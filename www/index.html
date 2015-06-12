@@ -7,47 +7,47 @@
         stage.color
 
         var rect = new createjs.Shape();
-        rect.graphics.beginFill("#FCFCFC").beginStroke("black").drawRoundRect(0,0,500,700,40);
+        rect.graphics.beginFill("#FCFCFC").beginStroke("black").drawRoundRect(0,0,250,350,40);
 
-        var value = new createjs.Text("A", "80px Arial", "black");
+        var value = new createjs.Text("A", "40px Arial", "black");
         value.x = 25;
         value.y = 25;
 
-        var suit = new createjs.Text("\u2663", "80px Arial", "black");
+        var suit = new createjs.Text("\u2663", "40px Arial", "black");
         suit.x = 25;
-        suit.y = 85;
+        suit.y = 55;
 
-        var bigsuit = new createjs.Text("\u2663", "144px Arial", "black");
-        bigsuit.x = 230;
-        bigsuit.y = 330;
+        var bigsuit = new createjs.Text("\u2663", "72px Arial", "black");
+        bigsuit.x = 125;
+        bigsuit.y = 175;
 
         var card = new createjs.Container();
         card.addChild(rect, value, suit, bigsuit);
         card.x = 300;
-        card.y = 300;
+        card.y = 500;
         card.regX = 250;
         card.regY = 350;
         stage.addChild(card);
 
         var rect = new createjs.Shape();
-        rect.graphics.beginFill("#FCFCFC").beginStroke("black").drawRoundRect(0,0,500,700,40);
+        rect.graphics.beginFill("#FCFCFC").beginStroke("black").drawRoundRect(0,0,250,350,40);
 
-        var value = new createjs.Text("Q", "80px Arial", "red");
+        var value = new createjs.Text("K", "40px Arial", "red");
         value.x = 25;
         value.y = 25;
 
-        var suit = new createjs.Text("\u2665", "80px Arial", "red");
+        var suit = new createjs.Text("\u2665", "40px Arial", "red");
         suit.x = 25;
-        suit.y = 85;
+        suit.y = 55;
 
-        var bigsuit = new createjs.Text("\u2665", "144px Arial", "red");
-        bigsuit.x = 230;
-        bigsuit.y = 330;
+        var bigsuit = new createjs.Text("\u2665", "72px Arial", "red");
+        bigsuit.x = 125;
+        bigsuit.y = 175;
 
         var card = new createjs.Container();
         card.addChild(rect, value, suit, bigsuit);
         card.x = 500;
-        card.y = 500;
+        card.y = 700;
         card.regX = 250;
         card.regY = 350;
         stage.addChild(card);
