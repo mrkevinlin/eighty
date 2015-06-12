@@ -1,0 +1,74 @@
+<html>
+  <head>
+    <script src="https://code.createjs.com/createjs-2015.05.21.min.js"></script>
+    <script>      
+      function init() {
+        var stage = new createjs.Stage("demoCanvas");
+        stage.color
+
+        var rect = new createjs.Shape();
+        rect.graphics.beginFill("#FCFCFC").beginStroke("black").drawRoundRect(0,0,500,700,40);
+
+        var value = new createjs.Text("A", "80px Arial", "black");
+        value.x = 25;
+        value.y = 25;
+
+        var suit = new createjs.Text("\u2663", "80px Arial", "black");
+        suit.x = 25;
+        suit.y = 85;
+
+        var bigsuit = new createjs.Text("\u2663", "144px Arial", "black");
+        bigsuit.x = 230;
+        bigsuit.y = 330;
+
+        var card = new createjs.Container();
+        card.addChild(rect, value, suit, bigsuit);
+        card.x = 300;
+        card.y = 300;
+        card.regX = 250;
+        card.regY = 350;
+        stage.addChild(card);
+
+        var rect = new createjs.Shape();
+        rect.graphics.beginFill("#FCFCFC").beginStroke("black").drawRoundRect(0,0,500,700,40);
+
+        var value = new createjs.Text("Q", "80px Arial", "red");
+        value.x = 25;
+        value.y = 25;
+
+        var suit = new createjs.Text("\u2665", "80px Arial", "red");
+        suit.x = 25;
+        suit.y = 85;
+
+        var bigsuit = new createjs.Text("\u2665", "144px Arial", "red");
+        bigsuit.x = 230;
+        bigsuit.y = 330;
+
+        var card = new createjs.Container();
+        card.addChild(rect, value, suit, bigsuit);
+        card.x = 500;
+        card.y = 500;
+        card.regX = 250;
+        card.regY = 350;
+        stage.addChild(card);
+
+
+        // createjs.Tween.get(card, { loop: true })
+        // .to({ x: 400 }, 1000, createjs.Ease.getPowInOut(2))
+        // .to({ x: 300 }, 1000, createjs.Ease.getPowInOut(4))
+        // .to({rotation: 360, transformOrigin: "bottom left"}, 1000, createjs.Ease.getPowInOut(1));
+
+        // createjs.Ticker.setFPS(60);
+        // createjs.Ticker.addEventListener("tick", stage);
+
+        stage.update();
+      }
+    </script>
+    <style>
+    body {margin:0;}
+    </style>
+  </head>
+  <body onload="init();">
+    <canvas id="demoCanvas" width="1000" height="1000"></canvas>
+  </body>
+</html>
