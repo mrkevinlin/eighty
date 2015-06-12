@@ -53,15 +53,15 @@
         stage.addChild(card);
 
 
-        // createjs.Tween.get(card, { loop: true })
-        // .to({ x: 400 }, 1000, createjs.Ease.getPowInOut(2))
-        // .to({ x: 300 }, 1000, createjs.Ease.getPowInOut(4))
-        // .to({rotation: 360, transformOrigin: "bottom left"}, 1000, createjs.Ease.getPowInOut(1));
+        createjs.Tween.get(card, { loop: true })
+        .to({ x: 800 }, 1000, createjs.Ease.getPowInOut(2))
+        .to({ x: 500 }, 1000, createjs.Ease.getPowInOut(4))
+        .to({rotation: 360, transformOrigin: "bottom left"}, 1000, createjs.Ease.getPowInOut(1));
 
-        // createjs.Ticker.setFPS(60);
-        // createjs.Ticker.addEventListener("tick", stage);
+        createjs.Ticker.setFPS(60);
+        createjs.Ticker.addEventListener("tick", stage);
 
-        stage.update();
+        // stage.update();
       }
     </script>
     <style>
