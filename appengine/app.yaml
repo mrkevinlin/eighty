@@ -5,14 +5,14 @@ api_version: 1
 threadsafe: yes
 
 handlers:
-- url: /
-  static_files: static_files/home
-  upload: static_files/home
-- url: /(.*\.html)
-  static_files: static_files/\1
-  upload: static_files/.*\.html
 - url: .*
   script: main.app
+# - url: /
+#   static_files: static_files/index.html
+#   upload: static_files/index.html
+# - url: /(.*\.html)
+#   static_files: static_files/\1
+#   upload: static_files/.*\.html
 
 libraries:
 - name: jinja2

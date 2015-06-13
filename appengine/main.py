@@ -1,16 +1,12 @@
-from flask import Flask
-app = Flask(__name__)
+from flask import Flask, request
+
+app = Flask(__name__, static_url_path='')
 app.config['DEBUG'] = False
 
-# Note: We don't need to call run() since our application is embedded within
-# the App Engine WSGI application server.
 
-
-# @app.route('/')
-# def hello():
-#     """Return a friendly HTTP greeting."""
-#     return 'Hello World!'
-
+@app.route('/')
+def home():
+    return app.send_static_file('index.html')
 
 @app.errorhandler(404)
 def page_not_found(e):
