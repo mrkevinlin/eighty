@@ -6,8 +6,16 @@ threadsafe: yes
 
 handlers:
 - url: /
-  static_files: static_files/index.html
-  upload: static_files/index.html
-- url: /(.*)
+  static_files: static_files/home
+  upload: static_files/home
+- url: /(.*\.html)
   static_files: static_files/\1
-  upload: static_files/(.*)
+  upload: static_files/.*\.html
+- url: .*
+  script: main.app
+
+libraries:
+- name: jinja2
+  version: "2.6"
+- name: markupsafe
+  version: "0.15"
