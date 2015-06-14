@@ -10,5 +10,4 @@ def home():
 
 @app.errorhandler(404)
 def page_not_found(e):
-    """Return a custom 404 error."""
-    return 'Sorry, nothing at this URL.', 404
+    return app.send_static_file('notfound.html')
