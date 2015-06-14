@@ -11,3 +11,7 @@ def home():
 @app.errorhandler(404)
 def page_not_found(e):
     return app.send_static_file('notfound.html')
+
+@app.errorhandler(403)
+def page_forbidden(e):
+    return app.send_static_file('forbidden.html')
