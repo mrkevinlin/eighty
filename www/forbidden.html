@@ -1,0 +1,81 @@
+<html>
+  <head>
+    <title>Eighty</title>
+    <meta name="description" content="Old Chinese card game with many players!">
+    <link rel="shortcut icon" href="../assets/favicon_temp.ico">
+    <link href='http://fonts.googleapis.com/css?family=Roboto+Condensed' rel='stylesheet' type='text/css'>
+    <style>
+        body {
+            margin:0;
+            background: #F0F0F0;
+            font-family: "Roboto Condensed", sans-serif;
+        }
+
+        a {
+            color: #0099FF;
+            text-decoration: none;
+        }
+
+        #card {
+            background:white;
+            padding:36px;
+            width:25%;
+            position:relative;
+            top:-30%;
+            min-width:320px;
+            margin-left: auto;
+            margin-right: auto;
+            box-shadow: 0 4px 18px -8px black;
+        }
+
+        #gear1 {
+            height:256px;
+            width:256px;
+            background-image: url("../assets/gear.png");
+            position: relative;
+            left:-80px;
+            top:-80px;
+            animation: rotateclock 30s linear infinite;
+            -webkit-animation: rotateclock 30s linear infinite;
+
+        }
+
+        #gear2 {
+            height:200px;
+            width:200px;
+            background-image: url("../assets/gear.png");
+            background-size: cover;
+            position: relative;
+            left:-96px;
+            top:-148px;
+            animation: rotatecount 30s linear infinite;
+            -webkit-animation: rotatecount 30s linear infinite;
+
+        }
+
+        @keyframes rotateclock {
+            100% { transform:rotate(360deg); }
+        }
+
+        @-webkit-keyframes rotateclock {
+            100% { -webkit-transform:rotate(360deg); }
+        }
+
+        @keyframes rotatecount {
+            100% { transform:rotate(-360deg); }
+        }
+
+        @-webkit-keyframes rotatecount {
+            100% { -webkit-transform:rotate(-360deg); }
+        }
+    </style>
+  </head>
+  <body>
+    <div id="gear1"></div>
+    <div id="gear2"></div>
+    <div id="card">
+        <h1>Be prepared!</h1>
+        <p>Yeah, be prepared! We'll be prepared. <br>But not quite yet. We're hard at work preparing you for <i>sensational</i> news.</p>
+    </div>
+  </body>
+</html>
