@@ -1,0 +1,8 @@
+html, body {
+	margin: 0;
+	font-family: "Roboto Condensed", sans-serif;
+}
+
+#table {
+	box-shadow: 0 0 4px 4px blue inset;
+}
