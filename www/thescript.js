@@ -1,12 +1,15 @@
 "use strict";
 var table;
 var context;
+var pr = window.devicePixelRatio;
 // var stage; For EaselJS
 
 function init() {
 	table = document.getElementById("table");
 	context = table.getContext('2d');
 	// stage = new createjs.Stage("table"); EaselJS
+
+	table.style.background = "#69CF88";
 	table.width = window.innerWidth;
 	table.height = window.innerHeight;
 
@@ -16,19 +19,28 @@ function init() {
 function drawEverything() {
 	// Eventually have different draws based on what size the screen is at. Draw mobile
 	// layout for screen size < 800px or whatever arbitrary amount. Draw desktop otherwise.
-	context.beginPath();
-	context.moveTo(500, 50);
-	context.lineTo(750, 150);
-	context.stroke();
 
+	infoDump();
 	drawDrawer();
+}
+
+function infoDump() {
+	context.font = "100px Material Icons";
+	context.fillText("\uE32A", 400, 500);
+	context.font = "48px Roboto Condensed";
+	context.fillText("7" + "\u2663", 400, 300);
+	context.fillStyle = "red";
+	context.fillText("A" + "\u2665", 600, 300);
 }
 
 function drawDrawer() {
 	var drawerWidth = table.width * .15;
 	if (drawerWidth >= 200) {
 		context.rect(0,0,drawerWidth, table.height);
-		context.fillStyle="gray";
+		context.fillStyle="white";
+		context.shadowColor = "black";
+		context.shadowBlur = 80;
+		context.shadowOffsetX = -10;
 		context.fill();
 	} else {
 		// EaselJS method
@@ -38,9 +50,9 @@ function drawDrawer() {
 		// stage.update();
 
 		//Regular Javascript and HTML5 canvas method
-		context.rect(0,0,64,64);
 		context.fillStyle="gray";
-		context.fill();
+		context.font = "48px Material Icons";
+		context.fillText("\uE88E", 10, 58);
 	}
 }
 
