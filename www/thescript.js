@@ -4,6 +4,12 @@ var context;
 var pr = window.devicePixelRatio;
 // var stage; For EaselJS
 
+WebFont.load({
+    google: {
+      families: ['Roboto Condensed', 'Material Icons']
+    }
+  });
+
 function init() {
 	table = document.getElementById("table");
 	context = table.getContext('2d');
@@ -20,17 +26,26 @@ function drawEverything() {
 	// Eventually have different draws based on what size the screen is at. Draw mobile
 	// layout for screen size < 800px or whatever arbitrary amount. Draw desktop otherwise.
 
+	drawIcons();
 	infoDump();
 	drawDrawer();
 }
 
-function infoDump() {
+function drawIcons() {
 	context.font = "100px Material Icons";
 	context.fillText("\uE32A", 400, 500);
 	context.font = "48px Roboto Condensed";
 	context.fillText("7" + "\u2663", 400, 300);
 	context.fillStyle = "red";
 	context.fillText("A" + "\u2665", 600, 300);
+}
+
+function infoDump() {
+	var w = window.innerWidth;
+	context.fillStyle = "black";
+	context.font = "48px Roboto Condensed";
+	context.fillText("Device width: " + w, 400, 600);
+	context.fillText("Pixel ratio: " + pr, 400, 650);
 }
 
 function drawDrawer() {
@@ -50,9 +65,9 @@ function drawDrawer() {
 		// stage.update();
 
 		//Regular Javascript and HTML5 canvas method
-		context.fillStyle="gray";
-		context.font = "48px Material Icons";
-		context.fillText("\uE88E", 10, 58);
+		context.fillStyle="#F1F1F1";
+		context.font = (48 * pr) + "px Material Icons";
+		context.fillText("\uE88E", 10*pr, 58*pr);
 	}
 }
 
