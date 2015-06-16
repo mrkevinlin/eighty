@@ -1,8 +1,8 @@
 "use strict";
 var table;
 var context;
+var stage;
 var pr = window.devicePixelRatio;
-// var stage; For EaselJS
 
 WebFont.load({
     google: {
@@ -13,13 +13,23 @@ WebFont.load({
 function init() {
 	table = document.getElementById("table");
 	context = table.getContext('2d');
-	// stage = new createjs.Stage("table"); EaselJS
+	stage = new createjs.Stage("table");
 
 	table.style.background = "#69CF88";
-	table.width = window.innerWidth;
-	table.height = window.innerHeight;
+
+	sizeCanvas();
 
 	drawEverything();
+}
+
+function sizeCanvas() {
+	if (window.innerWidth >= 720) {
+		table.width = window.innerWidth;
+	} else {table.width = 720;}
+
+	if (window.innerHeight >= 720) {
+		table.height = window.innerHeight;
+	} else {table.height = 720;}
 }
 
 function drawEverything() {
@@ -29,23 +39,37 @@ function drawEverything() {
 	drawIcons();
 	infoDump();
 	drawDrawer();
+
+	// stage.update();
 }
 
 function drawIcons() {
-	context.font = "100px Material Icons";
-	context.fillText("\uE32A", 400, 500);
+	context.font = "48px Material Icons";
+	context.fillText("\uE32A", 350, 100);
+	// var shield = new createjs.Text("\uE32A", "48px Material Icons", "black");
+	// shield.x = 350;
+	// shield.y = 100;
+	// stage.addChild(shield);
+
+	context.fillStyle = "white";
+	context.rect(470, 100, 100, 100);
+	context.fill();
+
 	context.font = "48px Roboto Condensed";
-	context.fillText("7" + "\u2663", 400, 300);
+	context.fillStyle = "black";
+	context.fillText("7", 470, 100);
+	context.fillText("\u2663", 460, 148);
+
 	context.fillStyle = "red";
-	context.fillText("A" + "\u2665", 600, 300);
+	context.fillText("A" + "\u2665", 540, 100);
 }
 
 function infoDump() {
-	var w = window.innerWidth;
 	context.fillStyle = "black";
 	context.font = "48px Roboto Condensed";
-	context.fillText("Device width: " + w, 400, 600);
-	context.fillText("Pixel ratio: " + pr, 400, 650);
+	context.fillText("Device width: " + window.innerWidth, 400, 400);
+	context.fillText("Device height: " + window.innerHeight, 400, 450)
+	context.fillText("Pixel ratio: " + pr, 400, 500);
 }
 
 function drawDrawer() {
@@ -72,12 +96,6 @@ function drawDrawer() {
 }
 
 window.addEventListener('resize', function() {
-	if (window.innerWidth >= 720) {
-		table.width = window.innerWidth;
-		drawEverything();
-	}
-	if (window.innerHeight >= 720) {
-		table.height = window.innerHeight;
-		drawEverything();
-	}
+	sizeCanvas();
+	drawEverything();
 });
