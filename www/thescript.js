@@ -3,6 +3,7 @@ var table;
 var context;
 var stage;
 var pr = window.devicePixelRatio;
+pr = 2;
 
 WebFont.load({
     google: {
@@ -43,7 +44,7 @@ function drawEverything() {
 
 	drawDrawerIcon();
 	drawHand();
-	drawOpponentHand(); 
+	// drawOpponentHand(); 
 
 
 // REMINDER:
@@ -58,10 +59,10 @@ function drawEverything() {
 
 function drawTestIcons() {
 
-	drawMiniCard("\u2665", "red", "7", 200, 200);
-	drawMiniCard("\u2660", "black", "Q", 400, 200);
-	drawMiniCardDown(300, 200);
-	drawCard("\u2663", "black", "A", 100, 400);
+	drawMiniCard("\u2665", "red", "7", 200*pr, 200);
+	drawMiniCard("\u2660", "black", "Q", 400*pr, 200);
+	drawMiniCardDown(300*pr, 200);
+	drawCard("\u2663", "black", "A", 100*pr, 400);
 }
 
 //Currently a hard-coded method to demonstrate hand appearance.
@@ -69,8 +70,8 @@ function drawHand() {
 	var offset = 0;
 	var handcenter = table.width/2;
 	for (var i = 0; i < 26; i++) {
-		drawCard("\u2666", "red", "8", (handcenter - (13*40) - 60)+offset, table.height-120);
-		offset += 40;
+		drawCard("\u2666", "red", "8", (handcenter - (13*40*pr) - 60)+offset, table.height-120*pr);
+		offset += 40*pr;
 	}
 }
 
