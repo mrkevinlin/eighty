@@ -86,17 +86,33 @@ function infoDump() {
 
 	var dw = new createjs.Text("Device width: " + window.innerWidth, font, color);
 	dw.x = 400;
-	dw.y = 400;
+	dw.y = 350;
 
 	var dh = new createjs.Text("Device height: " + window.innerHeight, font, color);
 	dh.x = 400;
-	dh.y = 450;
+	dh.y = 400;
 
 	var prtext = new createjs.Text("Pixel ratio: " + pr, font, color);
 	prtext.x = 400;
-	prtext.y = 500;
+	prtext.y = 450;
 
-	stage.addChild(dw, dh, prtext);
+	var sw = new createjs.Text("Screen width: " + screen.width, font, color);
+	sw.x = 400;
+	sw.y = 500;
+
+	var sh = new createjs.Text("Screen height: " + screen.height, font, color);
+	sh.x = 400;
+	sh.y = 550;
+
+	var asw = new createjs.Text("Available screen width: " + screen.availWidth, font, color);
+	asw.x = 400;
+	asw.y = 600;
+
+	var ash = new createjs.Text("Available screen height: " + screen.availHeight, font, color);
+	ash.x = 400;
+	ash.y = 650;
+
+	stage.addChild(dw, dh, prtext, sw, sh, asw, ash);
 
 	// context.fillText("Device width: " + window.innerWidth, 400, 400);
 	// context.fillText("Device height: " + window.innerHeight, 400, 450)
