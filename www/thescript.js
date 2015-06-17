@@ -196,7 +196,7 @@ function infoDump() {
 }
 
 function drawDrawerIcon() {
-	var drawerIcon = new createjs.Text("\uE88E", (48*pr) + "px Material Icons", "#F1F1F1");
+	var drawerIcon = new createjs.Text("\uE88E", (64*pr) + "px Material Icons", "#F1F1F1");
 	drawerIcon.x = drawerIcon.y = 10;
 	stage.addChild(drawerIcon);
 }
