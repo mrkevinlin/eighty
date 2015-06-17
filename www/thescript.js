@@ -37,32 +37,115 @@ function drawEverything() {
 	// layout for screen size < 800px or whatever arbitrary amount. Draw desktop otherwise.
 	stage.removeAllChildren();
 
+	//Testing methods
 	drawTestIcons();
 	infoDump();
+
 	drawDrawerIcon();
+	drawHand();
+	drawOpponentHand();
 
 	stage.update();
 }
 
 function drawTestIcons() {
 
-	var card = new createjs.Shape();
-	card.graphics.beginFill('white').drawRoundRect(445, 100, 70, 98, 5);
-	card.shadow = new createjs.Shadow("black", 0, 1, 2);
+	drawMiniCard("\u2665", "red", "7", 200, 200);
+	drawMiniCard("\u2660", "black", "Q", 400, 200);
+	drawMiniCardDown(300, 200);
+	drawCard("\u2663", "black", "A", 100, 400);
+}
+
+//Currently a hard-coded method to demonstrate hand appearance.
+function drawHand() {
+	var offset = 0;
+	var handcenter = table.width/2;
+	for (var i = 0; i < 26; i++) {
+		drawCard("\u2666", "red", "8", (handcenter - (13*40) - 60)+offset, table.height-100);
+		offset += 40;
+	}
+}
+
+function drawOpponentHand() {
+	var offset = 0;
+	for (var i = 0; i < 26; i++) {
+		drawMiniCardDown(500 + offset, 200);
+		offset += 20;
+	}
+}
+
+function drawMiniCardDown(x, y) {
+	var card = new createjs.Container();
+
+	var cardboard = new createjs.Shape();
+	cardboard.graphics.beginFill('white').drawRoundRect(0, 0, 70, 98, 10);
+	cardboard.shadow = new createjs.Shadow("black", 0, 1, 2);
+
+	var picture = new createjs.Text("\uE410", "64px Material Icons", "lightblue");
+	picture.textBaseline = "top";
+	picture.textAlign = "center";
+	picture.x = 35;
+	picture.y = (98 - picture.getMeasuredHeight())/2;
+
+	card.addChild(cardboard, picture);
+	card.x = x;
+	card.y = y;
+	
 	stage.addChild(card);
+}
 
-	var C = new createjs.Text("\u2663", "48px Roboto Condensed", "black");
-	C.x = 460;
-	C.y = 148;
-	var seven = new createjs.Text("7", "48px Roboto Condensed", "black");
-	seven.x = 470;
-	seven.y = 100;
-	stage.addChild(C, seven);
+//Save suit (unicode), value, and color variables in Card objects and consolidate those parameters
+//into a single Card object in this function. Pass in coordinates to start draw on.
+function drawMiniCard(suit, color, value, x, y) {
+	var card = new createjs.Container();
 
-	var HA = new createjs.Text("A" + "\u2665", "48px Roboto Condensed", "red");
-	HA.x = 540;
-	HA.y = 100;
-	stage.addChild(HA);
+	var cardboard = new createjs.Shape();
+	cardboard.graphics.beginFill('white').drawRoundRect(0, 0, 70, 98, 10);
+	cardboard.shadow = new createjs.Shadow("black", 0, 1, 2);
+
+	var value = new createjs.Text(value, "36px Roboto Condensed", color);
+	value.textBaseline = "top";
+	value.textAlign = "center";
+	value.x = 35;
+	value.y = 10;
+
+	var suit = new createjs.Text(suit, "36px Roboto Condensed", color);
+	suit.textBaseline = "top";
+	suit.textAlign = "center";
+	suit.x = 35;
+	suit.y = 10 + value.getMeasuredHeight();
+
+	card.addChild(cardboard, suit, value);
+	card.x = x;
+	card.y = y;
+	stage.addChild(card);
+}
+
+//Pass in Card object as parameter and use suit and value variables to set text.
+function drawCard(suit, color, value, x, y) {
+	var card = new createjs.Container();
+
+	var cardboard = new createjs.Shape();
+	cardboard.graphics.beginFill('white').drawRoundRect(0, 0, 120, 168, 10);
+	cardboard.shadow = new createjs.Shadow("black", 0, 1, 2);
+
+	var value = new createjs.Text(value, "36px Roboto Condensed", color);
+	value.textBaseline = "top";
+	value.textAlign = "center";
+	value.y = 10;
+
+	var suit = new createjs.Text(suit, "36px Roboto Condensed", color);
+	suit.textBaseline = "top";
+	suit.textAlign = "left";
+	suit.x = 5;
+	suit.y = 10 + value.getMeasuredHeight();
+
+	value.x = 5 + (suit.getMeasuredWidth()/2);
+
+	card.addChild(cardboard, suit, value);
+	card.x = x;
+	card.y = y;
+	stage.addChild(card);
 }
 
 function infoDump() {
