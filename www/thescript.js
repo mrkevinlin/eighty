@@ -15,7 +15,7 @@ function init() {
 	context = table.getContext('2d');
 	stage = new createjs.Stage("table");
 
-	table.style.background = "#69CF88";
+	table.style.background = "#66BB6A";
 
 	sizeCanvas();
 
@@ -43,7 +43,15 @@ function drawEverything() {
 
 	drawDrawerIcon();
 	drawHand();
-	drawOpponentHand();
+	drawOpponentHand(); 
+
+
+// REMINDER:
+//
+// Eventually figure out how to put each card container into a hand container to move hand container.
+//
+//
+
 
 	stage.update();
 }
@@ -61,7 +69,7 @@ function drawHand() {
 	var offset = 0;
 	var handcenter = table.width/2;
 	for (var i = 0; i < 26; i++) {
-		drawCard("\u2666", "red", "8", (handcenter - (13*40) - 60)+offset, table.height-100);
+		drawCard("\u2666", "red", "8", (handcenter - (13*40) - 60)+offset, table.height-120);
 		offset += 40;
 	}
 }
@@ -78,14 +86,14 @@ function drawMiniCardDown(x, y) {
 	var card = new createjs.Container();
 
 	var cardboard = new createjs.Shape();
-	cardboard.graphics.beginFill('white').drawRoundRect(0, 0, 70, 98, 10);
+	cardboard.graphics.beginFill('white').drawRoundRect(0, 0, 70*pr, 98*pr, 10);
 	cardboard.shadow = new createjs.Shadow("black", 0, 1, 2);
 
-	var picture = new createjs.Text("\uE410", "64px Material Icons", "lightblue");
+	var picture = new createjs.Text("\uE410", 64*pr + "px Material Icons", "lightblue");
 	picture.textBaseline = "top";
 	picture.textAlign = "center";
-	picture.x = 35;
-	picture.y = (98 - picture.getMeasuredHeight())/2;
+	picture.x = 35*pr;
+	picture.y = (98*pr - picture.getMeasuredHeight())/2;
 
 	card.addChild(cardboard, picture);
 	card.x = x;
@@ -100,20 +108,20 @@ function drawMiniCard(suit, color, value, x, y) {
 	var card = new createjs.Container();
 
 	var cardboard = new createjs.Shape();
-	cardboard.graphics.beginFill('white').drawRoundRect(0, 0, 70, 98, 10);
+	cardboard.graphics.beginFill('white').drawRoundRect(0, 0, 70*pr, 98*pr, 10);
 	cardboard.shadow = new createjs.Shadow("black", 0, 1, 2);
 
-	var value = new createjs.Text(value, "36px Roboto Condensed", color);
+	var value = new createjs.Text(value, 36*pr + "px Roboto Condensed", color);
 	value.textBaseline = "top";
 	value.textAlign = "center";
-	value.x = 35;
-	value.y = 10;
+	value.x = 35*pr;
+	value.y = 10*pr;
 
-	var suit = new createjs.Text(suit, "36px Roboto Condensed", color);
+	var suit = new createjs.Text(suit, 36*pr + "px Roboto Condensed", color);
 	suit.textBaseline = "top";
 	suit.textAlign = "center";
-	suit.x = 35;
-	suit.y = 10 + value.getMeasuredHeight();
+	suit.x = 35*pr;
+	suit.y = 10*pr + value.getMeasuredHeight();
 
 	card.addChild(cardboard, suit, value);
 	card.x = x;
@@ -126,21 +134,21 @@ function drawCard(suit, color, value, x, y) {
 	var card = new createjs.Container();
 
 	var cardboard = new createjs.Shape();
-	cardboard.graphics.beginFill('white').drawRoundRect(0, 0, 120, 168, 10);
+	cardboard.graphics.beginFill('white').drawRoundRect(0, 0, 120*pr, 168*pr, 10);
 	cardboard.shadow = new createjs.Shadow("black", 0, 1, 2);
 
-	var value = new createjs.Text(value, "36px Roboto Condensed", color);
+	var value = new createjs.Text(value, 36*pr + "px Roboto Condensed", color);
 	value.textBaseline = "top";
 	value.textAlign = "center";
-	value.y = 10;
+	value.y = 10*pr;
 
-	var suit = new createjs.Text(suit, "36px Roboto Condensed", color);
+	var suit = new createjs.Text(suit, 36*pr + "px Roboto Condensed", color);
 	suit.textBaseline = "top";
 	suit.textAlign = "left";
-	suit.x = 5;
-	suit.y = 10 + value.getMeasuredHeight();
+	suit.x = 5*pr;
+	suit.y = 10*pr + value.getMeasuredHeight();
 
-	value.x = 5 + (suit.getMeasuredWidth()/2);
+	value.x = 5*pr + (suit.getMeasuredWidth()/2);
 
 	card.addChild(cardboard, suit, value);
 	card.x = x;
