@@ -3,7 +3,10 @@ var table;
 var context;
 var stage;
 var pr = window.devicePixelRatio;
-pr = 2;
+
+if (pr >= 1.5 && pr <= 2.5) {pr = 1.33;}
+else if (pr > 2.5 && pr <= 3.5) {pr = 1.5;}
+else if (pr > 3.5) {pr = 2;}
 
 WebFont.load({
     google: {
