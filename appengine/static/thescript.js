@@ -5,7 +5,7 @@ var stage;
 var pr;
 
 if (screen.availWidth > 768) {pr = 1;}
-else {pr = 1.2;}
+else {pr = 4/3;}
 
 // if (pr >= 1.5 && pr <= 2.5) {pr = 1.33;}
 // else if (pr > 2.5 && pr <= 3.5) {pr = 1.5;}
@@ -46,12 +46,13 @@ function drawEverything() {
 
 	//Testing methods
 	drawTestIcons();
-	infoDump();
-	drawTestPlay();
+	// drawTestPlay();
 
 	drawDrawerIcon();
 	drawHand();
 	// drawOpponentHand(); 
+
+	infoDump();
 
 
 // REMINDER:
@@ -66,10 +67,10 @@ function drawEverything() {
 
 function drawTestIcons() {
 
-	drawMiniCard("\u2665", "red", "7", 200*pr, 200);
-	drawMiniCard("\u2660", "black", "Q", 400*pr, 200);
-	drawMiniCardDown(300*pr, 200);
-	drawCard("\u2663", "black", "A", 100*pr, 400);
+	drawMiniCard("\u2665", "red", "7", 300*pr, 50);
+	drawMiniCard("\u2660", "black", "Q", 400*pr, 50);
+	drawMiniCardDown(500*pr, 50);
+	drawCard("\u2663", "black", "A", 600*pr, 50);
 }
 
 function drawTestPlay() {
@@ -88,7 +89,7 @@ function drawHand() {
 	var offset = 0;
 	var handcenter = table.width/2;
 	for (var i = 0; i < 26; i++) {
-		drawCard("\u2666", "red", "8", (handcenter - (13*40*pr) - 60)+offset, table.height-120*pr);
+		drawCard("\u2666", "red", "8", (handcenter - (14*40*pr)) + offset, table.height-120*pr);
 		offset += 40*pr;
 	}
 }
@@ -180,32 +181,32 @@ function infoDump() {
 	var font = "24px Roboto Condensed";
 
 	var dw = new createjs.Text("Viewport width: " + window.innerWidth, font, color);
-	dw.x = 400;
-	dw.y = 350;
+	dw.x = 100;
+	dw.y = 50;
 
 	var dh = new createjs.Text("Viewport height: " + window.innerHeight, font, color);
-	dh.x = 400;
-	dh.y = 400;
+	dh.x = 100;
+	dh.y = 80;
 
 	var prtext = new createjs.Text("Pixel ratio: " + pr, font, color);
-	prtext.x = 400;
-	prtext.y = 450;
+	prtext.x = 100;
+	prtext.y = 110;
 
 	var sw = new createjs.Text("Screen width: " + screen.width, font, color);
-	sw.x = 400;
-	sw.y = 500;
+	sw.x = 100;
+	sw.y = 140;
 
 	var sh = new createjs.Text("Screen height: " + screen.height, font, color);
-	sh.x = 400;
-	sh.y = 550;
+	sh.x = 100;
+	sh.y = 170;
 
 	var asw = new createjs.Text("Available screen width: " + screen.availWidth, font, color);
-	asw.x = 400;
-	asw.y = 600;
+	asw.x = 100;
+	asw.y = 200;
 
 	var ash = new createjs.Text("Available screen height: " + screen.availHeight, font, color);
-	ash.x = 400;
-	ash.y = 650;
+	ash.x = 100;
+	ash.y = 230;
 
 	stage.addChild(dw, dh, prtext, sw, sh, asw, ash);
 }
