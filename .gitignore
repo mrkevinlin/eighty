@@ -1,2 +1,5 @@
 # dumb Thumbs.db
 Thumbs\.db
+
+# compile objects
+*.pyc
