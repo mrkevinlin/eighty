@@ -3,6 +3,8 @@ var table;
 var context;
 var stage;
 var pr;
+var players = [];
+var playerCount;
 
 if (screen.availWidth > 768) {pr = 1;}
 else {pr = 4/3;}
@@ -26,6 +28,12 @@ function init() {
 
 	sizeCanvas();
 
+	playerCount = 8;
+
+	for (var i = 0; i < playerCount; i++) {
+		players.push(i);
+	}
+
 	drawEverything();
 }
 
@@ -47,11 +55,11 @@ function drawEverything() {
 	//Testing methods
 	drawTestIcons();
 	// drawTestPlay();
-	drawCircle();
 
 	drawDrawerIcon();
 	drawHand();
 	// drawOpponentHand(); 
+	drawEveryone();
 
 	infoDump();
 
@@ -66,11 +74,38 @@ function drawEverything() {
 	stage.update();
 }
 
-function drawCircle() {
+function calcCircle() {
+	var degrees = [];
 	var xpoints = [];
 	var ypoints = [];
+	var radius = (table.height - 120*pr - 100)/2;
+	var centerx = table.width/2;
+	var centery = radius + 40; //Add arbitrary padding from radius
+	var stretch = (table.width - 80)/(radius*2);
 
-	
+	for (var i = 0; i < playerCount; i++) {
+		degrees.push(90 + (360/playerCount)*i);
+
+		ypoints.push((radius * Math.sin(degrees[i]*2*Math.PI/360)) + centery);
+
+		xpoints.push((stretch*(radius * Math.cos(degrees[i]*2*Math.PI/360))) + centerx);
+
+		drawPlayer(i, xpoints[i], ypoints[i]);
+	}
+
+}
+
+function drawEveryone() {
+	calcCircle();
+
+}
+
+function drawPlayer(id, x, y) {
+	var playerID = new createjs.Text(id, 48*pr + "px Roboto Condensed", "black");
+	playerID.textAlign = "center";
+	playerID.x = x;
+	playerID.y = y;
+	stage.addChild(playerID);
 }
 
 function drawTestIcons() {
