@@ -2,11 +2,14 @@
 var table;
 var context;
 var stage;
-var pr = window.devicePixelRatio;
+var pr;
 
-if (pr >= 1.5 && pr <= 2.5) {pr = 1.33;}
-else if (pr > 2.5 && pr <= 3.5) {pr = 1.5;}
-else if (pr > 3.5) {pr = 2;}
+if (screen.availWidth > 768) {pr = 1;}
+else {pr = 1.2;}
+
+// if (pr >= 1.5 && pr <= 2.5) {pr = 1.33;}
+// else if (pr > 2.5 && pr <= 3.5) {pr = 1.5;}
+// else if (pr > 3.5) {pr = 2;}
 
 WebFont.load({
     google: {
@@ -44,6 +47,7 @@ function drawEverything() {
 	//Testing methods
 	drawTestIcons();
 	infoDump();
+	drawTestPlay();
 
 	drawDrawerIcon();
 	drawHand();
@@ -68,6 +72,17 @@ function drawTestIcons() {
 	drawCard("\u2663", "black", "A", 100*pr, 400);
 }
 
+function drawTestPlay() {
+	var offset = 0;
+	var arraycolor = ["black", "red", "red", "black", "red", "black"];
+	var arraysuit = ["\u2663", "\u2665", "\u2666", "\u2660", "\u2665", "\u2663"];
+	var arrayvalue = ["J", "A", "7", "6", "6", "Q"];
+	for (var i = 0; i < 6; i++) {
+		drawMiniCard(arraysuit[i], arraycolor[i], arrayvalue[i], table.width-(6*40*pr)-60+offset, 300);
+		offset += 40*pr;
+	}
+}
+
 //Currently a hard-coded method to demonstrate hand appearance.
 function drawHand() {
 	var offset = 0;
@@ -90,14 +105,14 @@ function drawMiniCardDown(x, y) {
 	var card = new createjs.Container();
 
 	var cardboard = new createjs.Shape();
-	cardboard.graphics.beginFill('white').drawRoundRect(0, 0, 70*pr, 98*pr, 10);
+	cardboard.graphics.beginFill('white').drawRoundRect(0, 0, 60*pr, 84*pr, 10);
 	cardboard.shadow = new createjs.Shadow("black", 0, 1, 2);
 
 	var picture = new createjs.Text("\uE410", 64*pr + "px Material Icons", "lightblue");
 	picture.textBaseline = "top";
 	picture.textAlign = "center";
-	picture.x = 35*pr;
-	picture.y = (98*pr - picture.getMeasuredHeight())/2;
+	picture.x = 30*pr;
+	picture.y = (84*pr - picture.getMeasuredHeight())/2;
 
 	card.addChild(cardboard, picture);
 	card.x = x;
@@ -112,20 +127,20 @@ function drawMiniCard(suit, color, value, x, y) {
 	var card = new createjs.Container();
 
 	var cardboard = new createjs.Shape();
-	cardboard.graphics.beginFill('white').drawRoundRect(0, 0, 70*pr, 98*pr, 10);
+	cardboard.graphics.beginFill('white').drawRoundRect(0, 0, 60*pr, 84*pr, 10);
 	cardboard.shadow = new createjs.Shadow("black", 0, 1, 2);
 
 	var value = new createjs.Text(value, 36*pr + "px Roboto Condensed", color);
 	value.textBaseline = "top";
 	value.textAlign = "center";
-	value.x = 35*pr;
-	value.y = 10*pr;
+	value.x = 30*pr;
+	value.y = 5*pr;
 
 	var suit = new createjs.Text(suit, 36*pr + "px Roboto Condensed", color);
 	suit.textBaseline = "top";
 	suit.textAlign = "center";
-	suit.x = 35*pr;
-	suit.y = 10*pr + value.getMeasuredHeight();
+	suit.x = 30*pr;
+	suit.y = 5*pr + value.getMeasuredHeight();
 
 	card.addChild(cardboard, suit, value);
 	card.x = x;
