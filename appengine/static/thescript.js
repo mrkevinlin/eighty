@@ -47,6 +47,7 @@ function drawEverything() {
 	//Testing methods
 	drawTestIcons();
 	// drawTestPlay();
+	drawCircle();
 
 	drawDrawerIcon();
 	drawHand();
@@ -63,6 +64,13 @@ function drawEverything() {
 
 
 	stage.update();
+}
+
+function drawCircle() {
+	var xpoints = [];
+	var ypoints = [];
+
+	
 }
 
 function drawTestIcons() {
@@ -89,8 +97,8 @@ function drawHand() {
 	var offset = 0;
 	var handcenter = table.width/2;
 	for (var i = 0; i < 26; i++) {
-		drawCard("\u2666", "red", "8", (handcenter - (14*40*pr)) + offset, table.height-120*pr);
-		offset += 40*pr;
+		drawCard("\u2666", "red", "8", (handcenter - (14*40*Math.pow(pr,3))) + offset, table.height-120*pr);
+		offset += 40*Math.pow(pr,3);
 	}
 }
 
