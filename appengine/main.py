@@ -8,6 +8,10 @@ app.config['DEBUG'] = False
 def home():
     return app.send_static_file('index.html')
 
+@app.route('/oauth2callback')
+def game():
+    return app.send_static_file('game.html')
+
 @app.errorhandler(404)
 def page_not_found(e):
     return app.send_static_file('notfound.html')
