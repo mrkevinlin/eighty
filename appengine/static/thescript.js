@@ -1,4 +1,6 @@
 "use strict";
+var isTouch;
+
 var table;
 var context;
 var stage;
@@ -15,7 +17,6 @@ var radius;
 var centerx;
 var centery;
 
-
 if (screen.availWidth > 768) {pr = 1;}
 else {pr = 4/3;}
 
@@ -26,6 +27,9 @@ WebFont.load({
   });
 
 function init() {
+    isTouch = ((('ontouchstart' in window) || window.DocumentTouch && document instanceof DocumentTouch)==true);
+    console.log(isTouch);
+
     table = document.getElementById("table");
     context = table.getContext('2d');
     stage = new createjs.Stage("table");
@@ -159,7 +163,6 @@ function drawEveryone() {
             ypoints.push((radius * Math.sin(degrees[i]*2*Math.PI/360)) + centery);
 
             var xpoint = Math.round(radius * Math.cos(degrees[i]*2*Math.PI/360));
-            console.log(xpoint);
             if (xpoint == 0) {xpoint = centerx;}
             else if (xpoint < 0) {xpoint = 30;}
             else if (xpoint > 0) {xpoint = table.width - 30;}
@@ -292,7 +295,7 @@ function drawCard(suit, color, value, x, y) {
     var targetY = y-30*pr
     var clicked = false;
 
-    if (pr ==1) {
+    if (!isTouch) {
         card.addEventListener("mouseover", function() {
             createjs.Tween.get(card).to({y: targetY},60);
             // card.y-=30*pr;
