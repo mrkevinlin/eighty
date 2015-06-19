@@ -7,6 +7,15 @@ var players = [];
 var playerCount;
 var deck = [];
 
+//Player ring
+var degrees;
+var xpoints;
+var ypoints;
+var radius;
+var centerx;
+var centery;
+
+
 if (screen.availWidth > 768) {pr = 1;}
 else {pr = 4/3;}
 
@@ -29,7 +38,7 @@ function init() {
     sizeCanvas();
 
 
-    playerCount = 5;
+    playerCount = 8;
 
     for (var i = 0; i < playerCount; i++) {
         players.push(new Player(i));
@@ -69,8 +78,6 @@ function initializeDeck() {
             }
         }
     }
-
-    console.log(deck[0].suitCode);
 }
 
 function initializeHands() {
@@ -83,10 +90,6 @@ function initializeHands() {
             dealID = 0;
         }
     }
-
-    console.log(players[0].hand.length);
-    console.log(players[0].hand[0]);
-    console.log(players[0].hand[0].suitCode);
 }
 
 var Player = function(id) {
@@ -117,9 +120,7 @@ function drawEverything() {
     drawHand(0);
     // drawOpponentHand(); 
 
-    if (pr == 1) {
-        drawEveryoneDesktop();
-    } else {}
+    drawEveryone();
 
 // REMINDER:
 //
@@ -131,25 +132,44 @@ function drawEverything() {
     // stage.update();
 }
 
-function drawEveryoneDesktop() {
-    var degrees = [];
-    var xpoints = [];
-    var ypoints = [];
-    var radius = (table.height - 120*pr - 80)/2;
-    var centerx = table.width/2;
-    var centery = radius + 20; //Add arbitrary padding from radius
+
+function drawEveryone() {
+    degrees = [];
+    xpoints = [];
+    ypoints = [];
+    radius = (table.height - 120*Math.pow(pr,3) - 60)/2;
+    centerx = table.width/2;
+    centery = radius; //Add arbitrary padding from radius
     var stretch = (table.width - 80)/(radius*2);
 
-    for (var i = 0; i < playerCount; i++) {
+    //For desktop.
+    for (var i = 0; i < playerCount; i++) { 
+
         degrees.push(90 + (360/playerCount)*i);
 
-        ypoints.push((radius * Math.sin(degrees[i]*2*Math.PI/360)) + centery);
+        if (window.innerWidth > window.innerHeight) { //For desktop
+            ypoints.push((radius * Math.sin(degrees[i]*2*Math.PI/360)) + centery);
 
-        xpoints.push((stretch*(radius * Math.cos(degrees[i]*2*Math.PI/360))) + centerx);
+            xpoints.push((stretch*(radius * Math.cos(degrees[i]*2*Math.PI/360))) + centerx);
 
-        drawPlayer(i, xpoints[i], ypoints[i]);
+            drawPlayer(i, xpoints[i], ypoints[i]);
+        }
+
+        else { //For mobile
+            ypoints.push((radius * Math.sin(degrees[i]*2*Math.PI/360)) + centery);
+
+            var xpoint = Math.round(radius * Math.cos(degrees[i]*2*Math.PI/360));
+            console.log(xpoint);
+            if (xpoint == 0) {xpoint = centerx;}
+            else if (xpoint < 0) {xpoint = 30;}
+            else if (xpoint > 0) {xpoint = table.width - 30;}
+
+            xpoints.push(xpoint);
+
+            drawPlayer(i, xpoints[i], ypoints[i]);
+        }
+
     }
-
 }
 
 function drawPlayer(id, x, y) {
@@ -186,7 +206,6 @@ function drawHand(id) {
     for (var i = 0; i < players[id].hand.length; i++) {
         drawCard(players[id].hand[i].suitCode, players[id].hand[i].suitColor, players[id].hand[i].cardValue, (handcenter - ((players[id].hand.length/2 +1)*40*Math.pow(pr,3))) + offset, table.height-120*pr);
         offset += 40*Math.pow(pr,3);
-        console.log(players[id].hand[i].suitCode);
     }
 }
 
@@ -290,11 +309,13 @@ function drawCard(suit, color, value, x, y) {
     card.addEventListener("click", function() {
         if (!clicked) {
             cardboard.shadow = new createjs.Shadow("orange", 0, 0, 20);
-            card.y = targetY;
+            createjs.Tween.get(card).to({y: targetY}, 60);
+            // card.y = targetY;
             clicked = !clicked;
         } else {
             cardboard.shadow = new createjs.Shadow("black", 0, 1, 2);
-            card.y = originalY;
+            // createjs.Tween.get(card).to({y: originalY}, 60);
+            // card.y = originalY;
             clicked = !clicked;
         }
         // card.y+=30*pr;
