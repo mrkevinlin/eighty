@@ -292,36 +292,51 @@ function drawCard(suit, color, value, x, y) {
     var targetY = y-30*pr
     var clicked = false;
 
-    card.addEventListener("mouseover", function() {
-        createjs.Tween.get(card).to({y: targetY},60);
-        // card.y-=30*pr;
-        // stage.update();
-    });
+    if (pr ==1) {
+        card.addEventListener("mouseover", function() {
+            createjs.Tween.get(card).to({y: targetY},60);
+            // card.y-=30*pr;
+            // stage.update();
+        });
 
-    card.addEventListener("mouseout", function() {
-        if (!clicked) {
-            createjs.Tween.get(card).to({y: originalY},60);
-        }
-        // card.y+=30*pr;
-        // stage.update();
-    });
+        card.addEventListener("mouseout", function() {
+            if (!clicked) {
+                createjs.Tween.get(card).to({y: originalY},60);
+            }
+            // card.y+=30*pr;
+            // stage.update();
+        });
 
-    card.addEventListener("click", function() {
-        if (!clicked) {
-            cardboard.shadow = new createjs.Shadow("orange", 0, 0, 20);
-            createjs.Tween.get(card).to({y: targetY}, 60);
-            // card.y = targetY;
-            clicked = !clicked;
-        } else {
-            cardboard.shadow = new createjs.Shadow("black", 0, 1, 2);
-            // createjs.Tween.get(card).to({y: originalY}, 60);
-            // card.y = originalY;
-            clicked = !clicked;
-        }
-        // card.y+=30*pr;
-        // card.y-=60*pr;
-        // stage.update();
-    });
+        card.addEventListener("click", function() {
+            if (!clicked) {
+                cardboard.shadow = new createjs.Shadow("orange", 0, 0, 20);
+                createjs.Tween.get(card).to({y: targetY}, 60);
+                // card.y = targetY;
+                clicked = !clicked;
+            } else {
+                cardboard.shadow = new createjs.Shadow("black", 0, 1, 2);
+                // createjs.Tween.get(card).to({y: originalY}, 60);
+                // card.y = originalY;
+                clicked = !clicked;
+            }
+            // card.y+=30*pr;
+            // card.y-=60*pr;
+            // stage.update();
+        });
+    } else {
+        card.addEventListener("click", function() {
+            if (!clicked) {
+                cardboard.shadow = new createjs.Shadow("orange", 0, 0, 20);
+                createjs.Tween.get(card).to({y: targetY}, 60);
+                clicked = !clicked;
+            } else {
+                cardboard.shadow = new createjs.Shadow("black", 0, 1, 2);
+                createjs.Tween.get(card).to({y: originalY}, 60);
+                clicked = !clicked;
+            }
+        });
+    }
+
 
     card.mouseChildren = false;
 
