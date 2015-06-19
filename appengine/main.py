@@ -8,7 +8,7 @@ app.config['DEBUG'] = False
 def home():
     return app.send_static_file('index.html')
 
-@app.route('/oauth2callback')
+@app.route('/game')
 def game():
     return app.send_static_file('game.html')
 
