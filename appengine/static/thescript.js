@@ -38,7 +38,7 @@ function init() {
     sizeCanvas();
 
 
-    playerCount = 8;
+    playerCount = 5;
 
     for (var i = 0; i < playerCount; i++) {
         players.push(new Player(i));
@@ -137,9 +137,9 @@ function drawEveryone() {
     degrees = [];
     xpoints = [];
     ypoints = [];
-    radius = (table.height - 120*Math.pow(pr,3) - 60)/2;
+    radius = (table.height - 120*pr*pr - 60)/2;
     centerx = table.width/2;
-    centery = radius; //Add arbitrary padding from radius
+    centery = radius;
     var stretch = (table.width - 80)/(radius*2);
 
     //For desktop.
@@ -204,7 +204,7 @@ function drawHand(id) {
     var offset = 0;
     var handcenter = table.width/2;
     for (var i = 0; i < players[id].hand.length; i++) {
-        drawCard(players[id].hand[i].suitCode, players[id].hand[i].suitColor, players[id].hand[i].cardValue, (handcenter - ((players[id].hand.length/2 +1)*40*Math.pow(pr,3))) + offset, table.height-120*pr);
+        drawCard(players[id].hand[i].suitCode, players[id].hand[i].suitColor, players[id].hand[i].cardValue, (handcenter - ((players[id].hand.length/2 +1)*40*Math.pow(pr,3))) + offset, table.height-120*pr*pr);
         offset += 40*Math.pow(pr,3);
     }
 }
