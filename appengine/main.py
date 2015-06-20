@@ -60,9 +60,9 @@ def simon_says():
                 username=username)
 
 @app.route('/simonsays/logoff')
-def ss_logoff():
+def ss_logoff(username=None):
     global ss_players
-    name = session.pop('username', None)
+    name = session.pop('username', None) or username
     if name:
         ss_players -= 1
         current_players.pop(name, None)
@@ -79,3 +79,9 @@ def ss_request_update():
         abort(404)
     return ('', 204)
 
+@app.route('/_ah/channel/disconnected/', methods=['POST'])
+def channel_disconnected():
+    # client_id is currently set to username, but that could change in the
+    # future
+    client_id = request.form['from']
+    return ss_logoff(username=client_id)
