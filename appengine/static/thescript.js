@@ -17,6 +17,9 @@ var radius;
 var centerx;
 var centery;
 
+var mousemove = 0;
+var mouseclick = 0;
+
 if (screen.availWidth > 768) {pr = 1;}
 else {pr = 4/3;}
 
@@ -33,6 +36,19 @@ function init() {
     table = document.getElementById("table");
     context = table.getContext('2d');
     stage = new createjs.Stage("table");
+
+    stage.on("stagemousemove", function() {
+        mousemove++;
+        var text1 = new createjs.Text("mousemove: " + mousemove, "64px Roboto Condensed", "black");
+        stage.addChild(text1);
+    });
+
+    stage.on("stagemousedown", function() {
+        mouseclick++;
+        var text2 = new createjs.Text("mousedown: " + mouseclick, "64px Roboto Condensed", "black");
+        text2.y = 100;
+        stage.addChild(text2);
+    });
 
     table.style.background = "#66BB6A";
     createjs.Ticker.setFPS(60);
