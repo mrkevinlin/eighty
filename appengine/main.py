@@ -1,12 +1,11 @@
 from __future__ import print_function
 from flask import Flask, request, render_template, session, redirect, url_for
 from google.appengine.api.channel import channel
-import uuid
+import uuid, os
 
 app = Flask(__name__, static_url_path='')
 app.config['DEBUG'] = True
-# DON'T COMMIT THIS
-app.secret_key = '\x97c\xf3\xcb0\x98WaGS\xcb\xbf\xaesX\x0e\x7f{\xeaK\xb6\xbaaU'
+app.secret_key = os.urandom(24)
 
 my_uuid = unicode(uuid.uuid4())
 token = None
