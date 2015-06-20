@@ -414,20 +414,20 @@ function drawDrawerIcon() {
 
 function drawDrawer() {
     drawer = new createjs.Container();
-    drawer.x = -200*pr;
+    drawer.x = -250*pr;
 
     var drawerBack = new createjs.Shape();
-    drawerBack.graphics.beginFill("white").drawRect(0, 0, 200*pr, table.height);
+    drawerBack.graphics.beginFill("white").drawRect(0, 0, 250*pr, table.height);
 
     drawerBack.shadow = new createjs.Shadow("black", -5, 0, 50);
 
     var close = new createjs.Text("\uE14C", (36*pr) + "px Material Icons", "black");
     close.textAlign="right";
-    close.x = 190;
+    close.x = 250*pr-10;
     close.y = 10;
 
     var target = new createjs.Shape();
-    target.graphics.beginFill("white").drawRect(-close.getMeasuredWidth(), 0, close.getMeasuredWidth(), close.getMeasuredHeight());
+    target.graphics.beginFill("white").drawRect(-close.getMeasuredWidth()-10, -10, close.getMeasuredWidth()+20, close.getMeasuredHeight()+20);
     close.hitArea = target;
 
     close.on("mouseover", function() {
@@ -439,7 +439,7 @@ function drawDrawer() {
     });
 
     close.addEventListener("click", function() {
-        createjs.Tween.get(drawer).to({x: -200*pr}, 60);
+        createjs.Tween.get(drawer).to({x: -250*pr}, 60);
     });
 
     drawer.addChild(drawerBack, close);
