@@ -75,7 +75,7 @@ function initializeDeck() {
     var suit = ["spades", "diamonds", "clubs", "hearts"];
     var suitCode = ["\u2660", "\u2666", "\u2663", "\u2665"];
     var suitColor = ["black", "red", "black", "red"];
-    var values = ["2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A"];
+    var names = ["2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A"];
     var points = 0;
 
     for (var i = 0; i < Math.floor(playerCount/2); i++) {
@@ -83,7 +83,7 @@ function initializeDeck() {
             for (var v = 0; v <= 12; v++) {
                 if (v == 5) { points = 5; }
                 else if (v == 10 || v == 13) { points = 10; }
-                deck.push(new Card(suit[s], suitCode[s], suitColor[s], values[v], false, points));
+                deck.push(new Card(suit[s], suitCode[s], suitColor[s], names[v], v+2, false, points));
                 points = 0;
             }
         }
@@ -100,6 +100,47 @@ function initializeHands() {
             dealID = 0;
         }
     }
+
+    // Temporary promotion of trumps and trump value
+
+    for (var i = 0; i < players[0].hand.length; i++) {
+        if (players[0].hand[i].suit == "hearts") {
+            players[0].hand[i].isTrump = true;
+        }
+        if (players[0].hand[i].cardValue == 2) {
+            players[0].hand[i].cardValue = 15;
+            players[0].hand[i].isTrump = true;
+        }
+    }
+
+    // Should do for player only
+    players[0].hand.sort(function(a, b) {
+        if (a.isTrump && !b.isTrump) {
+            return 1;
+        } else if (b.isTrump && !a.isTrump) {
+            return -1;
+        } else if (a.isTrump && b.isTrump) {
+            if (a.cardValue == 15 && b.cardValue == 15) {
+                if (a.suit>b.suit) {
+                    return 1;
+                } else if (a.suit < b.suit) {
+                    return -1;
+                } else {
+                    return a.cardValue - b.cardValue;
+                }
+            } else { 
+                return a.cardValue - b.cardValue;
+            }
+        } else {
+            if (a.suit>b.suit) {
+                return 1;
+            } else if (a.suit < b.suit) {
+                return -1;
+            } else {
+                return a.cardValue - b.cardValue;
+            }
+        }
+    });
 }
 
 var Player = function(id) {
@@ -107,10 +148,11 @@ var Player = function(id) {
     this.hand = [];
 };
 
-var Card = function(suit, suitCode, color, value, isTrump, points) {
+var Card = function(suit, suitCode, color, name, value, isTrump, points) {
     this.suit = suit;
     this.suitCode = suitCode;
     this.suitColor = color;
+    this.cardName = name;
     this.cardValue = value;
     this.isTrump = isTrump;
     this.points = points;
@@ -214,7 +256,7 @@ function drawHand(id) {
     var handcenter = table.width/2;
     var handContainer = new createjs.Container();
     for (var i = 0; i < players[id].hand.length; i++) {
-        drawCard(players[id].hand[i].suitCode, players[id].hand[i].suitColor, players[id].hand[i].cardValue, (handcenter - ((players[id].hand.length/2 +1)*40*Math.pow(pr,3))) + offset, table.height-120*pr*pr);
+        drawCard(players[id].hand[i].suitCode, players[id].hand[i].suitColor, players[id].hand[i].cardName, (handcenter - ((players[id].hand.length/2 +1)*40*Math.pow(pr,3))) + offset, table.height-120*pr*pr);
         offset += 40*Math.pow(pr,3);
     }
 }
@@ -303,7 +345,6 @@ function drawCard(suit, color, value, x, y) {
     var clicked = false;
 
     card.addEventListener("mouseover", function() {
-        console.log(mousemove - mousedown);
         if (hasMouse()) {
             createjs.Tween.get(card).to({y: targetY},60);
         }
@@ -348,15 +389,29 @@ function drawDrawerIcon() {
         .to({alpha:0.6}, 100);
     });
 
+    drawerIcon.addEventListener("click", function() {
+        drawDrawer();
+    });
+
     stage.addChild(drawerIcon);
 }
 
 function drawDrawer() {
+    var drawer = new createjs.Container();
 
-}
+    var drawerBack = new createjs.Shape();
+    drawerBack.graphics.beginFill("white").drawRect(0, 0, 200, table.height);
 
-function drawDrawerCloseIcon() {
+    var close = new createjs.Text("\uE14C", (36*pr) + "px Material Icons", "black");
+    close.textAlign="right";
+    close.x = 190;
+    close.y = 10;
+    close.addEventListener("click", function() {
+        createjs.Tween.get(drawer).to({x: -200}, 200);
+    });
 
+    drawer.addChild(drawerBack, close);
+    stage.addChild(drawer);
 }
 
 function hasMouse() {
