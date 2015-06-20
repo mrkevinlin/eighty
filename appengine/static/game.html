@@ -1,24 +1,105 @@
-<html lang="en">
-  <head>
-    <meta name="google-signin-scope" content="profile email">
-    <meta name="google-signin-client_id" content="256313654719-omu1i4n9m8rvd7fbpfgqk8p110cqbh2m.apps.googleusercontent.com">
-    <script src="https://apis.google.com/js/platform.js" async defer></script>
-  </head>
-  <body>
-    <div class="g-signin2" data-onsuccess="onSignIn" data-theme="dark"></div>
-    <script>
-      function onSignIn(googleUser) {
-        // Useful data for your client-side scripts:
-        var profile = googleUser.getBasicProfile();
-        console.log("ID: " + profile.getId()); // Don't send this directly to your server!
-        console.log("Name: " + profile.getName());
-        console.log("Image URL: " + profile.getImageUrl());
-        console.log("Email: " + profile.getEmail());
+<html>
+    <head>
+        <title>Eighty</title>
+        <meta name="description" content="Old Chinese card game with many players!">
+        <link rel="shortcut icon" href="assets/favicon_temp.ico">
+        <script src="https://apis.google.com/js/client.js" async defer></script>
+        <script src="https://apis.google.com/js/platform.js?onload=renderButton" async defer></script>
+        <script src="https://ajax.googleapis.com/ajax/libs/webfont/1.5.18/webfont.js"></script>
+        <link href='https://fonts.googleapis.com/css?family=Roboto+Condensed' rel='stylesheet' type='text/css'>
+        <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+        <link href="style.css" rel="stylesheet" type="text/css">
+        <script src="https://code.createjs.com/easeljs-0.8.1.min.js"></script>
+        <script src="https://code.createjs.com/tweenjs-0.6.1.min.js"></script>
+        <script src="thescript.js"></script>
+        <script>
+            var auth2;
+            var initClient = function() {
+                init();
+                gapi.load('auth2', function(){
+                    auth2 = gapi.auth2.init({
+                        client_id: '256313654719-omu1i4n9m8rvd7fbpfgqk8p110cqbh2m.apps.googleusercontent.com'
+                    });
+                    auth2.attachClickHandler('signin-button', {}, onSuccess, onFailure);
+                    if (!auth2.isSignedIn.get()) {
+                        renderButton();
+                    } else {
+                    }
+                });
+            }
+            var renderButton = function() {
+                gapi.signin2.render('my-signin2', {
+                    'scope': 'https://www.googleapis.com/auth/plus.login',
+                    'width': 500,
+                    'height': 100,
+                    'longtitle': true,
+                    'theme': 'dark',
+                    'onsuccess': onSuccess,
+                    'onfailure': onFailure
+                });
+            }
+            var signedIn = function() {
+            }
+            var notSignedIn = function() {
+            }
+            var onSuccess = function() {
+                document.getElementById("signin-screen").style.display = "none";
+            }
+            var onFailure = function() {
+            }
+            var signOut = function() {
+                var auth2 = gapi.auth2.getAuthInstance();
+                auth2.signOut().then(function () {
+                    console.log('User signed out.');
+                });
+                document.getElementById("signin-screen").style.display = "block";
+            }
+        </script>
+    </head> 
 
-        // The ID token you need to pass to your backend:
-        var id_token = googleUser.getAuthResponse().id_token;
-        console.log("ID Token: " + id_token);
-      };
-    </script>
-  </body>
+    <style>
+        #table {
+            position: absolute;
+            z-index: 1;
+        }
+        #signin-screen {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+        #signin-overlay {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background-color: white;
+            z-index: 101;
+            opacity: 0.65;
+        }
+        #my-signin2 {
+            position: relative;
+            z-index: 102;
+            width: 500;
+            top: 50%;
+            transform: translateY(-50%);
+            -webkit-transform: translateY(-50%);
+            opacity: 1;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        #signout-button {
+            position:absolute;
+            top: 0;
+            left: 0;
+            z-index: 50;
+        }
+    </style>
+
+    <body onload="initClient();">
+        <canvas id="table"></canvas>
+        <div id="signin-screen">
+            <div id="signin-overlay"></div>
+            <div id="my-signin2"></div>
+        </div>
+        <a href="#" onclick="signOut();" id="signout-button">Sign Out</a>
+    </body>
 </html>
