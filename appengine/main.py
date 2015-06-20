@@ -1,7 +1,7 @@
 from __future__ import print_function
 from flask import Flask, request, render_template, session, redirect, url_for
 from google.appengine.api.channel import channel
-import os
+import os, json
 
 app = Flask(__name__, static_url_path='')
 app.config['DEBUG'] = True
@@ -70,11 +70,16 @@ def ss_logoff(username=None):
 
 @app.route('/simonsays/requestupdate')
 def ss_request_update():
-    update_requested = request.args['category']
     user = current_players[session['username']]
-    if update_requested == 'players':
-        if user['channel_token']:
-            channel.send_message(user['channel_token'], str(ss_players))
+    if not user['channel_token']:
+        abort(404)
+    update_category = request.args['category']
+    message = {'category': update_category}
+    if update_category == 'players':
+        message['player_count'] = ss_players
+        message['player_names'] = current_players.keys()
+        for player in current_players:
+            channel.send_message(current_players[player]['channel_token'], json.dumps(message))
     else:
         abort(404)
     return ('', 204)
