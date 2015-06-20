@@ -1,15 +1,11 @@
 from __future__ import print_function
 from flask import Flask, request, render_template, session, redirect, url_for
 from google.appengine.api.channel import channel
-import uuid, os
+import os
 
 app = Flask(__name__, static_url_path='')
 app.config['DEBUG'] = True
 app.secret_key = os.urandom(24)
-
-my_uuid = unicode(uuid.uuid4())
-token = None
-ss_token = None
 
 
 @app.route('/')
@@ -30,7 +26,7 @@ def page_forbidden(e):
 
 # simon says code
 ss_players = 0
-current_players = []
+current_players = {}
 LOGIN_FORM = '''
             <form action="" method="post">
                 <p><input type=text name=username>
@@ -48,21 +44,20 @@ def simon_says():
             return 'That username has already been taken<br/>' + LOGIN_FORM
         else:
             session['username'] = formname
-            current_players.append(formname)
+            current_players[formname] = {}
             ss_players += 1
             return redirect(url_for('simon_says'))
     if 'username' not in session:
         # ask for signin
         return LOGIN_FORM
     else:
-        global ss_token
-        if not ss_token:
-            ss_token = start_simon_says()
+        username = session['username']
+        if 'channel_token' not in current_players[username]:
+            token = channel.create_channel(username)
+            current_players[username]['channel_token'] = token
         return render_template('simonsays.html', players=ss_players,
-                token=ss_token, username=session['username'])
-
-def start_simon_says():
-    return channel.create_channel(my_uuid)
+                token=current_players[username]['channel_token'],
+                username=username)
 
 @app.route('/simonsays/logoff')
 def ss_logoff():
@@ -70,13 +65,16 @@ def ss_logoff():
     name = session.pop('username', None)
     if name:
         ss_players -= 1
+        current_players.pop(name, None)
     return redirect(url_for('simon_says'))
 
 @app.route('/simonsays/requestupdate')
 def ss_request_update():
     update_requested = request.args['category']
+    user = current_players[session['username']]
     if update_requested == 'players':
-        channel.send_message(ss_token, str(ss_players))
+        if user['channel_token']:
+            channel.send_message(user['channel_token'], str(ss_players))
     else:
         abort(404)
     return ('', 204)
