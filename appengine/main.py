@@ -57,7 +57,7 @@ def simon_says():
             current_players[username]['channel_token'] = token
         return render_template('simonsays.html', players=ss_players,
                 token=current_players[username]['channel_token'],
-                username=username)
+                usernames=', '.join([x for x in current_players]))
 
 @app.route('/simonsays/logoff')
 def ss_logoff(username=None):
