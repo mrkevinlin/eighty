@@ -12,6 +12,7 @@
         <link href="style.css" rel="stylesheet" type="text/css">
         <script src="https://code.createjs.com/easeljs-0.8.1.min.js"></script>
         <script src="https://code.createjs.com/tweenjs-0.6.1.min.js"></script>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
         <script src="thescript.js"></script>
         <script>
             var auth2;
@@ -46,8 +47,18 @@
                 console.log('Name: ' + profile.getName());
                 console.log('Image URL: ' + profile.getImageUrl());
                 console.log('Email: ' + profile.getEmail());
-                var id_token = auth2.currentUser.get().getAuthResponse().id_token;
-                console.log("ID Token: " + id_token);
+                var idToken = auth2.currentUser.get().getAuthResponse().id_token;
+                console.log("ID Token: " + idToken);
+                $.ajax({
+                    type: "POST",
+                    url: "/game/user",
+                    data: {
+                        userId: idToken,
+                        action: "connect"
+                    }/*,
+                    success: success,
+                    dataType: dataType*/
+                });
             }
             var onFailure = function() {
             }

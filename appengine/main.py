@@ -12,6 +12,11 @@ def home():
 def game():
     return app.send_static_file('game.html')
 
+@app.route('/game/user', methods = ['POST'])
+def user_request():
+	print request.values
+	return ""
+
 @app.errorhandler(404)
 def page_not_found(e):
     return app.send_static_file('notfound.html')
