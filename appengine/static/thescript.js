@@ -326,18 +326,8 @@ function drawCard(suit, color, value, x, y) {
         });
     } else {
         card.addEventListener("mouseover", function() {
-            createjs.Tween.get(card).to({y: targetY},60);
-            // card.y-=30*pr;
-            // stage.update();
-        });
-
-        card.addEventListener("mouseout", function() {
-            if (!clicked) {
-                createjs.Tween.get(card).to({y: originalY},60);
-            }
-            // card.y+=30*pr;
-            // stage.update();
-        });
+            console.log("Mobile mouseover trash");
+        }
         card.addEventListener("click", function() {
             if (!clicked) {
                 cardboard.shadow = new createjs.Shadow("orange", 0, 0, 20);
