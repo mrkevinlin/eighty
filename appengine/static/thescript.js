@@ -141,7 +141,7 @@ function drawEveryone() {
     degrees = [];
     xpoints = [];
     ypoints = [];
-    radius = (table.height - 120*pr*pr - 60)/2;
+    radius = (table.height - 120*Math.pow(pr,3) - 60)/2;
     centerx = table.width/2;
     centery = radius;
     var stretch = (table.width - 80)/(radius*2);
@@ -301,7 +301,6 @@ function drawCard(suit, color, value, x, y) {
             // card.y-=30*pr;
             // stage.update();
         });
-
         card.addEventListener("mouseout", function() {
             if (!clicked) {
                 createjs.Tween.get(card).to({y: originalY},60);
@@ -309,7 +308,6 @@ function drawCard(suit, color, value, x, y) {
             // card.y+=30*pr;
             // stage.update();
         });
-
         card.addEventListener("click", function() {
             if (!clicked) {
                 cardboard.shadow = new createjs.Shadow("orange", 0, 0, 20);
@@ -327,6 +325,19 @@ function drawCard(suit, color, value, x, y) {
             // stage.update();
         });
     } else {
+        card.addEventListener("mouseover", function() {
+            createjs.Tween.get(card).to({y: targetY},60);
+            // card.y-=30*pr;
+            // stage.update();
+        });
+
+        card.addEventListener("mouseout", function() {
+            if (!clicked) {
+                createjs.Tween.get(card).to({y: originalY},60);
+            }
+            // card.y+=30*pr;
+            // stage.update();
+        });
         card.addEventListener("click", function() {
             if (!clicked) {
                 cardboard.shadow = new createjs.Shadow("orange", 0, 0, 20);
