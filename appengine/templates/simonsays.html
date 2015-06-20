@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<script type="text/javascript" src="/_ah/channel/jsapi" ></script>
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+	</head>
+	<style>
+		button {
+			padding: 50px;
+			font-size: 18px;
+			color: white;
+		}
+	</style>
+	<body>
+		<div>
+			Simon Says: there are currently {{ players }} players <br/>
+			Your username is: {{ username }}
+		</div>
+		<div>
+			<button style="background-color: purple;">One</button>
+			<button style="background-color: blue;">Two</button>
+			<button style="background-color: green;">Three</button>
+		</div>
+		<a href="{{ url_for('ss_logoff') }}">Logoff</a>
+		<script>
+			var onOpened = function() {
+				console.log('channel opened');
+				requestUpdate('players');
+			};
+			var onMessage = function(message) {
+				console.log('message received');
+				console.log(message.data);
+			};
+			var onError = function(error) {
+				console.log('error');
+			};
+			var onClose = function() {
+				console.log('channel closed');
+			};
+			var requestUpdate = function(category) {
+				$.get('simonsays/requestupdate', {'category': category});
+			};
+			channel = new goog.appengine.Channel('{{ token }}');
+			socket = channel.open();
+			socket.onopen = onOpened;
+			socket.onmessage = onMessage;
+			socket.onerror = onError;
+			socket.onclose = onClose;
+		</script>
+	</body>
+
+</html>
