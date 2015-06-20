@@ -4,6 +4,8 @@ var table;
 var context;
 var stage;
 var pr;
+
+var drawer;
 var players = [];
 var playerCount;
 var deck = [];
@@ -168,11 +170,13 @@ function drawEverything() {
     // drawTestPlay();
     // infoDump();
 
-    drawDrawerIcon();
     drawHand(0);
     // drawOpponentHand(); 
 
     drawEveryone();
+
+    drawDrawerIcon();
+    drawDrawer();
 
 // REMINDER:
 //
@@ -380,34 +384,62 @@ function drawCard(suit, color, value, x, y) {
 
 function drawDrawerIcon() {
     var drawerIcon = new createjs.Text("\uE88E", (64*pr) + "px Material Icons", "white");
+
+    var iconTarget = new createjs.Shape();
+    iconTarget.graphics.beginFill("white").drawRect(0, 0, drawerIcon.getMeasuredWidth(), drawerIcon.getMeasuredHeight());
+    drawerIcon.hitArea = iconTarget;
+
     drawerIcon.x = drawerIcon.y = 10;
     drawerIcon.alpha = 0.6;
+
+    drawerIcon.on("mouseover", function() {
+        createjs.Tween.get(drawerIcon)
+        .to({alpha:1}, 100);
+    });
+    drawerIcon.on("mouseout", function() {
+        createjs.Tween.get(drawerIcon)
+        .to({alpha:0.6}, 100);
+    })
+
     drawerIcon.on("click", function() {
         // alert("INFOOORRMATION!");
         createjs.Tween.get(drawerIcon)
         .to({alpha:1}, 100)
         .to({alpha:0.6}, 100);
-    });
-
-    drawerIcon.addEventListener("click", function() {
-        drawDrawer();
+        createjs.Tween.get(drawer).to({x: 0}, 60);
     });
 
     stage.addChild(drawerIcon);
 }
 
 function drawDrawer() {
-    var drawer = new createjs.Container();
+    drawer = new createjs.Container();
+    drawer.x = -200*pr;
 
     var drawerBack = new createjs.Shape();
-    drawerBack.graphics.beginFill("white").drawRect(0, 0, 200, table.height);
+    drawerBack.graphics.beginFill("white").drawRect(0, 0, 200*pr, table.height);
+
+    drawerBack.shadow = new createjs.Shadow("black", -5, 0, 50);
 
     var close = new createjs.Text("\uE14C", (36*pr) + "px Material Icons", "black");
     close.textAlign="right";
     close.x = 190;
     close.y = 10;
+
+    var target = new createjs.Shape();
+    target.graphics.beginFill("white").drawRect(-close.getMeasuredWidth(), 0, close.getMeasuredWidth(), close.getMeasuredHeight());
+    close.hitArea = target;
+
+    close.on("mouseover", function() {
+        close.color = "blue";
+    });
+
+    close.on("mouseout", function() {
+        close.color = "black";
+    });
+
     close.addEventListener("click", function() {
-        createjs.Tween.get(drawer).to({x: -200}, 200);
+        createjs.Tween.get(drawer).to({x: -200*pr}, 60);
     });
 
     drawer.addChild(drawerBack, close);
