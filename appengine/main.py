@@ -38,7 +38,7 @@ LOGIN_FORM = '''
 def simon_says():
     global ss_players
     if request.method == 'POST':
-        formname = request.form['username']
+        formname = unicode(request.form['username'])
         if formname in current_players:
             # duplicate, REJECTED
             return 'That username has already been taken<br/>' + LOGIN_FORM
