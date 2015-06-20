@@ -1,5 +1,4 @@
 "use strict";
-var isTouch;
 
 var table;
 var context;
@@ -18,7 +17,7 @@ var centerx;
 var centery;
 
 var mousemove = 0;
-var mouseclick = 0;
+var mousedown = 0;
 
 if (screen.availWidth > 768) {pr = 1;}
 else {pr = 4/3;}
@@ -30,25 +29,9 @@ WebFont.load({
   });
 
 function init() {
-    isTouch = ((('ontouchstart' in window) || window.DocumentTouch && document instanceof DocumentTouch)==true);
-    console.log(isTouch);
-
     table = document.getElementById("table");
     context = table.getContext('2d');
     stage = new createjs.Stage("table");
-
-    stage.on("stagemousemove", function() {
-        mousemove++;
-        var text1 = new createjs.Text("mousemove: " + mousemove, "64px Roboto Condensed", "black");
-        stage.addChild(text1);
-    });
-
-    stage.on("stagemousedown", function() {
-        mouseclick++;
-        var text2 = new createjs.Text("mousedown: " + mouseclick, "64px Roboto Condensed", "black");
-        text2.y = 100;
-        stage.addChild(text2);
-    });
 
     table.style.background = "#66BB6A";
     createjs.Ticker.setFPS(60);
@@ -57,6 +40,13 @@ function init() {
 
     sizeCanvas();
 
+    stage.on("stagemousemove", function() {
+        mousemove++;
+    });
+
+    stage.on("stagemousedown", function() {
+        mousedown++;
+    });
 
     playerCount = 5;
 
@@ -312,52 +302,36 @@ function drawCard(suit, color, value, x, y) {
     var targetY = y-30*pr
     var clicked = false;
 
-    if (!isTouch) {
-        card.addEventListener("mouseover", function() {
+    card.addEventListener("mouseover", function() {
+        console.log(mousemove - mousedown);
+        if (hasMouse()) {
             createjs.Tween.get(card).to({y: targetY},60);
-            // card.y-=30*pr;
-            // stage.update();
-        });
-        card.addEventListener("mouseout", function() {
-            if (!clicked) {
-                createjs.Tween.get(card).to({y: originalY},60);
-            }
-            // card.y+=30*pr;
-            // stage.update();
-        });
-        card.addEventListener("click", function() {
-            if (!clicked) {
-                cardboard.shadow = new createjs.Shadow("orange", 0, 0, 20);
-                createjs.Tween.get(card).to({y: targetY}, 60);
-                // card.y = targetY;
-                clicked = !clicked;
-            } else {
-                cardboard.shadow = new createjs.Shadow("black", 0, 1, 2);
-                // createjs.Tween.get(card).to({y: originalY}, 60);
-                // card.y = originalY;
-                clicked = !clicked;
-            }
-            // card.y+=30*pr;
-            // card.y-=60*pr;
-            // stage.update();
-        });
-    } else {
-        card.addEventListener("mouseover", function() {
-            console.log("Mobile mouseover trash");
-        });
-        card.addEventListener("click", function() {
-            if (!clicked) {
-                cardboard.shadow = new createjs.Shadow("orange", 0, 0, 20);
-                createjs.Tween.get(card).to({y: targetY}, 60);
-                clicked = !clicked;
-            } else {
-                cardboard.shadow = new createjs.Shadow("black", 0, 1, 2);
-                createjs.Tween.get(card).to({y: originalY}, 60);
-                clicked = !clicked;
-            }
-        });
-    }
+        }
+    });
 
+    card.addEventListener("mouseout", function() {
+        if (!clicked) {
+            createjs.Tween.get(card).to({y: originalY},60);
+        }
+    });
+
+    card.addEventListener("click", function() {
+        if (!clicked) {
+            cardboard.shadow = new createjs.Shadow("orange", 0, 0, 20);
+            createjs.Tween.get(card).to({y: targetY}, 60);
+            clicked = !clicked;
+        } else {
+            cardboard.shadow = new createjs.Shadow("black", 0, 1, 2);
+            if (!hasMouse()) {
+                createjs.Tween.get(card).to({y: originalY}, 60);
+            }
+            clicked = !clicked;
+        }
+        // card.y+=30*pr;
+        // card.y-=60*pr;
+        // stage.update();
+    });
+    
     card.mouseChildren = false;
 
     stage.addChild(card);
@@ -383,6 +357,10 @@ function drawDrawer() {
 
 function drawDrawerCloseIcon() {
 
+}
+
+function hasMouse() {
+    return mousemove > mousedown;
 }
 
 window.addEventListener('resize', function() {
