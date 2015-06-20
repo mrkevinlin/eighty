@@ -206,6 +206,7 @@ function drawTestPlay() {
 function drawHand(id) {
     var offset = 0;
     var handcenter = table.width/2;
+    var handContainer = new createjs.Container();
     for (var i = 0; i < players[id].hand.length; i++) {
         drawCard(players[id].hand[i].suitCode, players[id].hand[i].suitColor, players[id].hand[i].cardValue, (handcenter - ((players[id].hand.length/2 +1)*40*Math.pow(pr,3))) + offset, table.height-120*pr*pr);
         offset += 40*Math.pow(pr,3);
@@ -327,7 +328,7 @@ function drawCard(suit, color, value, x, y) {
     } else {
         card.addEventListener("mouseover", function() {
             console.log("Mobile mouseover trash");
-        }
+        });
         card.addEventListener("click", function() {
             if (!clicked) {
                 cardboard.shadow = new createjs.Shadow("orange", 0, 0, 20);
