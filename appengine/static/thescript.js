@@ -3,7 +3,7 @@
 var table;
 var context;
 var stage;
-var pr;
+var scale;
 
 var drawer;
 var players = [];
@@ -21,8 +21,8 @@ var centery;
 var mousemove = 0;
 var mousedown = 0;
 
-if (screen.availWidth > 768) {pr = 1;}
-else {pr = 4/3;}
+if (screen.availWidth > 768) {scale = 1;}
+else {scale = 4/3;}
 
 WebFont.load({
     google: {
@@ -103,7 +103,7 @@ function initializeHands() {
         }
     }
 
-    // Temporary promotion of trumps and trump value
+    // Temporary scaleomotion of trumps and trump value
 
     for (var i = 0; i < players[0].hand.length; i++) {
         if (players[0].hand[i].suit == "hearts") {
@@ -161,8 +161,6 @@ var Card = function(suit, suitCode, color, name, value, isTrump, points) {
 };
 
 function drawEverything() {
-    // Eventually have different draws based on what size the screen is at. Draw mobile
-    // layout for screen size < 800px or whatever arbitrary amount. Draw desktop otherwise.
     stage.removeAllChildren();
 
     //Testing methods
@@ -183,8 +181,6 @@ function drawEverything() {
 // Eventually figure out how to put each card container into a hand container to move hand container.
 //
 //
-
-
     // stage.update();
 }
 
@@ -193,7 +189,7 @@ function drawEveryone() {
     degrees = [];
     xpoints = [];
     ypoints = [];
-    radius = (table.height - 120*Math.pow(pr,3) - 60)/2;
+    radius = (table.height - 120*Math.pow(scale,3) - 60)/2;
     centerx = table.width/2;
     centery = radius;
     var stretch = (table.width - 80)/(radius*2);
@@ -228,7 +224,7 @@ function drawEveryone() {
 }
 
 function drawPlayer(id, x, y) {
-    var playerID = new createjs.Text(id, 48*pr + "px Roboto Condensed", "black");
+    var playerID = new createjs.Text(id, 48*scale + "px Roboto Condensed", "black");
     playerID.textAlign = "center";
     playerID.x = x;
     playerID.y = y;
@@ -238,9 +234,9 @@ function drawPlayer(id, x, y) {
 
 function drawTestIcons() {
 
-    drawMiniCard("\u2665", "red", "7", 300*pr, 50);
-    drawMiniCard("\u2660", "black", "Q", 400*pr, 50);
-    drawMiniCardDown(500*pr, 50);
+    drawMiniCard("\u2665", "red", "7", 300*scale, 50);
+    drawMiniCard("\u2660", "black", "Q", 400*scale, 50);
+    drawMiniCardDown(500*scale, 50);
 }
 
 function drawTestPlay() {
@@ -249,8 +245,8 @@ function drawTestPlay() {
     var arraysuit = ["\u2663", "\u2665", "\u2666", "\u2660", "\u2665", "\u2663"];
     var arrayvalue = ["J", "A", "7", "6", "6", "Q"];
     for (var i = 0; i < 6; i++) {
-        drawMiniCard(arraysuit[i], arraycolor[i], arrayvalue[i], table.width-(6*40*pr)-60+offset, 300);
-        offset += 40*pr;
+        drawMiniCard(arraysuit[i], arraycolor[i], arrayvalue[i], table.width-(6*40*scale)-60+offset, 300);
+        offset += 40*scale;
     }
 }
 
@@ -260,8 +256,8 @@ function drawHand(id) {
     var handcenter = table.width/2;
     var handContainer = new createjs.Container();
     for (var i = 0; i < players[id].hand.length; i++) {
-        drawCard(players[id].hand[i].suitCode, players[id].hand[i].suitColor, players[id].hand[i].cardName, (handcenter - ((players[id].hand.length/2 +1)*40*Math.pow(pr,3))) + offset, table.height-120*pr*pr);
-        offset += 40*Math.pow(pr,3);
+        drawCard(players[id].hand[i].suitCode, players[id].hand[i].suitColor, players[id].hand[i].cardName, (handcenter - ((players[id].hand.length/2 +1)*40*Math.pow(scale,3))) + offset, table.height-120*scale*scale);
+        offset += 40*Math.pow(scale,3);
     }
 }
 
@@ -277,14 +273,14 @@ function drawMiniCardDown(x, y) {
     var card = new createjs.Container();
 
     var cardboard = new createjs.Shape();
-    cardboard.graphics.beginFill('white').drawRoundRect(0, 0, 60*pr, 84*pr, 10);
+    cardboard.graphics.beginFill('white').drawRoundRect(0, 0, 60*scale, 84*scale, 10);
     cardboard.shadow = new createjs.Shadow("black", 0, 1, 2);
 
-    var picture = new createjs.Text("\uE410", 64*pr + "px Material Icons", "lightblue");
+    var picture = new createjs.Text("\uE410", 64*scale + "px Material Icons", "lightblue");
     picture.textBaseline = "top";
     picture.textAlign = "center";
-    picture.x = 30*pr;
-    picture.y = (84*pr - picture.getMeasuredHeight())/2;
+    picture.x = 30*scale;
+    picture.y = (84*scale - picture.getMeasuredHeight())/2;
 
     card.addChild(cardboard, picture);
     card.x = x;
@@ -299,20 +295,20 @@ function drawMiniCard(suit, color, value, x, y) {
     var card = new createjs.Container();
 
     var cardboard = new createjs.Shape();
-    cardboard.graphics.beginFill('white').drawRoundRect(0, 0, 60*pr, 84*pr, 10);
+    cardboard.graphics.beginFill('white').drawRoundRect(0, 0, 60*scale, 84*scale, 10);
     cardboard.shadow = new createjs.Shadow("black", 0, 1, 2);
 
-    var value = new createjs.Text(value, 36*pr + "px Roboto Condensed", color);
+    var value = new createjs.Text(value, 36*scale + "px Roboto Condensed", color);
     value.textBaseline = "top";
     value.textAlign = "center";
-    value.x = 30*pr;
-    value.y = 5*pr;
+    value.x = 30*scale;
+    value.y = 5*scale;
 
-    var suit = new createjs.Text(suit, 36*pr + "px Roboto Condensed", color);
+    var suit = new createjs.Text(suit, 36*scale + "px Roboto Condensed", color);
     suit.textBaseline = "top";
     suit.textAlign = "center";
-    suit.x = 30*pr;
-    suit.y = 5*pr + value.getMeasuredHeight();
+    suit.x = 30*scale;
+    suit.y = 5*scale + value.getMeasuredHeight();
 
     card.addChild(cardboard, suit, value);
     card.x = x;
@@ -325,27 +321,27 @@ function drawCard(suit, color, value, x, y) {
     var card = new createjs.Container();
 
     var cardboard = new createjs.Shape();
-    cardboard.graphics.beginFill('white').drawRoundRect(0, 0, 120*pr, 168*pr, 10);
+    cardboard.graphics.beginFill('white').drawRoundRect(0, 0, 120*scale, 168*scale, 10);
     cardboard.shadow = new createjs.Shadow("black", 0, 1, 2);
 
-    var value = new createjs.Text(value, 36*pr + "px Roboto Condensed", color);
+    var value = new createjs.Text(value, 36*scale + "px Roboto Condensed", color);
     value.textBaseline = "top";
     value.textAlign = "center";
-    value.y = 10*pr;
+    value.y = 10*scale;
 
-    var suit = new createjs.Text(suit, 36*pr + "px Roboto Condensed", color);
+    var suit = new createjs.Text(suit, 36*scale + "px Roboto Condensed", color);
     suit.textBaseline = "top";
     suit.textAlign = "left";
-    suit.x = 5*pr;
-    suit.y = 10*pr + value.getMeasuredHeight();
+    suit.x = 5*scale;
+    suit.y = 10*scale + value.getMeasuredHeight();
 
-    value.x = 5*pr + (suit.getMeasuredWidth()/2);
+    value.x = 5*scale + (suit.getMeasuredWidth()/2);
 
     card.addChild(cardboard, suit, value);
     card.x = x;
     card.y = y;
     var originalY = y;
-    var targetY = y-30*pr
+    var targetY = y-30*scale
     var clicked = false;
 
     card.addEventListener("mouseover", function() {
@@ -372,8 +368,8 @@ function drawCard(suit, color, value, x, y) {
             }
             clicked = !clicked;
         }
-        // card.y+=30*pr;
-        // card.y-=60*pr;
+        // card.y+=30*scale;
+        // card.y-=60*scale;
         // stage.update();
     });
     
@@ -383,7 +379,7 @@ function drawCard(suit, color, value, x, y) {
 }
 
 function drawDrawerIcon() {
-    var drawerIcon = new createjs.Text("\uE88E", (64*pr) + "px Material Icons", "white");
+    var drawerIcon = new createjs.Text("\uE88E", (64*scale) + "px Material Icons", "white");
 
     var iconTarget = new createjs.Shape();
     iconTarget.graphics.beginFill("white").drawRect(0, 0, drawerIcon.getMeasuredWidth(), drawerIcon.getMeasuredHeight());
@@ -414,16 +410,16 @@ function drawDrawerIcon() {
 
 function drawDrawer() {
     drawer = new createjs.Container();
-    drawer.x = -250*pr;
+    drawer.x = -250*window.devicePixelRatio;
 
     var drawerBack = new createjs.Shape();
-    drawerBack.graphics.beginFill("white").drawRect(0, 0, 250*pr, table.height);
+    drawerBack.graphics.beginFill("white").drawRect(0, 0, 250*window.devicePixelRatio, table.height);
 
     drawerBack.shadow = new createjs.Shadow("black", -5, 0, 50);
 
-    var close = new createjs.Text("\uE14C", (36*pr) + "px Material Icons", "black");
+    var close = new createjs.Text("\uE14C", (36*scale) + "px Material Icons", "black");
     close.textAlign="right";
-    close.x = 250*pr-10;
+    close.x = 250*window.devicePixelRatio-10;
     close.y = 10;
 
     var target = new createjs.Shape();
@@ -431,7 +427,7 @@ function drawDrawer() {
     close.hitArea = target;
 
     close.on("mouseover", function() {
-        close.color = "blue";
+        close.color = "#03A9F4";
     });
 
     close.on("mouseout", function() {
@@ -439,7 +435,7 @@ function drawDrawer() {
     });
 
     close.addEventListener("click", function() {
-        createjs.Tween.get(drawer).to({x: -250*pr}, 60);
+        createjs.Tween.get(drawer).to({x: -250*window.devicePixelRatio}, 60);
     });
 
     drawer.addChild(drawerBack, close);
@@ -469,9 +465,9 @@ function infoDump() {
     dh.x = 100;
     dh.y = 80;
 
-    var prtext = new createjs.Text("Pixel ratio: " + pr, font, color);
-    prtext.x = 100;
-    prtext.y = 110;
+    var scaletext = new createjs.Text("Pixel ratio: " + scale, font, color);
+    scaletext.x = 100;
+    scaletext.y = 110;
 
     var sw = new createjs.Text("Screen width: " + screen.width, font, color);
     sw.x = 100;
@@ -489,5 +485,5 @@ function infoDump() {
     ash.x = 100;
     ash.y = 230;
 
-    stage.addChild(dw, dh, prtext, sw, sh, asw, ash);
+    stage.addChild(dw, dh, scaletext, sw, sh, asw, ash);
 }
