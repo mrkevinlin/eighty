@@ -23,11 +23,11 @@ def game():
 
 @app.errorhandler(404)
 def page_not_found(e):
-    return app.send_static_file('notfound.html')
+    return app.send_static_file('notfound.html'), 404
 
 @app.errorhandler(403)
 def page_forbidden(e):
-    return app.send_static_file('forbidden.html')
+    return app.send_static_file('forbidden.html'), 403
 
 @app.route('/_ah/channel/disconnected/', methods=['POST'])
 def channel_disconnected():
