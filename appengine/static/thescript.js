@@ -70,11 +70,11 @@ function initStage() {
     });
 
     //Clicking ANYWHERE stows the drawer
-    stage.on("stagemousedown", function() {
-        if(drawer.x==0) {
-            createjs.Tween.get(drawer).to({x: -250*scale}, 60);
-        }
-    });
+    // stage.on("stagemousedown", function() {
+    //     if(drawer.x==0) {
+    //         createjs.Tween.get(drawer).to({x: -250*scale}, 60);
+    //     }
+    // });
 }
 
 function initPlayer() {
@@ -431,8 +431,8 @@ function drawDrawer() {
 
     var close = new createjs.Text("\uE14C", (36*scale*scale) + "px Material Icons", "black");
     close.textAlign="right";
-    close.x = 250*scale-10;
-    close.y = 10;
+    close.x = 250*scale-16;
+    close.y = 16;
 
     var target = new createjs.Shape();
     target.graphics.beginFill("white").drawRect(-close.getMeasuredWidth()-10, -10, close.getMeasuredWidth()+20, close.getMeasuredHeight()+20);
@@ -450,7 +450,24 @@ function drawDrawer() {
         createjs.Tween.get(drawer).to({x: -250*scale}, 60);
     });
 
-    drawer.addChild(drawerBack, close);
+    var titleIcon = new createjs.Text("\uE14D", (28*scale) + "px Material Icons", "#808080");
+    var title = new createjs.Text("Eighty", (24*scale) + "px Roboto Condensed", "black");
+    titleIcon.y = title.y = 18;
+
+    var settingsIcon = new createjs.Text("\uE8B8", (28*scale) + "px Material Icons", "#808080");
+    var settings = new createjs.Text("Settings", (24*scale) + "px Roboto Condensed", "black");
+    var helpIcon = new createjs.Text("\uE887", (28*scale) + "px Material Icons", "#808080");
+    var help = new createjs.Text("Help", (24*scale) + "px Roboto Condensed", "black");
+
+    settingsIcon.textBaseline = settings.textBaseline = 
+    helpIcon.textBaseline = help.textBaseline = "bottom";
+
+    titleIcon.x = settingsIcon.x = helpIcon.x = 18;
+    settings.x = help.x = title.x = titleIcon.getMeasuredWidth() + 36;
+    settingsIcon.y = settings.y = table.height - helpIcon.getMeasuredHeight() - 36;
+    helpIcon.y = help.y = table.height - 18;
+
+    drawer.addChild(drawerBack, titleIcon, title, close, settingsIcon, settings, helpIcon, help);
     stage.addChild(drawer);
 }
 
