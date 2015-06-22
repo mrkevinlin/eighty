@@ -10,6 +10,8 @@ var players = [];
 var playerCount;
 var deck = [];
 
+var handContainer;
+
 //Player ring
 var degrees;
 var xpoints;
@@ -77,7 +79,7 @@ function initStage() {
 }
 
 function initPlayer() {
-    playerCount = 5;
+    playerCount = 8;
 
     for (var i = 0; i < playerCount; i++) {
         players.push(new Player(i));
@@ -175,10 +177,10 @@ function drawEverything() {
     // drawTestPlay();
     // infoDump();
 
+    drawEveryone();
     drawHand(0);
     // drawOpponentHand(); 
 
-    drawEveryone();
     drawDrawerIcon();
     drawDrawer();
 
@@ -232,18 +234,45 @@ function drawPlayer(id, x, y) {
     stage.addChild(playerID);
 }
 
-//Currently a hard-coded method to demonstrate hand appearance.
 function drawHand(id) {
     var offset = 0;
-    var handcenter = table.width/2;
-    var handContainer = new createjs.Container();
+    handContainer = new createjs.Container();
+    // var boundX;
 
     for (var i = 0; i < players[id].hand.length; i++) {
-        handContainer.addChild(createHandCard(players[id].hand[i].suit, players[id].hand[i].cardName, 0 + offset, table.height-120*scale*scale));
+        handContainer.addChild(createHandCard(players[id].hand[i].suit, players[id].hand[i].cardName, offset, 0));
         offset += 40*Math.pow(scale,3);
     }
 
-    createjs.Tween.get(handContainer, {loop: true}).to({x : table.width}, 1500).to({x : 0}, 1500);
+    handContainer.x = table.width/2 - ((players[id].hand.length-1) * 40*Math.pow(scale,3) + 120)/2;
+    handContainer.y = table.height - 120*scale*scale;
+
+    var moveCards = false;
+    var restart = true;
+    var shift;
+    var oldX;
+    
+    stage.on("stagemousedown", function() {moveCards = true; });
+    stage.on("stagemouseup", function() {moveCards = false; restart = true;});
+    stage.on("stagemousemove", function(event) {
+        if (moveCards) {
+
+            if (restart) {
+                oldX = event.stageX;
+                restart = false;
+            } else {
+                    shift = event.stageX - oldX;
+                    if (shift > 0) {
+                        if (handContainer.x + shift > 40) {shift = 0;}
+                    } else {
+                        if (handContainer.x + handContainer.getBounds().width + shift < table.width - 130) {shift = 0;}
+                    }
+                    handContainer.x += shift;
+                    oldX = event.stageX;
+            }
+
+        }
+    });
 
     stage.addChild(handContainer);
 }
