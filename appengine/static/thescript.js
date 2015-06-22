@@ -241,46 +241,28 @@ function drawHand(id) {
     var restart = true;
     var shift;
     var oldX;
-    
-    // stage.on("stagemousedown", function() {moveCards = true; });
-    // stage.on("stagemouseup", function() {moveCards = false; restart = true;});
-    // stage.on("stagemousemove", function(event) {
-    //     if (moveCards) {
 
-    //         if (restart) {
-    //             oldX = event.stageX;
-    //             restart = false;
-    //         } else {
-    //                 shift = event.stageX - oldX;
-    //                 if (shift > 0) {
-    //                     if (handContainer.x + shift > 40) {shift = 0;}
-    //                 } else {
-    //                     if (handContainer.x + handContainer.getBounds().width + shift < table.width - 130) {shift = 0;}
-    //                 }
-    //                 handContainer.x += shift;
-    //                 oldX = event.stageX;
-    //         }
+    stage.on("stagemousedown", function() {moveCards = true; });
+    stage.on("stagemouseup", function() {moveCards = false; restart = true;});
+    stage.on("stagemousemove", function(event) {
+        if (moveCards) {
 
-    //     }
-    // });
+            if (restart) {
+                oldX = event.stageX;
+                restart = false;
+            } else {
+                    shift = event.stageX - oldX;
+                    if (shift > 0) {
+                        if (handContainer.x + shift > 40) {shift = 0;}
+                    } else {
+                        if (handContainer.x + handContainer.getBounds().width + shift < table.width - 130) {shift = 0;}
+                    }
+                    handContainer.x += shift;
+                    oldX = event.stageX;
+            }
 
-    stage.on("stagemouseup", function() {table.style.background = "purple";});
-
-    // stage.on("stagemousemove", function(event) {
-    //     if (restart) {
-    //         oldX = event.stageX;
-    //         restart = false;
-    //     } else {
-    //             shift = event.stageX - oldX;
-    //             if (shift > 0) {
-    //                 if (handContainer.x + shift > 40) {shift = 0;}
-    //             } else {
-    //                 if (handContainer.x + handContainer.getBounds().width + shift < table.width - 130) {shift = 0;}
-    //             }
-    //             handContainer.x += shift;
-    //             oldX = event.stageX;
-    //     }
-    // });
+        }
+    });
 
     stage.addChild(handContainer);
 }
