@@ -264,6 +264,8 @@ function drawHand(id) {
     //     }
     // });
 
+    stage.on("stagemouseup", function() {restart = true;});
+
     stage.on("stagemousemove", function(event) {
         if (restart) {
             oldX = event.stageX;
