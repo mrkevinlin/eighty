@@ -21,9 +21,6 @@ var centery;
 var mousemove = 0;
 var mousedown = 0;
 
-if (screen.availWidth > 768) {scale = 1;}
-else {scale = 4/3;}
-
 WebFont.load({
     google: {
       families: ['Roboto Condensed', 'Material Icons']
@@ -33,12 +30,14 @@ WebFont.load({
 function init() {
     table = document.getElementById("table");
 
+    if (screen.availWidth > 768) {scale = 1;}
+    else {scale = 4/3;}
+
     sizeCanvas();
     initStage();
     initPlayer();
     initDeck();
     initHands();
-
 
     drawEverything();
 }
@@ -87,8 +86,6 @@ function initPlayer() {
 
 function initDeck() {
     var suit = ["spades", "diamonds", "clubs", "hearts"];
-    var suitCode = ["\u2660", "\u2666", "\u2663", "\u2665"];
-    var suitColor = ["black", "red", "black", "red"];
     var names = ["2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A"];
     var points = 0;
 
@@ -97,7 +94,7 @@ function initDeck() {
             for (var v = 0; v <= 12; v++) {
                 if (v == 5) { points = 5; }
                 else if (v == 10 || v == 13) { points = 10; }
-                deck.push(new Card(suit[s], suitCode[s], suitColor[s], names[v], v+2, false, points));
+                deck.push(new Card(suit[s], names[v], v+2, false, points));
                 points = 0;
             }
         }
@@ -162,10 +159,8 @@ var Player = function(id) {
     this.hand = [];
 };
 
-var Card = function(suit, suitCode, color, name, value, isTrump, points) {
+var Card = function(suit, name, value, isTrump, points) {
     this.suit = suit;
-    this.suitCode = suitCode;
-    this.suitColor = color;
     this.cardName = name;
     this.cardValue = value;
     this.isTrump = isTrump;
@@ -184,7 +179,6 @@ function drawEverything() {
     // drawOpponentHand(); 
 
     drawEveryone();
-
     drawDrawerIcon();
     drawDrawer();
 
@@ -192,10 +186,7 @@ function drawEverything() {
 //
 // Eventually figure out how to put each card container into a hand container to move hand container.
 //
-//
-    // stage.update();
 }
-
 
 function drawEveryone() {
     degrees = [];
@@ -206,20 +197,17 @@ function drawEveryone() {
     centery = radius;
     var stretch = (table.width - 80)/(radius*2);
 
-    //For desktop.
     for (var i = 0; i < playerCount; i++) { 
 
         degrees.push(90 + (360/playerCount)*i);
 
-        if (window.innerWidth > window.innerHeight) { //For desktop
+        if (window.innerWidth > window.innerHeight) { //For landscape
             ypoints.push((radius * Math.sin(degrees[i]*2*Math.PI/360)) + centery);
 
             xpoints.push((stretch*(radius * Math.cos(degrees[i]*2*Math.PI/360))) + centerx);
 
             drawPlayer(i, xpoints[i], ypoints[i]);
-        }
-
-        else { //For mobile
+        } else { //For portrait
             ypoints.push((radius * Math.sin(degrees[i]*2*Math.PI/360)) + centery);
 
             var xpoint = Math.round(radius * Math.cos(degrees[i]*2*Math.PI/360));
@@ -244,33 +232,20 @@ function drawPlayer(id, x, y) {
     stage.addChild(playerID);
 }
 
-function drawTestIcons() {
-
-    drawMiniCard("\u2665", "red", "7", 300*scale, 50);
-    drawMiniCard("\u2660", "black", "Q", 400*scale, 50);
-    drawMiniCardDown(500*scale, 50);
-}
-
-function drawTestPlay() {
-    var offset = 0;
-    var arraycolor = ["black", "red", "red", "black", "red", "black"];
-    var arraysuit = ["\u2663", "\u2665", "\u2666", "\u2660", "\u2665", "\u2663"];
-    var arrayvalue = ["J", "A", "7", "6", "6", "Q"];
-    for (var i = 0; i < 6; i++) {
-        drawMiniCard(arraysuit[i], arraycolor[i], arrayvalue[i], table.width-(6*40*scale)-60+offset, 300);
-        offset += 40*scale;
-    }
-}
-
 //Currently a hard-coded method to demonstrate hand appearance.
 function drawHand(id) {
     var offset = 0;
     var handcenter = table.width/2;
     var handContainer = new createjs.Container();
+
     for (var i = 0; i < players[id].hand.length; i++) {
-        drawCard(players[id].hand[i].suitCode, players[id].hand[i].suitColor, players[id].hand[i].cardName, (handcenter - ((players[id].hand.length/2 +1)*40*Math.pow(scale,3))) + offset, table.height-120*scale*scale);
+        handContainer.addChild(createHandCard(players[id].hand[i].suit, players[id].hand[i].cardName, 0 + offset, table.height-120*scale*scale));
         offset += 40*Math.pow(scale,3);
     }
+
+    createjs.Tween.get(handContainer, {loop: true}).to({x : table.width}, 1500).to({x : 0}, 1500);
+
+    stage.addChild(handContainer);
 }
 
 function drawOpponentHand() {
@@ -303,7 +278,26 @@ function drawMiniCardDown(x, y) {
 
 //Save suit (unicode), value, and color variables in Card objects and consolidate those parameters
 //into a single Card object in this function. Pass in coordinates to start draw on.
-function drawMiniCard(suit, color, value, x, y) {
+function drawMiniCard(suit, value, x, y) {
+    var color;
+    if (suit == "diamonds" || suit == "hearts") {color = "red";}
+    else {color = "black";}
+
+    switch (suit) {
+        case "spades":
+            suit = "\u2660";
+            break;
+        case "diamonds":
+            suit = "\u2666";
+            break;
+        case "clubs":
+            suit = "\u2663";
+            break;
+        case "hearts":
+            suit = "\u2665";
+            break;
+    }
+
     var card = new createjs.Container();
 
     var cardboard = new createjs.Shape();
@@ -316,20 +310,39 @@ function drawMiniCard(suit, color, value, x, y) {
     value.x = 30*scale;
     value.y = 5*scale;
 
-    var suit = new createjs.Text(suit, 36*scale + "px Roboto Condensed", color);
-    suit.textBaseline = "top";
-    suit.textAlign = "center";
-    suit.x = 30*scale;
-    suit.y = 5*scale + value.getMeasuredHeight();
+    var suitIcon = new createjs.Text(suit, 36*scale + "px Roboto Condensed", color);
+    suitIcon.textBaseline = "top";
+    suitIcon.textAlign = "center";
+    suitIcon.x = 30*scale;
+    suitIcon.y = 5*scale + value.getMeasuredHeight();
 
-    card.addChild(cardboard, suit, value);
+    card.addChild(cardboard, suitIcon, value);
     card.x = x;
     card.y = y;
     stage.addChild(card);
 }
 
 //Pass in Card object as parameter and use suit and value variables to set text.
-function drawCard(suit, color, value, x, y) {
+function createHandCard(suit, value, x, y) {
+    var color;
+    if (suit == "diamonds" || suit == "hearts") {color = "red";}
+    else {color = "black";}
+
+    switch (suit) {
+        case "spades":
+            suit = "\u2660";
+            break;
+        case "diamonds":
+            suit = "\u2666";
+            break;
+        case "clubs":
+            suit = "\u2663";
+            break;
+        case "hearts":
+            suit = "\u2665";
+            break;
+    }
+
     var card = new createjs.Container();
 
     var cardboard = new createjs.Shape();
@@ -341,15 +354,15 @@ function drawCard(suit, color, value, x, y) {
     value.textAlign = "center";
     value.y = 10*scale;
 
-    var suit = new createjs.Text(suit, 36*scale + "px Roboto Condensed", color);
-    suit.textBaseline = "top";
-    suit.textAlign = "left";
-    suit.x = 5*scale;
-    suit.y = 10*scale + value.getMeasuredHeight();
+    var suitIcon = new createjs.Text(suit, 36*scale + "px Roboto Condensed", color);
+    suitIcon.textBaseline = "top";
+    suitIcon.textAlign = "left";
+    suitIcon.x = 5*scale;
+    suitIcon.y = 10*scale + value.getMeasuredHeight();
 
-    value.x = 5*scale + (suit.getMeasuredWidth()/2);
+    value.x = 5*scale + (suitIcon.getMeasuredWidth()/2);
 
-    card.addChild(cardboard, suit, value);
+    card.addChild(cardboard, suitIcon, value);
     card.x = x;
     card.y = y;
     var originalY = y;
@@ -380,14 +393,12 @@ function drawCard(suit, color, value, x, y) {
             }
             clicked = !clicked;
         }
-        // card.y+=30*scale;
-        // card.y-=60*scale;
-        // stage.update();
     });
     
     card.mouseChildren = false;
 
-    stage.addChild(card);
+    // stage.addChild(card);
+    return card;
 }
 
 function drawDrawerIcon() {
@@ -410,7 +421,6 @@ function drawDrawerIcon() {
     })
 
     drawerIcon.on("click", function() {
-        // alert("INFOOORRMATION!");
         createjs.Tween.get(drawerIcon)
         .to({alpha:1}, 100)
         .to({alpha:0.6}, 100);
@@ -459,8 +469,7 @@ function drawDrawer() {
     var helpIcon = new createjs.Text("\uE887", (28*scale*scale) + "px Material Icons", "#808080");
     var help = new createjs.Text("Help", (24*scale*scale) + "px Roboto Condensed", "black");
 
-    settingsIcon.textBaseline = settings.textBaseline = 
-    helpIcon.textBaseline = help.textBaseline = "bottom";
+    settingsIcon.textBaseline = settings.textBaseline = helpIcon.textBaseline = help.textBaseline = "bottom";
 
     titleIcon.x = settingsIcon.x = helpIcon.x = 18*scale;
     settings.x = help.x = title.x = titleIcon.getMeasuredWidth() + 36*scale;
@@ -481,6 +490,24 @@ window.addEventListener('resize', function() {
 });
 
 
+
+function drawTestIcons() {
+
+    drawMiniCard("\u2665", "red", "7", 300*scale, 50);
+    drawMiniCard("\u2660", "black", "Q", 400*scale, 50);
+    drawMiniCardDown(500*scale, 50);
+}
+
+function drawTestPlay() {
+    var offset = 0;
+    var arraycolor = ["black", "red", "red", "black", "red", "black"];
+    var arraysuit = ["\u2663", "\u2665", "\u2666", "\u2660", "\u2665", "\u2663"];
+    var arrayvalue = ["J", "A", "7", "6", "6", "Q"];
+    for (var i = 0; i < 6; i++) {
+        drawMiniCard(arraysuit[i], arraycolor[i], arrayvalue[i], table.width-(6*40*scale)-60+offset, 300);
+        offset += 40*scale;
+    }
+}
 
 function infoDump() {
     var color = "black";
