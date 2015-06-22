@@ -13,23 +13,34 @@
 	</style>
 	<body>
 		<div>
-			Simon Says: there are currently {{ players }} players <br/>
-			Your username is: {{ username }}
+			<h1>Simon Says</h1>
+			<div id="playerCount">There are currently {{ players }} players</div>
+			<div id="playerNames">Current players: {{ usernames }}</div>
 		</div>
 		<div>
 			<button style="background-color: purple;">One</button>
 			<button style="background-color: blue;">Two</button>
 			<button style="background-color: green;">Three</button>
 		</div>
-		<a href="{{ url_for('ss_logoff') }}">Logoff</a>
+		<a href="{{ url_for('.logoff') }}">Logoff</a>
 		<script>
 			var onOpened = function() {
 				console.log('channel opened');
 				requestUpdate('players');
 			};
 			var onMessage = function(message) {
-				console.log('message received');
-				console.log(message.data);
+				var data = JSON.parse(message.data);
+				console.log(data['category'] + ' message received');
+				switch (data['category']) {
+					case 'players':
+						var names = data['player_names'];
+						var count = data['player_count'];
+						$('#playerCount').text('There are currently ' + count + ' players');
+						$('#playerNames').text('Current players: ' + names.join([separator=', ']));
+						break;
+					default:
+						alert('server sent message of unknown type');
+				}
 			};
 			var onError = function(error) {
 				console.log('error');
