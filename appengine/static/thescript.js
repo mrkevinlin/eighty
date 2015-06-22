@@ -450,22 +450,22 @@ function drawDrawer() {
         createjs.Tween.get(drawer).to({x: -250*scale}, 60);
     });
 
-    var titleIcon = new createjs.Text("\uE14D", (28*scale) + "px Material Icons", "#808080");
-    var title = new createjs.Text("Eighty", (24*scale) + "px Roboto Condensed", "black");
+    var titleIcon = new createjs.Text("\uE14D", (28*scale*scale) + "px Material Icons", "#808080");
+    var title = new createjs.Text("Eighty", (24*scale*scale) + "px Roboto Condensed", "black");
     titleIcon.y = title.y = 18;
 
-    var settingsIcon = new createjs.Text("\uE8B8", (28*scale) + "px Material Icons", "#808080");
-    var settings = new createjs.Text("Settings", (24*scale) + "px Roboto Condensed", "black");
-    var helpIcon = new createjs.Text("\uE887", (28*scale) + "px Material Icons", "#808080");
-    var help = new createjs.Text("Help", (24*scale) + "px Roboto Condensed", "black");
+    var settingsIcon = new createjs.Text("\uE8B8", (28*scale*scale) + "px Material Icons", "#808080");
+    var settings = new createjs.Text("Settings", (24*scale*scale) + "px Roboto Condensed", "black");
+    var helpIcon = new createjs.Text("\uE887", (28*scale*scale) + "px Material Icons", "#808080");
+    var help = new createjs.Text("Help", (24*scale*scale) + "px Roboto Condensed", "black");
 
     settingsIcon.textBaseline = settings.textBaseline = 
     helpIcon.textBaseline = help.textBaseline = "bottom";
 
-    titleIcon.x = settingsIcon.x = helpIcon.x = 18;
-    settings.x = help.x = title.x = titleIcon.getMeasuredWidth() + 36;
-    settingsIcon.y = settings.y = table.height - helpIcon.getMeasuredHeight() - 36;
-    helpIcon.y = help.y = table.height - 18;
+    titleIcon.x = settingsIcon.x = helpIcon.x = 18*scale;
+    settings.x = help.x = title.x = titleIcon.getMeasuredWidth() + 36*scale;
+    settingsIcon.y = settings.y = table.height - helpIcon.getMeasuredHeight() - 36*scale;
+    helpIcon.y = help.y = table.height - 18*scale;
 
     drawer.addChild(drawerBack, titleIcon, title, close, settingsIcon, settings, helpIcon, help);
     stage.addChild(drawer);
