@@ -264,23 +264,23 @@ function drawHand(id) {
     //     }
     // });
 
-    stage.on("stagemouseup", function() {restart = true;});
+    stage.on("stagemouseup", function() {table.style.background = "purple";});
 
-    stage.on("stagemousemove", function(event) {
-        if (restart) {
-            oldX = event.stageX;
-            restart = false;
-        } else {
-                shift = event.stageX - oldX;
-                if (shift > 0) {
-                    if (handContainer.x + shift > 40) {shift = 0;}
-                } else {
-                    if (handContainer.x + handContainer.getBounds().width + shift < table.width - 130) {shift = 0;}
-                }
-                handContainer.x += shift;
-                oldX = event.stageX;
-        }
-    });
+    // stage.on("stagemousemove", function(event) {
+    //     if (restart) {
+    //         oldX = event.stageX;
+    //         restart = false;
+    //     } else {
+    //             shift = event.stageX - oldX;
+    //             if (shift > 0) {
+    //                 if (handContainer.x + shift > 40) {shift = 0;}
+    //             } else {
+    //                 if (handContainer.x + handContainer.getBounds().width + shift < table.width - 130) {shift = 0;}
+    //             }
+    //             handContainer.x += shift;
+    //             oldX = event.stageX;
+    //     }
+    // });
 
     stage.addChild(handContainer);
 }
