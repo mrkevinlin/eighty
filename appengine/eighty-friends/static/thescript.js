@@ -14,8 +14,6 @@ var handContainer;
 
 //Player ring
 var degrees;
-var xpoints;
-var ypoints;
 var radius;
 var centerx;
 var centery;
@@ -65,16 +63,47 @@ function initStage() {
 }
 
 function initPlayer() {
-    playerCount = 4;
+    playerCount = 5;
 
     for (var i = 0; i < playerCount; i++) {
         players.push(new Player(i));
     }
+
+    degrees = [];
+    initPlayerCoordinates();
+}
+
+function initPlayerCoordinates() {
+    degrees.length = 0;
+    radius = (table.height - 120*Math.pow(scale,3) - 60)/2;
+    centerx = table.width/2;
+    centery = radius;
+    var stretch = (table.width - 80)/(radius*2);
+
+    for (var i = 0; i < playerCount; i++) { 
+
+        degrees.push(90 + (360/playerCount)*i);
+
+        var xpoint = Math.round(stretch * radius * Math.cos(degrees[i]*2*Math.PI/360));
+        var ypoint = (radius * Math.sin(degrees[i]*2*Math.PI/360)) + centery;
+
+        if (window.innerWidth > window.innerHeight) { xpoint += centerx; }
+        else {
+            if (xpoint == 0) { xpoint = centerx; }
+            else if (xpoint < 0) { xpoint = 36*scale; }
+            else { xpoint = table.width - 36*scale; }
+        }
+
+        players[i].xcoord = xpoint;
+        players[i].ycoord = ypoint;
+    }
 }
 
 var Player = function(id) {
-    this.id = id;
+    this.playerID = id;
     this.hand = [];
+    this.xcoord;
+    this.ycoord;
 };
 
 function initDeck() {
@@ -92,6 +121,8 @@ function initDeck() {
                 points = 0;
             }
         }
+        deck.push(new Card("trump", "S", 19, true, 0));
+        deck.push(new Card("trumpbig", "B", 20, true, 0));
     }
 
     deck = shuffle(deck);
@@ -117,7 +148,7 @@ function initTrump(suit, value) {
 
 function initHands() {
     var dealID = 0;
-    var cardCount = deck.length;
+    var cardCount = deck.length - calculateDiscard();
     for (var d = 0; d < cardCount; d++) {
         players[dealID].hand.push(deck[d]);
         dealID++;
@@ -126,7 +157,6 @@ function initHands() {
         }
     }
 
-    // Should do for player only
     players[0].hand.sort(function(a, b) {
         if (a.isTrump && !b.isTrump) {
             return 1;
@@ -134,7 +164,7 @@ function initHands() {
             return -1;
         } else if (a.isTrump && b.isTrump) {
             if (a.cardValue == 15 && b.cardValue == 15) {
-                if (a.suit>b.suit) {
+                if (a.suit > b.suit) {
                     return 1;
                 } else if (a.suit < b.suit) {
                     return -1;
@@ -145,7 +175,7 @@ function initHands() {
                 return a.cardValue - b.cardValue;
             }
         } else {
-            if (a.suit>b.suit) {
+            if (a.suit > b.suit) {
                 return 1;
             } else if (a.suit < b.suit) {
                 return -1;
@@ -156,11 +186,17 @@ function initHands() {
     });
 }
 
+function calculateDiscard() {
+    var discard = (playerCount == 6) ? 6 : 8;
+    return discard;
+}
+
 function drawEverything() {
     stage.removeAllChildren();
 
+    drawStart();
     drawEveryone();
-    drawHand(0);
+    drawHand();
     // drawOpponentHand(); 
     drawDrawerIcon();
     drawDrawer();
@@ -171,38 +207,33 @@ function drawEverything() {
     // infoDump();
 }
 
+function drawStart() {
+    var startButton = new createjs.Container();
+    var startText = new createjs.Text("GO!", 36*scale + "px Roboto Condensed", "white");
+    var startColor = new createjs.Shape();
+    startColor.graphics.beginFill("#03A9F4").drawRoundRect(0, 0, 120, 60, 10);
+    startText.textAlign = "center";
+    startText.textBaseline = "middle";
+    startText.x = 120/2;
+    startText.y = 60/2;
+
+    startButton.addChild(startColor, startText);
+    startButton.x = table.width - 220;
+    startButton.y = 100;
+
+    startButton.addEventListener("click", animateDeal);
+
+    stage.addChild(startButton);
+}
+
+function animateDeal() {
+    startx = centerx;
+    starty = 0;
+}
+
 function drawEveryone() {
-    degrees = [];
-    xpoints = [];
-    ypoints = [];
-    radius = (table.height - 120*Math.pow(scale,3) - 60)/2;
-    centerx = table.width/2;
-    centery = radius;
-    var stretch = (table.width - 80)/(radius*2);
-
     for (var i = 0; i < playerCount; i++) { 
-
-        degrees.push(90 + (360/playerCount)*i);
-
-        if (window.innerWidth > window.innerHeight) { //For landscape
-            ypoints.push((radius * Math.sin(degrees[i]*2*Math.PI/360)) + centery);
-
-            xpoints.push((stretch*(radius * Math.cos(degrees[i]*2*Math.PI/360))) + centerx);
-
-            drawPlayer(i, xpoints[i], ypoints[i]);
-        } else { //For portrait
-            ypoints.push((radius * Math.sin(degrees[i]*2*Math.PI/360)) + centery);
-
-            var xpoint = Math.round(radius * Math.cos(degrees[i]*2*Math.PI/360));
-            if (xpoint == 0) {xpoint = centerx;}
-            else if (xpoint < 0) {xpoint = 30;}
-            else if (xpoint > 0) {xpoint = table.width - 30;}
-
-            xpoints.push(xpoint);
-
-            drawPlayer(i, xpoints[i], ypoints[i]);
-        }
-
+            drawPlayer(players[i].playerID, players[i].xcoord, players[i].ycoord);
     }
 }
 
@@ -215,16 +246,16 @@ function drawPlayer(id, x, y) {
     stage.addChild(playerID);
 }
 
-function drawHand(id) {
+function drawHand() {
     var offset = 0;
     handContainer = new createjs.Container();
 
-    for (var i = 0; i < players[id].hand.length; i++) {
-        handContainer.addChild(createHandCard(players[id].hand[i].suit, players[id].hand[i].cardName, offset, 0));
+    for (var i = 0; i < players[0].hand.length; i++) {
+        handContainer.addChild(drawCard(players[0].hand[i].suit, players[0].hand[i].cardName, offset, 0));
         offset += 40*Math.pow(scale,3);
     }
 
-    handContainer.x = table.width/2 - ((players[id].hand.length-1) * 40*Math.pow(scale,3) + 120)/2;
+    handContainer.x = table.width/2 - ((players[0].hand.length-1) * 40*Math.pow(scale,3) + 120)/2;
     handContainer.y = table.height - 120*scale*scale;
 
 
@@ -275,10 +306,10 @@ function drawMiniCardDown(x, y) {
     cardboard.shadow = new createjs.Shadow("black", 0, 1, 2);
 
     var picture = new createjs.Text("\uE410", 64*scale + "px Material Icons", "lightblue");
-    picture.textBaseline = "top";
+    picture.textBaseline = "middle";
     picture.textAlign = "center";
     picture.x = 30*scale;
-    picture.y = (84*scale - picture.getMeasuredHeight())/2;
+    picture.y = 42*scale;
 
     card.addChild(cardboard, picture);
     card.x = x;
@@ -290,7 +321,7 @@ function drawMiniCardDown(x, y) {
 //Save suit (unicode), value, and color variables in Card objects and consolidate those parameters
 //into a single Card object in this function. Pass in coordinates to start draw on.
 function drawMiniCard(suit, value, x, y) {
-    var color = (suit == "diamonds" || suit == "hearts") ? "red" : "black";
+    var color = (suit == "diamonds" || suit == "hearts" || suit == "trumpbig") ? "red" : "black";
 
     switch (suit) {
         case "spades":
@@ -304,6 +335,12 @@ function drawMiniCard(suit, value, x, y) {
             break;
         case "hearts":
             suit = "\u2665";
+            break;
+        case "trump":
+            suit = "\uE83A";
+            break;
+        case "trumpbig":
+            suit = "\uE838";
             break;
     }
 
@@ -331,9 +368,29 @@ function drawMiniCard(suit, value, x, y) {
     stage.addChild(card);
 }
 
+function drawCardDown(x, y) {
+    var card = new createjs.Container();
+
+    var cardboard = new createjs.Shape();
+    cardboard.graphics.beginFill('white').drawRoundRect(0, 0, 120*scale, 168*scale, 10);
+    cardboard.shadow = new createjs.Shadow("black", 0, 1, 2);
+
+    var picture = new createjs.Text("\uE410", 80*scale + "px Material Icons", "lightblue");
+    picture.textBaseline = "middle";
+    picture.textAlign = "center";
+    picture.x = 60*scale;
+    picture.y = 84*scale;
+
+    card.addChild(cardboard, picture);
+    card.x = x;
+    card.y = y;
+    
+    stage.addChild(card);
+}
+
 //Pass in Card object as parameter and use suit and value variables to set text.
-function createHandCard(suit, value, x, y) {
-    var color = (suit == "diamonds" || suit == "hearts") ? "red" : "black";
+function drawCard(suit, value, x, y) {
+    var color = (suit == "diamonds" || suit == "hearts" || suit == "trumpbig") ? "red" : "black";
 
     switch (suit) {
         case "spades":
@@ -347,6 +404,12 @@ function createHandCard(suit, value, x, y) {
             break;
         case "hearts":
             suit = "\u2665";
+            break;
+        case "trump":
+            suit = "\u2606";
+            break;
+        case "trumpbig":
+            suit = "\u2605";
             break;
     }
 
@@ -486,6 +549,7 @@ function drawDrawer() {
 
 window.addEventListener('resize', function() {
     sizeCanvas();
+    initPlayerCoordinates();
     drawEverything();
 });
 
