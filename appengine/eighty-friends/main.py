@@ -11,7 +11,7 @@ app.register_blueprint(simon_says, url_prefix='/simonsays')
 app.config['DEBUG'] = True
 app.secret_key = os.urandom(24)
 
-
+app.jinja_env.line_statement_prefix = '#'
 
 @app.route('/')
 def home():
