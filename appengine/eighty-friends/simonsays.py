@@ -56,6 +56,7 @@ def logoff(username=None):
         print('popping off', name)
 
         current_players.pop(name, None)
+    send_channel_update('players')
     return redirect(url_for('.game'))
 
 def channel_disconnected():
@@ -71,13 +72,16 @@ def request_update():
     if not user['channel_token']:
         abort(404)
     update_category = request.args['category']
-    message = {'category': update_category}
-    if update_category == 'players':
+    send_channel_update(update_category)
+    return ('', 204)
+
+def send_channel_update(category):
+    message = {'category': category}
+    if category == 'players':
         message['player_count'] = ss_players
         message['player_names'] = current_players.keys()
         for player in current_players:
             channel.send_message(current_players[player]['channel_token'], json.dumps(message))
     else:
         abort(404)
-    return ('', 204)
 
