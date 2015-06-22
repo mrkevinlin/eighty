@@ -56,6 +56,7 @@ function initStage() {
     createjs.Ticker.setFPS(60);
     createjs.Ticker.addEventListener("tick", stage);
     stage.enableMouseOver(30);
+    createjs.Touch.enable(stage);
 
     stage.on("stagemousemove", function() {
         mousemove++;
