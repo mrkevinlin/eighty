@@ -32,32 +32,12 @@ WebFont.load({
 
 function init() {
     table = document.getElementById("table");
-    context = table.getContext('2d');
-    stage = new createjs.Stage("table");
-
-    table.style.background = "#66BB6A";
-    createjs.Ticker.setFPS(60);
-    createjs.Ticker.addEventListener("tick", stage);
-    stage.enableMouseOver(30);
 
     sizeCanvas();
-
-    stage.on("stagemousemove", function() {
-        mousemove++;
-    });
-
-    stage.on("stagemousedown", function() {
-        mousedown++;
-    });
-
-    playerCount = 5;
-
-    for (var i = 0; i < playerCount; i++) {
-        players.push(new Player(i));
-    }
-
-    initializeDeck();
-    initializeHands();
+    initStage();
+    initPlayer();
+    initDeck();
+    initHands();
 
 
     drawEverything();
@@ -73,7 +53,39 @@ function sizeCanvas() {
     } else {table.height = 720;}
 }
 
-function initializeDeck() {
+function initStage() {
+    stage = new createjs.Stage("table");
+
+    table.style.background = "#66BB6A";
+    createjs.Ticker.setFPS(60);
+    createjs.Ticker.addEventListener("tick", stage);
+    stage.enableMouseOver(30);
+
+    stage.on("stagemousemove", function() {
+        mousemove++;
+    });
+
+    stage.on("stagemousedown", function() {
+        mousedown++;
+    });
+
+    //Clicking ANYWHERE stows the drawer
+    stage.on("stagemousedown", function() {
+        if(drawer.x==0) {
+            createjs.Tween.get(drawer).to({x: -250*scale}, 60);
+        }
+    });
+}
+
+function initPlayer() {
+    playerCount = 5;
+
+    for (var i = 0; i < playerCount; i++) {
+        players.push(new Player(i));
+    }
+}
+
+function initDeck() {
     var suit = ["spades", "diamonds", "clubs", "hearts"];
     var suitCode = ["\u2660", "\u2666", "\u2663", "\u2665"];
     var suitColor = ["black", "red", "black", "red"];
@@ -92,7 +104,7 @@ function initializeDeck() {
     }
 }
 
-function initializeHands() {
+function initHands() {
     var dealID = 0;
     var cardCount = deck.length;
     for (var d = 0; d < cardCount; d++) {
@@ -103,7 +115,7 @@ function initializeHands() {
         }
     }
 
-    // Temporary scaleomotion of trumps and trump value
+    // Temporary promotion of trumps and trump value
 
     for (var i = 0; i < players[0].hand.length; i++) {
         if (players[0].hand[i].suit == "hearts") {
@@ -379,7 +391,7 @@ function drawCard(suit, color, value, x, y) {
 }
 
 function drawDrawerIcon() {
-    var drawerIcon = new createjs.Text("\uE88E", (64*scale) + "px Material Icons", "white");
+    var drawerIcon = new createjs.Text("\uE88E", (64*scale*scale) + "px Material Icons", "white");
 
     var iconTarget = new createjs.Shape();
     iconTarget.graphics.beginFill("white").drawRect(0, 0, drawerIcon.getMeasuredWidth(), drawerIcon.getMeasuredHeight());
@@ -410,16 +422,16 @@ function drawDrawerIcon() {
 
 function drawDrawer() {
     drawer = new createjs.Container();
-    drawer.x = -250*window.devicePixelRatio;
+    drawer.x = -250*scale;
 
     var drawerBack = new createjs.Shape();
-    drawerBack.graphics.beginFill("white").drawRect(0, 0, 250*window.devicePixelRatio, table.height);
+    drawerBack.graphics.beginFill("white").drawRect(0, 0, 250*scale, table.height);
 
     drawerBack.shadow = new createjs.Shadow("black", -5, 0, 50);
 
-    var close = new createjs.Text("\uE14C", (36*scale) + "px Material Icons", "black");
+    var close = new createjs.Text("\uE14C", (36*scale*scale) + "px Material Icons", "black");
     close.textAlign="right";
-    close.x = 250*window.devicePixelRatio-10;
+    close.x = 250*scale-10;
     close.y = 10;
 
     var target = new createjs.Shape();
@@ -435,7 +447,7 @@ function drawDrawer() {
     });
 
     close.addEventListener("click", function() {
-        createjs.Tween.get(drawer).to({x: -250*window.devicePixelRatio}, 60);
+        createjs.Tween.get(drawer).to({x: -250*scale}, 60);
     });
 
     drawer.addChild(drawerBack, close);
