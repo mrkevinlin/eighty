@@ -45,13 +45,8 @@ function init() {
 }
 
 function sizeCanvas() {
-    if (window.innerWidth >= 720) {
-        table.width = window.innerWidth;
-    } else {table.width = 720;}
-
-    if (window.innerHeight >= 720) {
-        table.height = window.innerHeight;
-    } else {table.height = 720;}
+    table.width = (window.innerWidth >= 720) ? window.innerWidth : 720;
+    table.height = (window.innerHeight >= 720) ? window.innerHeight : 720;
 }
 
 function initStage() {
@@ -172,22 +167,16 @@ var Card = function(suit, name, value, isTrump, points) {
 function drawEverything() {
     stage.removeAllChildren();
 
+    drawEveryone();
+    drawHand(0);
+    // drawOpponentHand(); 
+    drawDrawerIcon();
+    drawDrawer();
+
     //Testing methods
     // drawTestIcons();
     // drawTestPlay();
     // infoDump();
-
-    drawEveryone();
-    drawHand(0);
-    // drawOpponentHand(); 
-
-    drawDrawerIcon();
-    drawDrawer();
-
-// REMINDER:
-//
-// Eventually figure out how to put each card container into a hand container to move hand container.
-//
 }
 
 function drawEveryone() {
@@ -237,7 +226,6 @@ function drawPlayer(id, x, y) {
 function drawHand(id) {
     var offset = 0;
     handContainer = new createjs.Container();
-    // var boundX;
 
     for (var i = 0; i < players[id].hand.length; i++) {
         handContainer.addChild(createHandCard(players[id].hand[i].suit, players[id].hand[i].cardName, offset, 0));
@@ -308,9 +296,7 @@ function drawMiniCardDown(x, y) {
 //Save suit (unicode), value, and color variables in Card objects and consolidate those parameters
 //into a single Card object in this function. Pass in coordinates to start draw on.
 function drawMiniCard(suit, value, x, y) {
-    var color;
-    if (suit == "diamonds" || suit == "hearts") {color = "red";}
-    else {color = "black";}
+    var color = (suit == "diamonds" || suit == "hearts") ? "red" : "black";
 
     switch (suit) {
         case "spades":
@@ -353,9 +339,7 @@ function drawMiniCard(suit, value, x, y) {
 
 //Pass in Card object as parameter and use suit and value variables to set text.
 function createHandCard(suit, value, x, y) {
-    var color;
-    if (suit == "diamonds" || suit == "hearts") {color = "red";}
-    else {color = "black";}
+    var color = (suit == "diamonds" || suit == "hearts") ? "red" : "black";
 
     switch (suit) {
         case "spades":
