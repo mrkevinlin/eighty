@@ -8,17 +8,10 @@ simon_says = Blueprint('simonsays', __name__)
 
 ss_players = 0
 current_players = {}
-LOGIN_FORM = '''
-            <form action="" method="post">
-                <p><input type=text name=username>
-                <p><input type=submit value=Login>
-            </form>
-            '''
 
 @simon_says.route('', methods=['GET','POST'])
 def game():
     if 'username' not in session:
-        # ask for signin
         return redirect(url_for('.login'))
     else:
         username = session['username']
@@ -35,7 +28,6 @@ def login():
     if request.method == 'POST' and 'username' in request.form:
         formname = unicode(request.form['username'])
         if formname in current_players:
-            # duplicate, REJECTED
             flash('That username has already been taken')
             return redirect(url_for('.login'))
         elif not formname:
@@ -53,8 +45,6 @@ def login():
 def logoff(username=None):
     name = session.pop('username', None) or username
     if name:
-        print('popping off', name)
-
         current_players.pop(name, None)
     send_channel_update('players')
     return redirect(url_for('.game'))
@@ -62,7 +52,6 @@ def logoff(username=None):
 def channel_disconnected():
     global ss_players
     ss_players -= 1
-    print(ss_players)
     client_id = request.form['from']
     return logoff(username=client_id.split(':')[-1])
 
