@@ -90,8 +90,9 @@ function initDeck() {
     for (var i = 0; i < Math.floor(playerCount/2); i++) {
         for (var s = 0; s < 4; s++) {
             for (var v = 0; v <= 12; v++) {
-                if (v == 5) { points = 5; }
-                else if (v == 10 || v == 13) { points = 10; }
+                if (v==5 || v==10 || v==13) {
+                    points = (v==5) ? 5:10;
+                }
                 deck.push(new Card(suit[s], names[v], v+2, false, points));
                 points = 0;
             }
@@ -241,25 +242,41 @@ function drawHand(id) {
     var shift;
     var oldX;
     
-    stage.on("stagemousedown", function() {moveCards = true; });
-    stage.on("stagemouseup", function() {moveCards = false; restart = true;});
+    // stage.on("stagemousedown", function() {moveCards = true; });
+    // stage.on("stagemouseup", function() {moveCards = false; restart = true;});
+    // stage.on("stagemousemove", function(event) {
+    //     if (moveCards) {
+
+    //         if (restart) {
+    //             oldX = event.stageX;
+    //             restart = false;
+    //         } else {
+    //                 shift = event.stageX - oldX;
+    //                 if (shift > 0) {
+    //                     if (handContainer.x + shift > 40) {shift = 0;}
+    //                 } else {
+    //                     if (handContainer.x + handContainer.getBounds().width + shift < table.width - 130) {shift = 0;}
+    //                 }
+    //                 handContainer.x += shift;
+    //                 oldX = event.stageX;
+    //         }
+
+    //     }
+    // });
+
     stage.on("stagemousemove", function(event) {
-        if (moveCards) {
-
-            if (restart) {
+        if (restart) {
+            oldX = event.stageX;
+            restart = false;
+        } else {
+                shift = event.stageX - oldX;
+                if (shift > 0) {
+                    if (handContainer.x + shift > 40) {shift = 0;}
+                } else {
+                    if (handContainer.x + handContainer.getBounds().width + shift < table.width - 130) {shift = 0;}
+                }
+                handContainer.x += shift;
                 oldX = event.stageX;
-                restart = false;
-            } else {
-                    shift = event.stageX - oldX;
-                    if (shift > 0) {
-                        if (handContainer.x + shift > 40) {shift = 0;}
-                    } else {
-                        if (handContainer.x + handContainer.getBounds().width + shift < table.width - 130) {shift = 0;}
-                    }
-                    handContainer.x += shift;
-                    oldX = event.stageX;
-            }
-
         }
     });
 
