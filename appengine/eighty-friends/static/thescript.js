@@ -20,9 +20,6 @@ var radius;
 var centerx;
 var centery;
 
-var mousemove = 0;
-var mousedown = 0;
-
 WebFont.load({
     google: {
       families: ['Roboto Condensed', 'Material Icons']
@@ -39,6 +36,7 @@ function init() {
     initStage();
     initPlayer();
     initDeck();
+    initTrump("hearts", 2);
     initHands();
 
     drawEverything();
@@ -58,14 +56,6 @@ function initStage() {
     stage.enableMouseOver(30);
     createjs.Touch.enable(stage);
 
-    stage.on("stagemousemove", function() {
-        mousemove++;
-    });
-
-    stage.on("stagemousedown", function() {
-        mousedown++;
-    });
-
     //Clicking ANYWHERE stows the drawer
     // stage.on("stagemousedown", function() {
     //     if(drawer.x==0) {
@@ -75,12 +65,17 @@ function initStage() {
 }
 
 function initPlayer() {
-    playerCount = 8;
+    playerCount = 4;
 
     for (var i = 0; i < playerCount; i++) {
         players.push(new Player(i));
     }
 }
+
+var Player = function(id) {
+    this.id = id;
+    this.hand = [];
+};
 
 function initDeck() {
     var suit = ["spades", "diamonds", "clubs", "hearts"];
@@ -98,6 +93,26 @@ function initDeck() {
             }
         }
     }
+
+    deck = shuffle(deck);
+}
+
+var Card = function(suit, name, value, isTrump, points) {
+    this.suit = suit;
+    this.cardName = name;
+    this.cardValue = value;
+    this.isTrump = isTrump;
+    this.points = points;
+};
+
+function initTrump(suit, value) {
+    for (var i = 0; i < deck.length; i++) {
+        deck[i].isTrump = (deck[i].suit == suit) ? true : false;
+        if (deck[i].cardValue == value) {
+            deck[i].cardValue = 15;
+            deck[i].isTrump = true;
+        }
+    }
 }
 
 function initHands() {
@@ -108,18 +123,6 @@ function initHands() {
         dealID++;
         if (dealID >= players.length) {
             dealID = 0;
-        }
-    }
-
-    // Temporary promotion of trumps and trump value
-
-    for (var i = 0; i < players[0].hand.length; i++) {
-        if (players[0].hand[i].suit == "hearts") {
-            players[0].hand[i].isTrump = true;
-        }
-        if (players[0].hand[i].cardValue == 2) {
-            players[0].hand[i].cardValue = 15;
-            players[0].hand[i].isTrump = true;
         }
     }
 
@@ -152,19 +155,6 @@ function initHands() {
         }
     });
 }
-
-var Player = function(id) {
-    this.id = id;
-    this.hand = [];
-};
-
-var Card = function(suit, name, value, isTrump, points) {
-    this.suit = suit;
-    this.cardName = name;
-    this.cardValue = value;
-    this.isTrump = isTrump;
-    this.points = points;
-};
 
 function drawEverything() {
     stage.removeAllChildren();
@@ -237,16 +227,18 @@ function drawHand(id) {
     handContainer.x = table.width/2 - ((players[id].hand.length-1) * 40*Math.pow(scale,3) + 120)/2;
     handContainer.y = table.height - 120*scale*scale;
 
+
     var moveCards = false;
     var restart = true;
     var shift;
     var oldX;
 
+    // NOTE: REMOVED ALL EVENT LISTENERS FOR STAGE HERE (in case more listeners are added to stage in the future and I forget about this)
+    stage.removeAllEventListeners();
     stage.on("stagemousedown", function() {moveCards = true; });
     stage.on("stagemouseup", function() {moveCards = false; restart = true;});
     stage.on("stagemousemove", function(event) {
         if (moveCards) {
-
             if (restart) {
                 oldX = event.stageX;
                 restart = false;
@@ -385,9 +377,7 @@ function createHandCard(suit, value, x, y) {
     var clicked = false;
 
     card.addEventListener("mouseover", function() {
-        if (hasMouse()) {
-            createjs.Tween.get(card).to({y: targetY},60);
-        }
+        createjs.Tween.get(card).to({y: targetY},60);
     });
 
     card.addEventListener("mouseout", function() {
@@ -403,16 +393,13 @@ function createHandCard(suit, value, x, y) {
             clicked = !clicked;
         } else {
             cardboard.shadow = new createjs.Shadow("black", 0, 1, 2);
-            if (!hasMouse()) {
-                createjs.Tween.get(card).to({y: originalY}, 60);
-            }
+            createjs.Tween.get(card).to({y: originalY}, 60);
             clicked = !clicked;
         }
     });
     
     card.mouseChildren = false;
 
-    // stage.addChild(card);
     return card;
 }
 
@@ -426,6 +413,7 @@ function drawDrawerIcon() {
     drawerIcon.x = drawerIcon.y = 10;
     drawerIcon.alpha = 0.6;
 
+    drawerIcon.removeAllEventListeners();
     drawerIcon.on("mouseover", function() {
         createjs.Tween.get(drawerIcon)
         .to({alpha:1}, 100);
@@ -460,9 +448,10 @@ function drawDrawer() {
     close.y = 16;
 
     var target = new createjs.Shape();
-    target.graphics.beginFill("white").drawRect(-close.getMeasuredWidth()-10, -10, close.getMeasuredWidth()+20, close.getMeasuredHeight()+20);
+    target.graphics.beginFill("white").drawRect(-close.getMeasuredWidth()-16, -16, close.getMeasuredWidth()+32, close.getMeasuredHeight()+32);
     close.hitArea = target;
 
+    close.removeAllEventListeners();
     close.on("mouseover", function() {
         close.color = "#03A9F4";
     });
@@ -495,16 +484,26 @@ function drawDrawer() {
     stage.addChild(drawer);
 }
 
-function hasMouse() {
-    return mousemove > mousedown;
-}
-
 window.addEventListener('resize', function() {
     sizeCanvas();
     drawEverything();
 });
 
+function shuffle(array) {
+    var counter = array.length, temp, index;
 
+    while (counter > 0) {
+        index = Math.floor(Math.random() * counter);
+
+        counter--;
+
+        temp = array[counter];
+        array[counter] = array[index];
+        array[index] = temp;
+    }
+
+    return array;
+}
 
 function drawTestIcons() {
 
