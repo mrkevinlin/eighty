@@ -16,6 +16,7 @@
 			<h1>Simon Says</h1>
 			<div id="playerCount">There are currently {{ players }} players</div>
 			<div id="playerNames">Current players: {{ usernames }}</div>
+			<div id="leaderText">{{ 'Leader: ' + leader if leader }}</div>
 		</div>
 		<div>
 			<button style="background-color: purple;">One</button>
@@ -38,8 +39,21 @@
 						$('#playerCount').text('There are currently ' + count + ' players');
 						$('#playerNames').text('Current players: ' + names.join([separator=', ']));
 						break;
+					case 'leader':
+						// FIXME: if leader refreshes, then they will lose
+						// leader text, perhaps ask server if you're the leader
+						// when joining?
+						var sequenceLength = data['sequence_length'];
+						$('#leaderText').text('You\'re the leader! Please enter a sequence of length ' + sequenceLength + ' and press submit');
+						break;
+					case 'follower':
+						var leader = data['leader'];
+						$('#leaderText').text('Leader: ' + leader);
+						break;
 					default:
-						alert('server sent message of unknown type');
+						alert('server sent message of unknown type: ' + data['category']);
+						console.log('server sent message of unknown type: ' +
+								data['category']);
 				}
 			};
 			var onError = function(error) {
@@ -49,7 +63,7 @@
 				console.log('channel closed');
 			};
 			var requestUpdate = function(category) {
-				$.get('simonsays/requestupdate', {'category': category});
+				//$.get('simonsays/requestupdate', {'category': category});
 			};
 			channel = new goog.appengine.Channel('{{ token }}');
 			socket = channel.open();
