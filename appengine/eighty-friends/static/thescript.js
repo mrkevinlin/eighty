@@ -122,7 +122,7 @@ function initDeck() {
             }
         }
         deck.push(new Card("trump", "S", 19, true, 0));
-        deck.push(new Card("trumpbig", "B", 20, true, 0));
+        deck.push(new Card("trump", "B", 20, true, 0));
     }
 
     deck = shuffle(deck);
@@ -221,14 +221,19 @@ function drawStart() {
     startButton.x = table.width - 220;
     startButton.y = 100;
 
-    startButton.addEventListener("click", animateDeal);
+    // startButton.addEventListener("click", animateDeal);
 
     stage.addChild(startButton);
 }
 
 function animateDeal() {
-    startx = centerx;
-    starty = 0;
+    var startx = centerx;
+    var starty = 0;
+    for (var i = 0; i < playerCount; i++) {
+        var dealt = drawCardDown(startx, starty);
+        stage.addChild(dealt);
+        createjs.Tween.get(dealt).to({x: players[i].xcoord, y: players[i].ycoord}, 300).call(function() {stage.removeChild(dealt);});
+    }
 }
 
 function drawEveryone() {
@@ -249,6 +254,7 @@ function drawPlayer(id, x, y) {
 function drawHand() {
     var offset = 0;
     handContainer = new createjs.Container();
+    stage.addChild(handContainer);
 
     for (var i = 0; i < players[0].hand.length; i++) {
         handContainer.addChild(drawCard(players[0].hand[i].suit, players[0].hand[i].cardName, offset, 0));
@@ -286,8 +292,6 @@ function drawHand() {
 
         }
     });
-
-    stage.addChild(handContainer);
 }
 
 function drawOpponentHand() {
@@ -321,7 +325,7 @@ function drawMiniCardDown(x, y) {
 //Save suit (unicode), value, and color variables in Card objects and consolidate those parameters
 //into a single Card object in this function. Pass in coordinates to start draw on.
 function drawMiniCard(suit, value, x, y) {
-    var color = (suit == "diamonds" || suit == "hearts" || suit == "trumpbig") ? "red" : "black";
+    var color = (suit == "diamonds" || suit == "hearts" || suit == "trump" && value == "B") ? "red" : "black";
 
     switch (suit) {
         case "spades":
@@ -336,11 +340,14 @@ function drawMiniCard(suit, value, x, y) {
         case "hearts":
             suit = "\u2665";
             break;
-        case "trump":
-            suit = "\uE83A";
+    }
+
+    switch (value) {
+        case "B":
+            suit = "\u2605";
             break;
-        case "trumpbig":
-            suit = "\uE838";
+        case "S":
+            suit = "\u2606";
             break;
     }
 
@@ -385,12 +392,12 @@ function drawCardDown(x, y) {
     card.x = x;
     card.y = y;
     
-    stage.addChild(card);
+    return card;
 }
 
 //Pass in Card object as parameter and use suit and value variables to set text.
 function drawCard(suit, value, x, y) {
-    var color = (suit == "diamonds" || suit == "hearts" || suit == "trumpbig") ? "red" : "black";
+    var color = (suit == "diamonds" || suit == "hearts" || suit == "trump" && value == "B") ? "red" : "black";
 
     switch (suit) {
         case "spades":
@@ -405,11 +412,14 @@ function drawCard(suit, value, x, y) {
         case "hearts":
             suit = "\u2665";
             break;
-        case "trump":
-            suit = "\u2606";
-            break;
-        case "trumpbig":
+    }
+
+    switch (value) {
+        case "B":
             suit = "\u2605";
+            break;
+        case "S":
+            suit = "\u2606";
             break;
     }
 
