@@ -114,7 +114,7 @@ var Player = function(id) {
 
 function initDeck() {
     var suit = ["spades", "diamonds", "clubs", "hearts"];
-    var names = ["2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A"];
+    var names = ["2", "3", "4", "5", "6", "7", "8", "9", "I0", "J", "Q", "K", "A"];
     var points = 0;
 
     for (var i = 0; i < Math.floor(playerCount/2); i++) {
@@ -127,8 +127,8 @@ function initDeck() {
                 points = 0;
             }
         }
-        deck.push(new Card("trump", "S", 19, true, 0));
-        deck.push(new Card("trump", "B", 20, true, 0));
+        deck.push(new Card("trump", "S", 17, true, 0));
+        deck.push(new Card("trump", "B", 18, true, 0));
     }
 
     deck = shuffle(deck);
@@ -144,7 +144,9 @@ var Card = function(suit, name, value, isTrump, points) {
 
 function initTrump(suit, value) {
     for (var i = 0; i < deck.length; i++) {
-        deck[i].isTrump = (deck[i].suit == suit) ? true : false;
+        if (deck[i].suit == suit) {
+            deck[i].isTrump = true;
+        }
         if (deck[i].cardValue == value) {
             deck[i].cardValue = 15;
             deck[i].isTrump = true;
@@ -175,7 +177,7 @@ function initHands() {
                 } else if (a.suit < b.suit) {
                     return -1;
                 } else {
-                    return a.cardValue - b.cardValue;
+                    return 0;
                 }
             } else { 
                 return a.cardValue - b.cardValue;
@@ -560,7 +562,43 @@ function drawDrawer() {
     helpIcon.y = help.y = table.height - 18*scale;
 
     drawer.addChild(drawerBack, titleIcon, title, close, settingsIcon, settings, helpIcon, help);
+    drawDrawerInfo();
     stage.addChild(drawer);
+}
+
+function drawDrawerInfo() {
+    var trumpSuitPic;
+    var trumpsColor = (trumpSuit == "diamonds" || trumpSuit == "hearts") ? "red" : "black";
+    switch (trumpSuit) {
+        case "spades":
+            trumpSuitPic = "\u2660";
+            break;
+        case "diamonds":
+            trumpSuitPic = "\u2666";
+            break;
+        case "clubs":
+            trumpSuitPic = "\u2663";
+            break;
+        case "hearts":
+            trumpSuitPic = "\u2665";
+            break;
+    }
+
+    var trumpSuitIcon = new createjs.Text(trumpSuitPic, (28*scale*scale) + "px Roboto Condensed", trumpsColor);
+    var trumpSuitText = new createjs.Text("Trump suit", (24*scale*scale) + "px Roboto Condensed", "black");
+    trumpSuitIcon.x = 18*scale;
+    trumpSuitText.x = trumpSuitIcon.getMeasuredWidth() + 36*scale;
+    trumpSuitIcon.y = trumpSuitText.y = 96*scale;
+
+    var trumpValueIcon = new createjs.Text(trumpValue, (28*scale*scale) + "px Roboto Condensed", trumpsColor);
+    var trumpValueText = new createjs.Text("Trump value", (24*scale*scale) + "px Roboto Condensed", "black");
+    trumpValueIcon.textAlign = "center";
+    trumpValueIcon.x = 18*scale + trumpSuitIcon.getMeasuredWidth()/2;
+    trumpValueText.x = trumpSuitIcon.getMeasuredWidth() + 36*scale;
+    trumpValueIcon.y = trumpValueText.y = 144*scale;
+
+    trumpSuitIcon.textBaseline = trumpSuitText.textBaseline = trumpValueIcon.textBaseline = trumpValueText.textBaseline = "middle";
+    drawer.addChild(trumpSuitIcon, trumpSuitText, trumpValueIcon, trumpValueText);
 }
 
 window.addEventListener('resize', function() {
