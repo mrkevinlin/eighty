@@ -6,17 +6,19 @@ var stage;
 var scale;
 
 var drawer;
+
 var players = [];
 var playerCount;
-var deck = [];
-
-var handContainer;
-
-//Player ring
 var degrees;
 var radius;
 var centerx;
 var centery;
+
+var deck = [];
+var trumpSuit;
+var trumpValue;
+
+var handContainer;
 
 WebFont.load({
     google: {
@@ -30,11 +32,17 @@ function init() {
     if (screen.availWidth > 768) {scale = 1;}
     else {scale = 4/3;}
 
+
+    playerCount = 5;
+    trumpSuit = "hearts";
+    trumpValue = 2;
+
+
     sizeCanvas();
     initStage();
-    initPlayer();
+    initPlayer(playerCount);
     initDeck();
-    initTrump("hearts", 2);
+    initTrump(trumpSuit, trumpValue);
     initHands();
 
     drawEverything();
@@ -62,10 +70,8 @@ function initStage() {
     // });
 }
 
-function initPlayer() {
-    playerCount = 5;
-
-    for (var i = 0; i < playerCount; i++) {
+function initPlayer(count) {
+    for (var i = 0; i < count; i++) {
         players.push(new Player(i));
     }
 
