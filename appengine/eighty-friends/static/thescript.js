@@ -40,9 +40,9 @@ function init() {
 
     sizeCanvas();
     initStage();
-    initPlayer(playerCount);
+    initPlayer();
     initDeck();
-    initTrump(trumpSuit, trumpValue);
+    initTrump();
     initHands();
 
     drawEverything();
@@ -70,8 +70,8 @@ function initStage() {
     // });
 }
 
-function initPlayer(count) {
-    for (var i = 0; i < count; i++) {
+function initPlayer() {
+    for (var i = 0; i < playerCount; i++) {
         players.push(new Player(i));
     }
 
@@ -144,10 +144,10 @@ var Card = function(suit, name, value, isTrump, points) {
 
 function initTrump(suit, value) {
     for (var i = 0; i < deck.length; i++) {
-        if (deck[i].suit == suit) {
+        if (deck[i].suit == trumpSuit) {
             deck[i].isTrump = true;
         }
-        if (deck[i].cardValue == value) {
+        if (deck[i].cardValue == trumpValue) {
             deck[i].cardValue = 15;
             deck[i].isTrump = true;
         }
@@ -527,20 +527,17 @@ function drawDrawer() {
     close.textAlign="right";
     close.x = 250*scale-16;
     close.y = 16;
-
-    var target = new createjs.Shape();
-    target.graphics.beginFill("white").drawRect(-close.getMeasuredWidth()-16, -16, close.getMeasuredWidth()+32, close.getMeasuredHeight()+32);
-    close.hitArea = target;
+    var closeTarget = new createjs.Shape();
+    closeTarget.graphics.beginFill("white").drawRect(-close.getMeasuredWidth()-16, -16, close.getMeasuredWidth()+32, close.getMeasuredHeight()+32);
+    close.hitArea = closeTarget;
 
     close.removeAllEventListeners();
     close.on("mouseover", function() {
         close.color = "#03A9F4";
     });
-
     close.on("mouseout", function() {
         close.color = "black";
     });
-
     close.addEventListener("click", function() {
         createjs.Tween.get(drawer).to({x: -250*scale}, 60);
     });
@@ -549,19 +546,39 @@ function drawDrawer() {
     var title = new createjs.Text("Eighty", (24*scale*scale) + "px Roboto Condensed", "black");
     titleIcon.y = title.y = 18;
 
+    var fullscreenIcon = new createjs.Text("\uE5D0", (28*scale*scale) + "px Material Icons", "#808080");
+    var fullscreen = new createjs.Text("Full Screen", (24*scale*scale) + "px Roboto Condensed", "black");
+
     var settingsIcon = new createjs.Text("\uE8B8", (28*scale*scale) + "px Material Icons", "#808080");
     var settings = new createjs.Text("Settings", (24*scale*scale) + "px Roboto Condensed", "black");
+
     var helpIcon = new createjs.Text("\uE887", (28*scale*scale) + "px Material Icons", "#808080");
     var help = new createjs.Text("Help", (24*scale*scale) + "px Roboto Condensed", "black");
 
-    settingsIcon.textBaseline = settings.textBaseline = helpIcon.textBaseline = help.textBaseline = "bottom";
+    fullscreenIcon.textBaseline = fullscreen.textBaseline = settingsIcon.textBaseline = settings.textBaseline = helpIcon.textBaseline = help.textBaseline = "middle";
 
-    titleIcon.x = settingsIcon.x = helpIcon.x = 18*scale;
-    settings.x = help.x = title.x = titleIcon.getMeasuredWidth() + 36*scale;
-    settingsIcon.y = settings.y = table.height - helpIcon.getMeasuredHeight() - 36*scale;
-    helpIcon.y = help.y = table.height - 18*scale;
+    titleIcon.x = fullscreenIcon.x = settingsIcon.x = helpIcon.x = 18*scale;
+    title.x = fullscreen.x = settings.x = help.x = titleIcon.getMeasuredWidth() + 36*scale;
 
-    drawer.addChild(drawerBack, titleIcon, title, close, settingsIcon, settings, helpIcon, help);
+    helpIcon.y = help.y = table.height - helpIcon.getMeasuredHeight();
+    settingsIcon.y = settings.y = helpIcon.y - settingsIcon.getMeasuredHeight() - 18*scale;
+    fullscreenIcon.y = fullscreen.y = settingsIcon.y - fullscreenIcon.getMeasuredHeight() - 18*scale;
+
+
+    var fullscreenTarget = new createjs.Shape();
+    fullscreenTarget.graphics.beginFill("white").drawRect(-(fullscreenIcon.getMeasuredWidth()+36*scale), -fullscreenIcon.getMeasuredHeight()/2 - 8*scale, 250*scale, fullscreenIcon.getMeasuredHeight() + 16*scale);
+    fullscreen.hitArea = fullscreenTarget;
+
+    fullscreen.removeAllEventListeners();
+    fullscreen.on("mouseover", function() {
+        fullscreen.color = "#03A9F4";
+    });
+    fullscreen.on("mouseout", function() {
+        fullscreen.color = "black";
+    });
+    fullscreen.on("click", toggleFullScreen);
+
+    drawer.addChild(drawerBack, titleIcon, title, close, fullscreenIcon, fullscreen, settingsIcon, settings, helpIcon, help);
     drawDrawerInfo();
     stage.addChild(drawer);
 }
@@ -588,17 +605,46 @@ function drawDrawerInfo() {
     var trumpSuitText = new createjs.Text("Trump suit", (24*scale*scale) + "px Roboto Condensed", "black");
     trumpSuitIcon.x = 18*scale;
     trumpSuitText.x = trumpSuitIcon.getMeasuredWidth() + 36*scale;
-    trumpSuitIcon.y = trumpSuitText.y = 96*scale;
+    trumpSuitIcon.y = trumpSuitText.y = 120*scale;
 
     var trumpValueIcon = new createjs.Text(trumpValue, (28*scale*scale) + "px Roboto Condensed", trumpsColor);
     var trumpValueText = new createjs.Text("Trump value", (24*scale*scale) + "px Roboto Condensed", "black");
     trumpValueIcon.textAlign = "center";
     trumpValueIcon.x = 18*scale + trumpSuitIcon.getMeasuredWidth()/2;
     trumpValueText.x = trumpSuitIcon.getMeasuredWidth() + 36*scale;
-    trumpValueIcon.y = trumpValueText.y = 144*scale;
+    trumpValueIcon.y = trumpValueText.y = 168*scale;
 
     trumpSuitIcon.textBaseline = trumpSuitText.textBaseline = trumpValueIcon.textBaseline = trumpValueText.textBaseline = "middle";
     drawer.addChild(trumpSuitIcon, trumpSuitText, trumpValueIcon, trumpValueText);
+}
+
+function toggleFullScreen() {
+    if (document.fullscreenEnabled || document.webkitFullscreenEnabled || document.mozFullScreenEnabled || document.msFullscreenEnabled) {
+
+        var i = document.getElementById("table");
+ 
+        if (document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement) {
+            if (document.exitFullscreen) {
+                document.exitFullscreen();
+            } else if (document.webkitExitFullscreen) {
+                document.webkitExitFullscreen();
+            } else if (document.mozCancelFullScreen) {
+                document.mozCancelFullScreen();
+            } else if (document.msExitFullscreen) {
+                document.msExitFullscreen();
+            }
+        } else {
+            if (i.requestFullscreen) {
+                i.requestFullscreen();
+            } else if (i.webkitRequestFullscreen) {
+                i.webkitRequestFullscreen();
+            } else if (i.mozRequestFullScreen) {
+                i.mozRequestFullScreen();
+            } else if (i.msRequestFullscreen) {
+                i.msRequestFullscreen();
+            }
+        }
+    }
 }
 
 window.addEventListener('resize', function() {
