@@ -5,10 +5,22 @@
 		<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
 	</head>
 	<style>
-		button {
+		button.colored {
 			padding: 50px;
 			font-size: 18px;
 			color: white;
+		}
+
+		button.blue {
+			background-color: blue;
+		}
+
+		button.green {
+			background-color: green;
+		}
+
+		button.purple {
+			background-color: purple;
 		}
 	</style>
 	<body>
@@ -19,11 +31,12 @@
 			<div id="leaderText">{{ 'Leader: ' + leader if leader }}</div>
 		</div>
 		<div>
-			<button style="background-color: purple;">One</button>
-			<button style="background-color: blue;">Two</button>
-			<button style="background-color: green;">Three</button>
+			<button class="colored purple" type="button"></button>
+			<button class="colored blue" type="button"></button>
+			<button class="colored green" type="button"></button>
 		</div>
-		<a href="{{ url_for('.logoff') }}">Logoff</a>
+		<div><button onclick="submitSequence()" type="button">Submit</button></div>
+		<div><a href="{{ url_for('.logoff') }}">Logoff</a><div>
 		<script>
 			var onOpened = function() {
 				console.log('channel opened');
