@@ -516,16 +516,16 @@ function drawDrawerIcon() {
 
 function drawDrawer() {
     drawer = new createjs.Container();
-    drawer.x = -250*scale;
+    drawer.x = -350*scale;
 
     var drawerBack = new createjs.Shape();
-    drawerBack.graphics.beginFill("white").drawRect(0, 0, 250*scale, table.height);
+    drawerBack.graphics.beginFill("white").drawRect(0, 0, 300*scale, table.height);
 
     drawerBack.shadow = new createjs.Shadow("black", -5, 0, 50);
 
-    var close = new createjs.Text("\uE14C", (36*scale*scale) + "px Material Icons", "black");
+    var close = new createjs.Text("\uE14C", (36*scale) + "px Material Icons", "black");
     close.textAlign="right";
-    close.x = 250*scale-16;
+    close.x = 300*scale-16;
     close.y = 16;
     var closeTarget = new createjs.Shape();
     closeTarget.graphics.beginFill("white").drawRect(-close.getMeasuredWidth()-16, -16, close.getMeasuredWidth()+32, close.getMeasuredHeight()+32);
@@ -539,34 +539,34 @@ function drawDrawer() {
         close.color = "black";
     });
     close.addEventListener("click", function() {
-        createjs.Tween.get(drawer).to({x: -250*scale}, 60);
+        createjs.Tween.get(drawer).to({x: -350*scale}, 60);
     });
 
-    var titleIcon = new createjs.Text("\uE14D", (28*scale*scale) + "px Material Icons", "#808080");
-    var title = new createjs.Text("Eighty", (24*scale*scale) + "px Roboto Condensed", "black");
-    titleIcon.y = title.y = 18;
+    var titleIcon = new createjs.Text("\uE14D", (28*scale) + "px Material Icons", "#808080");
+    var title = new createjs.Text("Eighty", (24*scale) + "px Roboto Condensed", "black");
+    titleIcon.y = title.y = 30*scale;
 
-    var fullscreenIcon = new createjs.Text("\uE5D0", (28*scale*scale) + "px Material Icons", "#808080");
-    var fullscreen = new createjs.Text("Full Screen", (24*scale*scale) + "px Roboto Condensed", "black");
+    var fullscreenIcon = new createjs.Text("\uE5D0", (28*scale) + "px Material Icons", "#808080");
+    var fullscreen = new createjs.Text("Full Screen", (24*scale) + "px Roboto Condensed", "black");
 
-    var settingsIcon = new createjs.Text("\uE8B8", (28*scale*scale) + "px Material Icons", "#808080");
-    var settings = new createjs.Text("Settings", (24*scale*scale) + "px Roboto Condensed", "black");
+    var settingsIcon = new createjs.Text("\uE8B8", (28*scale) + "px Material Icons", "#808080");
+    var settings = new createjs.Text("Settings", (24*scale) + "px Roboto Condensed", "black");
 
-    var helpIcon = new createjs.Text("\uE887", (28*scale*scale) + "px Material Icons", "#808080");
-    var help = new createjs.Text("Help", (24*scale*scale) + "px Roboto Condensed", "black");
+    var helpIcon = new createjs.Text("\uE887", (28*scale) + "px Material Icons", "#808080");
+    var help = new createjs.Text("Help", (24*scale) + "px Roboto Condensed", "black");
 
     fullscreenIcon.textBaseline = fullscreen.textBaseline = settingsIcon.textBaseline = settings.textBaseline = helpIcon.textBaseline = help.textBaseline = "middle";
 
-    titleIcon.x = fullscreenIcon.x = settingsIcon.x = helpIcon.x = 18*scale;
-    title.x = fullscreen.x = settings.x = help.x = titleIcon.getMeasuredWidth() + 36*scale;
+    titleIcon.x = fullscreenIcon.x = settingsIcon.x = helpIcon.x = 30*scale;
+    title.x = fullscreen.x = settings.x = help.x = titleIcon.getMeasuredWidth() + 60*scale;
 
-    helpIcon.y = help.y = table.height - helpIcon.getMeasuredHeight();
-    settingsIcon.y = settings.y = helpIcon.y - settingsIcon.getMeasuredHeight() - 18*scale;
-    fullscreenIcon.y = fullscreen.y = settingsIcon.y - fullscreenIcon.getMeasuredHeight() - 18*scale;
+    helpIcon.y = help.y = table.height - helpIcon.getMeasuredHeight() - 30*scale;
+    settingsIcon.y = settings.y = helpIcon.y - settingsIcon.getMeasuredHeight() - 30*scale;
+    fullscreenIcon.y = fullscreen.y = settingsIcon.y - fullscreenIcon.getMeasuredHeight() - 30*scale;
 
 
     var fullscreenTarget = new createjs.Shape();
-    fullscreenTarget.graphics.beginFill("white").drawRect(-(fullscreenIcon.getMeasuredWidth()+36*scale), -fullscreenIcon.getMeasuredHeight()/2 - 8*scale, 250*scale, fullscreenIcon.getMeasuredHeight() + 16*scale);
+    fullscreenTarget.graphics.beginFill("white").drawRect(-(fullscreenIcon.getMeasuredWidth()+60*scale), -fullscreenIcon.getMeasuredHeight()/2 - 8*scale, 300*scale, fullscreenIcon.getMeasuredHeight() + 16*scale);
     fullscreen.hitArea = fullscreenTarget;
 
     fullscreen.removeAllEventListeners();
@@ -601,17 +601,17 @@ function drawDrawerInfo() {
             break;
     }
 
-    var trumpSuitIcon = new createjs.Text(trumpSuitPic, (28*scale*scale) + "px Roboto Condensed", trumpsColor);
-    var trumpSuitText = new createjs.Text("Trump suit", (24*scale*scale) + "px Roboto Condensed", "black");
-    trumpSuitIcon.x = 18*scale;
-    trumpSuitText.x = trumpSuitIcon.getMeasuredWidth() + 36*scale;
+    var trumpSuitIcon = new createjs.Text(trumpSuitPic, (28*scale) + "px Roboto Condensed", trumpsColor);
+    var trumpSuitText = new createjs.Text("Trump suit", (24*scale) + "px Roboto Condensed", "black");
+    trumpSuitIcon.x = 30*scale;
+    trumpSuitText.x = trumpSuitIcon.getMeasuredWidth() + 60*scale;
     trumpSuitIcon.y = trumpSuitText.y = 120*scale;
 
-    var trumpValueIcon = new createjs.Text(trumpValue, (28*scale*scale) + "px Roboto Condensed", trumpsColor);
-    var trumpValueText = new createjs.Text("Trump value", (24*scale*scale) + "px Roboto Condensed", "black");
+    var trumpValueIcon = new createjs.Text(trumpValue, (28*scale) + "px Roboto Condensed", trumpsColor);
+    var trumpValueText = new createjs.Text("Trump value", (24*scale) + "px Roboto Condensed", "black");
     trumpValueIcon.textAlign = "center";
-    trumpValueIcon.x = 18*scale + trumpSuitIcon.getMeasuredWidth()/2;
-    trumpValueText.x = trumpSuitIcon.getMeasuredWidth() + 36*scale;
+    trumpValueIcon.x = 30*scale + trumpSuitIcon.getMeasuredWidth()/2;
+    trumpValueText.x = trumpSuitIcon.getMeasuredWidth() + 60*scale;
     trumpValueIcon.y = trumpValueText.y = 168*scale;
 
     trumpSuitIcon.textBaseline = trumpSuitText.textBaseline = trumpValueIcon.textBaseline = trumpValueText.textBaseline = "middle";
@@ -621,7 +621,7 @@ function drawDrawerInfo() {
 function toggleFullScreen() {
     if (document.fullscreenEnabled || document.webkitFullscreenEnabled || document.mozFullScreenEnabled || document.msFullscreenEnabled) {
 
-        var i = document.getElementById("table");
+        var i = document.documentElement;
  
         if (document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement) {
             if (document.exitFullscreen) {
