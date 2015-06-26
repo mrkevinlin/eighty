@@ -22,6 +22,7 @@ var trumpSuit;
 var trumpValue;
 
 var handContainer;
+var playButtonContainer;
 
 WebFont.load({
     google: {
@@ -113,7 +114,25 @@ var Player = function(id) {
     this.hand = [];
     this.xcoord;
     this.ycoord;
+    this.selectedIDs = [];
+    this.selectedCards = [];
 };
+
+//asdfj
+
+Player.prototype.addSelection = function(sel) {
+    this.selectedIDs.push(sel.parent.getChildIndex(sel));
+    console.log(this.selectedIDs);
+}
+
+Player.prototype.removeSelection = function(sel) {
+    this.selectedIDs.splice(this.selectedIDs.indexOf(sel.parent.getChildIndex(sel)),1);
+    console.log(this.selectedIDs);
+}
+
+Player.prototype.setSelectedCards = function() {
+
+}
 
 function initDeck() {
     var suit = ["spades", "diamonds", "clubs", "hearts"];
@@ -208,10 +227,11 @@ function calculateDiscard() {
 function drawEverything() {
     stage.removeAllChildren();
 
-    drawStart();
+    // drawStart();
     drawEveryone();
     drawHand();
     // drawOpponentHand();
+    drawPlayButton();
     drawDrawerIcon();
     drawDrawer();
 
@@ -270,6 +290,7 @@ function drawPlayer(id, x, y) {
 function drawHand() {
     var offset = 0;
     handContainer = new createjs.Container();
+    handContainer.removeAllChildren();
     stage.addChild(handContainer);
 
     for (var i = 0; i < players[0].hand.length; i++) {
@@ -279,8 +300,6 @@ function drawHand() {
 
     handContainer.x = table.width/2 - ((players[0].hand.length-1) * 40*Math.pow(scale,3) + 120)/2;
     handContainer.y = table.height - 120*scale*scale;
-
-    console.log(handContainer.numChildren);
 
     var moveCards = false;
     var restart = true;
@@ -457,19 +476,51 @@ function drawCard(suit, value, x, y) {
             animating++;
             createjs.Tween.get(card).to({y: targetY}, 60).call(finishAnimating);
             clicked = !clicked;
-            console.log(evt.target.getChildAt(1).text + evt.target.getChildAt(2).text);
+
+            //asdf
+
+            players[0].addSelection(evt.target);
 
         } else {
             cardboard.shadow = new createjs.Shadow("black", 0, 1, 2);
             animating++;
             createjs.Tween.get(card).to({y: originalY}, 60).call(finishAnimating);
             clicked = !clicked;
+
+            players[0].removeSelection(evt.target);
+        }
+
+        if (players[0].selectedIDs.length > 0) {
+            animating++;
+            createjs.Tween.get(playButtonContainer).to({x: table.width - 128}, 300).call(finishAnimating);
+        } else {
+            animating++;
+            createjs.Tween.get(playButtonContainer).to({x: table.width + 128}, 300).call(finishAnimating);
         }
     });
 
     card.mouseChildren = false;
 
     return card;
+}
+
+function drawPlayButton() {
+    playButtonContainer = new createjs.Container();
+
+    var playButtonText = new createjs.Text("Play", (32*scale) + "px Roboto Condensed", "white");
+    playButtonText.textAlign = "center";
+    playButtonText.textBaseline = "middle";
+    playButtonText.x = 60;
+    playButtonText.y = 30;
+    var playButtonShape = new createjs.Shape();
+    playButtonShape.graphics.beginFill("#03A9F4").drawRoundRect(0, 0, 120, 60, 5);
+    playButtonShape.shadow = new createjs.Shadow("rgba(0,0,0,0.5)", 0, 2, 1);
+
+    playButtonContainer.addChild(playButtonShape, playButtonText);
+    playButtonContainer.x = table.width + 128;
+    playButtonContainer.y = handContainer.y - 68;
+    stage.addChild(playButtonContainer);
+    stage.update();
 }
 
 function drawDrawerIcon() {
@@ -595,7 +646,10 @@ function drawDrawerInfo() {
     trumpValueText.x = trumpSuitIcon.getMeasuredWidth() + 60*scale;
     trumpValueIcon.y = trumpValueText.y = 168*scale;
 
-    trumpSuitIcon.textBaseline = trumpSuitText.textBaseline = trumpValueIcon.textBaseline = trumpValueText.textBaseline = "middle";
+    trumpSuitIcon.textBaseline = "middle";
+    trumpSuitText.textBaseline = "middle";
+    trumpValueIcon.textBaseline = "middle";
+    trumpValueText.textBaseline = "middle";
     drawer.addChild(trumpSuitIcon, trumpSuitText, trumpValueIcon, trumpValueText);
 }
 
