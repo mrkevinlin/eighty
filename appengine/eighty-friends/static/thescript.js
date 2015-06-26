@@ -3,7 +3,7 @@
 var table;
 var context;
 var stage;
-var animating = false;
+var animating = 0;
 var scale;
 
 var drawer;
@@ -460,14 +460,15 @@ function drawCard(suit, value, x, y) {
     var targetY = y-30*scale
     var clicked = false;
 
+    card.removeAllEventListeners();
     card.addEventListener("mouseover", function() {
-        animating = true;
+        animating++;
         createjs.Tween.get(card).to({y: targetY},60).call(finishAnimating);
     });
 
     card.addEventListener("mouseout", function() {
         if (!clicked) {
-            animating = true;
+            animating++;
             createjs.Tween.get(card).to({y: originalY},60).call(finishAnimating);
         }
     });
@@ -475,12 +476,12 @@ function drawCard(suit, value, x, y) {
     card.addEventListener("click", function() {
         if (!clicked) {
             cardboard.shadow = new createjs.Shadow("orange", 0, 0, 20);
-            animating = true;
+            animating++;
             createjs.Tween.get(card).to({y: targetY}, 60).call(finishAnimating);
             clicked = !clicked;
         } else {
             cardboard.shadow = new createjs.Shadow("black", 0, 1, 2);
-            animating = true;
+            animating++;
             createjs.Tween.get(card).to({y: originalY}, 60).call(finishAnimating);
             clicked = !clicked;
         }
@@ -503,18 +504,18 @@ function drawDrawerIcon() {
 
     drawerIcon.removeAllEventListeners();
     drawerIcon.on("mouseover", function() {
-        animating = true;
+        animating++;
         createjs.Tween.get(drawerIcon)
         .to({alpha:1}, 100).call(finishAnimating);
     });
     drawerIcon.on("mouseout", function() {
-        animating = true;
+        animating++;
         createjs.Tween.get(drawerIcon)
         .to({alpha:0.6}, 100).call(finishAnimating);
     })
 
     drawerIcon.on("click", function() {
-        animating = true;
+        animating++;
         createjs.Tween.get(drawerIcon)
         .to({alpha:1}, 100)
         .to({alpha:0.6}, 100);
@@ -551,7 +552,7 @@ function drawDrawer() {
         stage.update();
     });
     close.addEventListener("click", function() {
-        animating = true;
+        animating++;
         createjs.Tween.get(drawer).to({x: -350*scale}, 60).call(finishAnimating);
     });
 
@@ -663,15 +664,15 @@ function toggleFullScreen() {
 }
 
 function ticking(event) {
-        console.log(createjs.Tween.hasActiveTweens());
-    if (createjs.Tween.hasActiveTweens() || animating) {
+        // console.log(createjs.Tween.hasActiveTweens());
+    if (animating > 0) {
         stage.update();
-        console.log("updating");
+        console.log(animating);
     }
 }
 
 function finishAnimating() {
-    animating = false;
+    animating--;
 }
 
 window.addEventListener('resize', function() {
