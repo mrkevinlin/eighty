@@ -3,6 +3,7 @@
 var table;
 var context;
 var stage;
+var animating = false;
 var scale;
 
 var drawer;
@@ -58,7 +59,7 @@ function initStage() {
 
     table.style.background = "#66BB6A";
     createjs.Ticker.setFPS(60);
-    createjs.Ticker.addEventListener("tick", stage);
+    createjs.Ticker.addEventListener("tick", ticking); 
     stage.enableMouseOver(30);
     createjs.Touch.enable(stage);
 
@@ -213,6 +214,8 @@ function drawEverything() {
     // drawTestIcons();
     // drawTestPlay();
     // infoDump();
+
+    stage.update();
 }
 
 function drawStart() {
@@ -297,7 +300,7 @@ function drawHand() {
                     handContainer.x += shift;
                     oldX = event.stageX;
             }
-
+            stage.update();
         }
     });
 }
@@ -458,23 +461,27 @@ function drawCard(suit, value, x, y) {
     var clicked = false;
 
     card.addEventListener("mouseover", function() {
-        createjs.Tween.get(card).to({y: targetY},60);
+        animating = true;
+        createjs.Tween.get(card).to({y: targetY},60).call(finishAnimating);
     });
 
     card.addEventListener("mouseout", function() {
         if (!clicked) {
-            createjs.Tween.get(card).to({y: originalY},60);
+            animating = true;
+            createjs.Tween.get(card).to({y: originalY},60).call(finishAnimating);
         }
     });
 
     card.addEventListener("click", function() {
         if (!clicked) {
             cardboard.shadow = new createjs.Shadow("orange", 0, 0, 20);
-            createjs.Tween.get(card).to({y: targetY}, 60);
+            animating = true;
+            createjs.Tween.get(card).to({y: targetY}, 60).call(finishAnimating);
             clicked = !clicked;
         } else {
             cardboard.shadow = new createjs.Shadow("black", 0, 1, 2);
-            createjs.Tween.get(card).to({y: originalY}, 60);
+            animating = true;
+            createjs.Tween.get(card).to({y: originalY}, 60).call(finishAnimating);
             clicked = !clicked;
         }
     });
@@ -496,19 +503,22 @@ function drawDrawerIcon() {
 
     drawerIcon.removeAllEventListeners();
     drawerIcon.on("mouseover", function() {
+        animating = true;
         createjs.Tween.get(drawerIcon)
-        .to({alpha:1}, 100);
+        .to({alpha:1}, 100).call(finishAnimating);
     });
     drawerIcon.on("mouseout", function() {
+        animating = true;
         createjs.Tween.get(drawerIcon)
-        .to({alpha:0.6}, 100);
+        .to({alpha:0.6}, 100).call(finishAnimating);
     })
 
     drawerIcon.on("click", function() {
+        animating = true;
         createjs.Tween.get(drawerIcon)
         .to({alpha:1}, 100)
         .to({alpha:0.6}, 100);
-        createjs.Tween.get(drawer).to({x: 0}, 60);
+        createjs.Tween.get(drawer).to({x: 0}, 60).call(finishAnimating);
     });
 
     stage.addChild(drawerIcon);
@@ -534,12 +544,15 @@ function drawDrawer() {
     close.removeAllEventListeners();
     close.on("mouseover", function() {
         close.color = "#03A9F4";
+        stage.update();
     });
     close.on("mouseout", function() {
         close.color = "black";
+        stage.update();
     });
     close.addEventListener("click", function() {
-        createjs.Tween.get(drawer).to({x: -350*scale}, 60);
+        animating = true;
+        createjs.Tween.get(drawer).to({x: -350*scale}, 60).call(finishAnimating);
     });
 
     var titleIcon = new createjs.Text("\uE14D", (28*scale) + "px Material Icons", "#808080");
@@ -572,9 +585,11 @@ function drawDrawer() {
     fullscreen.removeAllEventListeners();
     fullscreen.on("mouseover", function() {
         fullscreen.color = "#03A9F4";
+        stage.update();
     });
     fullscreen.on("mouseout", function() {
         fullscreen.color = "black";
+        stage.update();
     });
     fullscreen.on("click", toggleFullScreen);
 
@@ -645,6 +660,18 @@ function toggleFullScreen() {
             }
         }
     }
+}
+
+function ticking(event) {
+        console.log(createjs.Tween.hasActiveTweens());
+    if (createjs.Tween.hasActiveTweens() || animating) {
+        stage.update();
+        console.log("updating");
+    }
+}
+
+function finishAnimating() {
+    animating = false;
 }
 
 window.addEventListener('resize', function() {
