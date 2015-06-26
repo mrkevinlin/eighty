@@ -5,6 +5,7 @@ var context;
 var stage;
 var animating = 0;
 var scale;
+var fps = 60
 
 var drawer;
 
@@ -58,8 +59,9 @@ function initStage() {
     stage = new createjs.Stage("table");
 
     table.style.background = "#66BB6A";
-    createjs.Ticker.setFPS(60);
-    createjs.Ticker.addEventListener("tick", ticking); 
+    createjs.Ticker.timingMode = createjs.Ticker.RAF_SYNCHED;
+    createjs.Ticker.setFPS(fps);
+    createjs.Ticker.addEventListener("tick", ticking);
     stage.enableMouseOver(30);
     createjs.Touch.enable(stage);
 
@@ -87,7 +89,7 @@ function initPlayerCoordinates() {
     centery = radius;
     var stretch = (table.width - 80)/(radius*2);
 
-    for (var i = 0; i < playerCount; i++) { 
+    for (var i = 0; i < playerCount; i++) {
 
         degrees.push(90 + (360/playerCount)*i);
 
@@ -147,6 +149,9 @@ function initTrump(suit, value) {
     for (var i = 0; i < deck.length; i++) {
         if (deck[i].suit == trumpSuit) {
             deck[i].isTrump = true;
+            if (deck[i].cardValue == trumpValue) {
+            	deck[i].cardValue = 16;
+            }
         }
         if (deck[i].cardValue == trumpValue) {
             deck[i].cardValue = 15;
@@ -180,7 +185,7 @@ function initHands() {
                 } else {
                     return 0;
                 }
-            } else { 
+            } else {
                 return a.cardValue - b.cardValue;
             }
         } else {
@@ -206,7 +211,7 @@ function drawEverything() {
     drawStart();
     drawEveryone();
     drawHand();
-    // drawOpponentHand(); 
+    // drawOpponentHand();
     drawDrawerIcon();
     drawDrawer();
 
@@ -248,7 +253,7 @@ function animateDeal() {
 }
 
 function drawEveryone() {
-    for (var i = 0; i < playerCount; i++) { 
+    for (var i = 0; i < playerCount; i++) {
             drawPlayer(players[i].playerID, players[i].xcoord, players[i].ycoord);
     }
 }
@@ -329,7 +334,7 @@ function drawMiniCardDown(x, y) {
     card.addChild(cardboard, picture);
     card.x = x;
     card.y = y;
-    
+
     stage.addChild(card);
 }
 
@@ -337,21 +342,7 @@ function drawMiniCardDown(x, y) {
 //into a single Card object in this function. Pass in coordinates to start draw on.
 function drawMiniCard(suit, value, x, y) {
     var color = (suit == "diamonds" || suit == "hearts" || suit == "trump" && value == "B") ? "red" : "black";
-
-    switch (suit) {
-        case "spades":
-            suit = "\u2660";
-            break;
-        case "diamonds":
-            suit = "\u2666";
-            break;
-        case "clubs":
-            suit = "\u2663";
-            break;
-        case "hearts":
-            suit = "\u2665";
-            break;
-    }
+	suit = getSuitIcon(suit);
 
     switch (value) {
         case "B":
@@ -402,28 +393,14 @@ function drawCardDown(x, y) {
     card.addChild(cardboard, picture);
     card.x = x;
     card.y = y;
-    
+
     return card;
 }
 
 //Pass in Card object as parameter and use suit and value variables to set text.
 function drawCard(suit, value, x, y) {
     var color = (suit == "diamonds" || suit == "hearts" || suit == "trump" && value == "B") ? "red" : "black";
-
-    switch (suit) {
-        case "spades":
-            suit = "\u2660";
-            break;
-        case "diamonds":
-            suit = "\u2666";
-            break;
-        case "clubs":
-            suit = "\u2663";
-            break;
-        case "hearts":
-            suit = "\u2665";
-            break;
-    }
+    suit = getSuitIcon(suit);
 
     switch (value) {
         case "B":
@@ -486,7 +463,7 @@ function drawCard(suit, value, x, y) {
             clicked = !clicked;
         }
     });
-    
+
     card.mouseChildren = false;
 
     return card;
@@ -578,7 +555,6 @@ function drawDrawer() {
     settingsIcon.y = settings.y = helpIcon.y - settingsIcon.getMeasuredHeight() - 30*scale;
     fullscreenIcon.y = fullscreen.y = settingsIcon.y - fullscreenIcon.getMeasuredHeight() - 30*scale;
 
-
     var fullscreenTarget = new createjs.Shape();
     fullscreenTarget.graphics.beginFill("white").drawRect(-(fullscreenIcon.getMeasuredWidth()+60*scale), -fullscreenIcon.getMeasuredHeight()/2 - 8*scale, 300*scale, fullscreenIcon.getMeasuredHeight() + 16*scale);
     fullscreen.hitArea = fullscreenTarget;
@@ -600,22 +576,8 @@ function drawDrawer() {
 }
 
 function drawDrawerInfo() {
-    var trumpSuitPic;
+    var trumpSuitPic = getSuitIcon(trumpSuit);
     var trumpsColor = (trumpSuit == "diamonds" || trumpSuit == "hearts") ? "red" : "black";
-    switch (trumpSuit) {
-        case "spades":
-            trumpSuitPic = "\u2660";
-            break;
-        case "diamonds":
-            trumpSuitPic = "\u2666";
-            break;
-        case "clubs":
-            trumpSuitPic = "\u2663";
-            break;
-        case "hearts":
-            trumpSuitPic = "\u2665";
-            break;
-    }
 
     var trumpSuitIcon = new createjs.Text(trumpSuitPic, (28*scale) + "px Roboto Condensed", trumpsColor);
     var trumpSuitText = new createjs.Text("Trump suit", (24*scale) + "px Roboto Condensed", "black");
@@ -634,11 +596,30 @@ function drawDrawerInfo() {
     drawer.addChild(trumpSuitIcon, trumpSuitText, trumpValueIcon, trumpValueText);
 }
 
+function getSuitIcon(suit) {
+	var code;
+	switch (suit) {
+        case "spades":
+            code = "\u2660";
+            break;
+        case "diamonds":
+            code = "\u2666";
+            break;
+        case "clubs":
+            code = "\u2663";
+            break;
+        case "hearts":
+            code = "\u2665";
+            break;
+    }
+    return code;
+}
+
 function toggleFullScreen() {
     if (document.fullscreenEnabled || document.webkitFullscreenEnabled || document.mozFullScreenEnabled || document.msFullscreenEnabled) {
 
         var i = document.documentElement;
- 
+
         if (document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement) {
             if (document.exitFullscreen) {
                 document.exitFullscreen();
@@ -672,7 +653,7 @@ function ticking(event) {
 }
 
 function finishAnimating() {
-    setTimeout(function () {animating--}, 20);
+    setTimeout(function () {animating--}, Math.ceil(1000/fps));
 }
 
 window.addEventListener('resize', function() {
