@@ -7,7 +7,7 @@ var animating = 0;
 var scale;
 var fps = 60
 
-var drawer;
+var drawer = new createjs.Container();
 var drawerWidth = 300;
 
 var players = [];
@@ -21,8 +21,8 @@ var deck = [];
 var trumpSuit;
 var trumpValue;
 
-var handContainer;
-var playButtonContainer;
+var handContainer = new createjs.Container();
+var playButtonContainer = new createjs.Container();
 
 WebFont.load({
     google: {
@@ -122,16 +122,30 @@ var Player = function(id) {
 
 Player.prototype.addSelection = function(sel) {
     this.selectedIDs.push(sel.parent.getChildIndex(sel));
-    console.log(this.selectedIDs);
 }
 
 Player.prototype.removeSelection = function(sel) {
     this.selectedIDs.splice(this.selectedIDs.indexOf(sel.parent.getChildIndex(sel)),1);
-    console.log(this.selectedIDs);
 }
 
 Player.prototype.setSelectedCards = function() {
+	this.selectedIDs.sort(function(a, b) {return a-b;});
+	// console.log(this.selectedIDs);
+	for (var i = 0; i < this.selectedIDs.length; i++) {
+		this.selectedCards.push(this.hand[this.selectedIDs[i]]);
+	}
+	// console.log(this.selectedCards);
+}
 
+Player.prototype.playCards = function() {
+	// Remove from array starting at higher indexes to prevent index change errors
+	for (var i = this.selectedIDs.length - 1; i >= 0; i--) {
+		// console.log(this.selectedIDs[i]);
+		this.hand.splice(this.selectedIDs[i],1);
+	}
+	this.selectedIDs.length = 0;
+	this.selectedCards.length = 0;
+	drawHand();
 }
 
 function initDeck() {
@@ -289,7 +303,6 @@ function drawPlayer(id, x, y) {
 
 function drawHand() {
     var offset = 0;
-    handContainer = new createjs.Container();
     handContainer.removeAllChildren();
     stage.addChild(handContainer);
 
@@ -328,14 +341,6 @@ function drawHand() {
             stage.update();
         }
     });
-}
-
-function drawOpponentHand() {
-    var offset = 0;
-    for (var i = 0; i < 26; i++) {
-        drawMiniCardDown(500 + offset, 200);
-        offset += 20;
-    }
 }
 
 function drawMiniCardDown(x, y) {
@@ -477,8 +482,6 @@ function drawCard(suit, value, x, y) {
             createjs.Tween.get(card).to({y: targetY}, 60).call(finishAnimating);
             clicked = !clicked;
 
-            //asdf
-
             players[0].addSelection(evt.target);
 
         } else {
@@ -492,10 +495,10 @@ function drawCard(suit, value, x, y) {
 
         if (players[0].selectedIDs.length > 0) {
             animating++;
-            createjs.Tween.get(playButtonContainer).to({x: table.width - 128}, 300).call(finishAnimating);
+            createjs.Tween.get(playButtonContainer).to({alpha: 1}, 150).call(finishAnimating);
         } else {
             animating++;
-            createjs.Tween.get(playButtonContainer).to({x: table.width + 128}, 300).call(finishAnimating);
+            createjs.Tween.get(playButtonContainer).to({alpha: 0}, 150).call(finishAnimating);
         }
     });
 
@@ -505,8 +508,6 @@ function drawCard(suit, value, x, y) {
 }
 
 function drawPlayButton() {
-    playButtonContainer = new createjs.Container();
-
     var playButtonText = new createjs.Text("Play", (32*scale) + "px Roboto Condensed", "white");
     playButtonText.textAlign = "center";
     playButtonText.textBaseline = "middle";
@@ -517,10 +518,29 @@ function drawPlayButton() {
     playButtonShape.shadow = new createjs.Shadow("rgba(0,0,0,0.5)", 0, 2, 1);
 
     playButtonContainer.addChild(playButtonShape, playButtonText);
-    playButtonContainer.x = table.width + 128;
-    playButtonContainer.y = handContainer.y - 68;
+    playButtonContainer.x = handContainer.x;
+    playButtonContainer.y = handContainer.y - 100;
+    playButtonContainer.alpha = 0;
+    playButtonContainer.on("click", function(evt) {
+    	animating++;
+    	createjs.Tween.get(evt.target.parent).to({alpha: 0.8}, 60).to({alpha: 1}, 60).call(finishAnimating);
+    	players[0].setSelectedCards();
+    	checkLead(players[0].selectedCards);
+    });
     stage.addChild(playButtonContainer);
     stage.update();
+}
+
+function checkLead(cards) {
+	var valid = true;
+
+	//Check validity of the play
+
+	if (valid) {
+		players[0].playCards();
+	} else {
+		console.log("not valid");
+	}
 }
 
 function drawDrawerIcon() {
@@ -557,7 +577,6 @@ function drawDrawerIcon() {
 }
 
 function drawDrawer() {
-    drawer = new createjs.Container();
     drawer.x = -(drawerWidth+50)*scale;
 
     var drawerBack = new createjs.Shape();
