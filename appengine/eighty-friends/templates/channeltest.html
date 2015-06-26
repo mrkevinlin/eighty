@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<script type="text/javascript" src="/_ah/channel/jsapi"></script>
+	</head>
+
+	<body>
+		Yay!
+		<script>
+			var onOpened = function() {
+				console.log('channel opened');
+				var request = new XMLHttpRequest();
+				request.open('get', 'taketurn');
+				request.send(null);
+			};
+			var onMessage = function(message) {
+				console.log('message received');
+				console.log(message.data);
+			};
+			var onError = function(error) {
+				console.log('error');
+			};
+			var onClose = function() {
+				console.log('channel closed');
+			};
+			channel = new goog.appengine.Channel('{{ token }}');
+			socket = channel.open();
+			socket.onopen = onOpened;
+			socket.onmessage = onMessage;
+			socket.onerror = onError;
+			socket.onclose = onClose;
+		</script>
+	</body>
+
+</html>
