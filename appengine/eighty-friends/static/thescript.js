@@ -8,6 +8,7 @@ var scale;
 var fps = 60
 
 var drawer;
+var drawerWidth = 300;
 
 var players = [];
 var playerCount;
@@ -504,16 +505,16 @@ function drawDrawerIcon() {
 
 function drawDrawer() {
     drawer = new createjs.Container();
-    drawer.x = -350*scale;
+    drawer.x = -(drawerWidth+50)*scale;
 
     var drawerBack = new createjs.Shape();
-    drawerBack.graphics.beginFill("white").drawRect(0, 0, 300*scale, table.height);
+    drawerBack.graphics.beginFill("white").drawRect(0, 0, drawerWidth*scale, table.height);
 
     drawerBack.shadow = new createjs.Shadow("black", -5, 0, 50);
 
     var close = new createjs.Text("\uE14C", (36*scale) + "px Material Icons", "black");
     close.textAlign="right";
-    close.x = 300*scale-16;
+    close.x = drawerWidth*scale-16;
     close.y = 16;
     var closeTarget = new createjs.Shape();
     closeTarget.graphics.beginFill("white").drawRect(-close.getMeasuredWidth()-16, -16, close.getMeasuredWidth()+32, close.getMeasuredHeight()+32);
@@ -530,7 +531,7 @@ function drawDrawer() {
     });
     close.addEventListener("click", function() {
         animating++;
-        createjs.Tween.get(drawer).to({x: -350*scale}, 60).call(finishAnimating);
+        createjs.Tween.get(drawer).to({x: -(drawerWidth+50)*scale}, 60).call(finishAnimating);
     });
 
     var titleIcon = new createjs.Text("\uE14D", (28*scale) + "px Material Icons", "#808080");
@@ -556,7 +557,7 @@ function drawDrawer() {
     fullscreenIcon.y = fullscreen.y = settingsIcon.y - fullscreenIcon.getMeasuredHeight() - 30*scale;
 
     var fullscreenTarget = new createjs.Shape();
-    fullscreenTarget.graphics.beginFill("white").drawRect(-(fullscreenIcon.getMeasuredWidth()+60*scale), -fullscreenIcon.getMeasuredHeight()/2 - 8*scale, 300*scale, fullscreenIcon.getMeasuredHeight() + 16*scale);
+    fullscreenTarget.graphics.beginFill("white").drawRect(-(fullscreenIcon.getMeasuredWidth()+60*scale), -fullscreenIcon.getMeasuredHeight()/2 - 8*scale, drawerWidth*scale, fullscreenIcon.getMeasuredHeight() + 16*scale);
     fullscreen.hitArea = fullscreenTarget;
 
     fullscreen.removeAllEventListeners();
@@ -679,7 +680,6 @@ function shuffle(array) {
 }
 
 function drawTestIcons() {
-
     drawMiniCard("\u2665", "red", "7", 300*scale, 50);
     drawMiniCard("\u2660", "black", "Q", 400*scale, 50);
     drawMiniCardDown(500*scale, 50);
