@@ -60,7 +60,6 @@ function initStage() {
     stage = new createjs.Stage("table");
 
     table.style.background = "#66BB6A";
-    createjs.Ticker.timingMode = createjs.Ticker.RAF_SYNCHED;
     createjs.Ticker.setFPS(fps);
     createjs.Ticker.addEventListener("tick", ticking);
     stage.enableMouseOver(30);
@@ -281,6 +280,7 @@ function drawHand() {
     handContainer.x = table.width/2 - ((players[0].hand.length-1) * 40*Math.pow(scale,3) + 120)/2;
     handContainer.y = table.height - 120*scale*scale;
 
+    console.log(handContainer.numChildren);
 
     var moveCards = false;
     var restart = true;
@@ -451,12 +451,14 @@ function drawCard(suit, value, x, y) {
         }
     });
 
-    card.addEventListener("click", function() {
+    card.addEventListener("click", function(evt) {
         if (!clicked) {
             cardboard.shadow = new createjs.Shadow("orange", 0, 0, 20);
             animating++;
             createjs.Tween.get(card).to({y: targetY}, 60).call(finishAnimating);
             clicked = !clicked;
+            console.log(evt.target.getChildAt(1).text + evt.target.getChildAt(2).text);
+
         } else {
             cardboard.shadow = new createjs.Shadow("black", 0, 1, 2);
             animating++;
@@ -646,10 +648,8 @@ function toggleFullScreen() {
 }
 
 function ticking(event) {
-        // console.log(createjs.Tween.hasActiveTweens());
     if (animating > 0) {
         stage.update();
-        console.log(animating);
     }
 }
 
