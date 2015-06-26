@@ -7,7 +7,8 @@ var animating = 0;
 var scale;
 var fps = 60
 
-var drawer;
+var drawer = new createjs.Container();
+var drawerWidth = 300;
 
 var players = [];
 var playerCount;
@@ -20,7 +21,8 @@ var deck = [];
 var trumpSuit;
 var trumpValue;
 
-var handContainer;
+var handContainer = new createjs.Container();
+var playButtonContainer = new createjs.Container();
 
 WebFont.load({
     google: {
@@ -59,7 +61,6 @@ function initStage() {
     stage = new createjs.Stage("table");
 
     table.style.background = "#66BB6A";
-    createjs.Ticker.timingMode = createjs.Ticker.RAF_SYNCHED;
     createjs.Ticker.setFPS(fps);
     createjs.Ticker.addEventListener("tick", ticking);
     stage.enableMouseOver(30);
@@ -113,7 +114,39 @@ var Player = function(id) {
     this.hand = [];
     this.xcoord;
     this.ycoord;
+    this.selectedIDs = [];
+    this.selectedCards = [];
 };
+
+//asdfj
+
+Player.prototype.addSelection = function(sel) {
+    this.selectedIDs.push(sel.parent.getChildIndex(sel));
+}
+
+Player.prototype.removeSelection = function(sel) {
+    this.selectedIDs.splice(this.selectedIDs.indexOf(sel.parent.getChildIndex(sel)),1);
+}
+
+Player.prototype.setSelectedCards = function() {
+	this.selectedIDs.sort(function(a, b) {return a-b;});
+	// console.log(this.selectedIDs);
+	for (var i = 0; i < this.selectedIDs.length; i++) {
+		this.selectedCards.push(this.hand[this.selectedIDs[i]]);
+	}
+	// console.log(this.selectedCards);
+}
+
+Player.prototype.playCards = function() {
+	// Remove from array starting at higher indexes to prevent index change errors
+	for (var i = this.selectedIDs.length - 1; i >= 0; i--) {
+		// console.log(this.selectedIDs[i]);
+		this.hand.splice(this.selectedIDs[i],1);
+	}
+	this.selectedIDs.length = 0;
+	this.selectedCards.length = 0;
+	drawHand();
+}
 
 function initDeck() {
     var suit = ["spades", "diamonds", "clubs", "hearts"];
@@ -208,10 +241,11 @@ function calculateDiscard() {
 function drawEverything() {
     stage.removeAllChildren();
 
-    drawStart();
+    // drawStart();
     drawEveryone();
     drawHand();
     // drawOpponentHand();
+    drawPlayButton();
     drawDrawerIcon();
     drawDrawer();
 
@@ -269,7 +303,7 @@ function drawPlayer(id, x, y) {
 
 function drawHand() {
     var offset = 0;
-    handContainer = new createjs.Container();
+    handContainer.removeAllChildren();
     stage.addChild(handContainer);
 
     for (var i = 0; i < players[0].hand.length; i++) {
@@ -279,7 +313,6 @@ function drawHand() {
 
     handContainer.x = table.width/2 - ((players[0].hand.length-1) * 40*Math.pow(scale,3) + 120)/2;
     handContainer.y = table.height - 120*scale*scale;
-
 
     var moveCards = false;
     var restart = true;
@@ -308,14 +341,6 @@ function drawHand() {
             stage.update();
         }
     });
-}
-
-function drawOpponentHand() {
-    var offset = 0;
-    for (var i = 0; i < 26; i++) {
-        drawMiniCardDown(500 + offset, 200);
-        offset += 20;
-    }
 }
 
 function drawMiniCardDown(x, y) {
@@ -450,23 +475,72 @@ function drawCard(suit, value, x, y) {
         }
     });
 
-    card.addEventListener("click", function() {
+    card.addEventListener("click", function(evt) {
         if (!clicked) {
             cardboard.shadow = new createjs.Shadow("orange", 0, 0, 20);
             animating++;
             createjs.Tween.get(card).to({y: targetY}, 60).call(finishAnimating);
             clicked = !clicked;
+
+            players[0].addSelection(evt.target);
+
         } else {
             cardboard.shadow = new createjs.Shadow("black", 0, 1, 2);
             animating++;
             createjs.Tween.get(card).to({y: originalY}, 60).call(finishAnimating);
             clicked = !clicked;
+
+            players[0].removeSelection(evt.target);
+        }
+
+        if (players[0].selectedIDs.length > 0) {
+            animating++;
+            createjs.Tween.get(playButtonContainer).to({alpha: 1}, 150).call(finishAnimating);
+        } else {
+            animating++;
+            createjs.Tween.get(playButtonContainer).to({alpha: 0}, 150).call(finishAnimating);
         }
     });
 
     card.mouseChildren = false;
 
     return card;
+}
+
+function drawPlayButton() {
+    var playButtonText = new createjs.Text("Play", (32*scale) + "px Roboto Condensed", "white");
+    playButtonText.textAlign = "center";
+    playButtonText.textBaseline = "middle";
+    playButtonText.x = 60;
+    playButtonText.y = 30;
+    var playButtonShape = new createjs.Shape();
+    playButtonShape.graphics.beginFill("#03A9F4").drawRoundRect(0, 0, 120, 60, 5);
+    playButtonShape.shadow = new createjs.Shadow("rgba(0,0,0,0.5)", 0, 2, 1);
+
+    playButtonContainer.addChild(playButtonShape, playButtonText);
+    playButtonContainer.x = handContainer.x;
+    playButtonContainer.y = handContainer.y - 100;
+    playButtonContainer.alpha = 0;
+    playButtonContainer.on("click", function(evt) {
+    	animating++;
+    	createjs.Tween.get(evt.target.parent).to({alpha: 0.8}, 60).to({alpha: 1}, 60).call(finishAnimating);
+    	players[0].setSelectedCards();
+    	checkLead(players[0].selectedCards);
+    });
+    stage.addChild(playButtonContainer);
+    stage.update();
+}
+
+function checkLead(cards) {
+	var valid = true;
+
+	//Check validity of the play
+
+	if (valid) {
+		players[0].playCards();
+	} else {
+		console.log("not valid");
+	}
 }
 
 function drawDrawerIcon() {
@@ -503,17 +577,16 @@ function drawDrawerIcon() {
 }
 
 function drawDrawer() {
-    drawer = new createjs.Container();
-    drawer.x = -350*scale;
+    drawer.x = -(drawerWidth+50)*scale;
 
     var drawerBack = new createjs.Shape();
-    drawerBack.graphics.beginFill("white").drawRect(0, 0, 300*scale, table.height);
+    drawerBack.graphics.beginFill("white").drawRect(0, 0, drawerWidth*scale, table.height);
 
     drawerBack.shadow = new createjs.Shadow("black", -5, 0, 50);
 
     var close = new createjs.Text("\uE14C", (36*scale) + "px Material Icons", "black");
     close.textAlign="right";
-    close.x = 300*scale-16;
+    close.x = drawerWidth*scale-16;
     close.y = 16;
     var closeTarget = new createjs.Shape();
     closeTarget.graphics.beginFill("white").drawRect(-close.getMeasuredWidth()-16, -16, close.getMeasuredWidth()+32, close.getMeasuredHeight()+32);
@@ -530,7 +603,7 @@ function drawDrawer() {
     });
     close.addEventListener("click", function() {
         animating++;
-        createjs.Tween.get(drawer).to({x: -350*scale}, 60).call(finishAnimating);
+        createjs.Tween.get(drawer).to({x: -(drawerWidth+50)*scale}, 60).call(finishAnimating);
     });
 
     var titleIcon = new createjs.Text("\uE14D", (28*scale) + "px Material Icons", "#808080");
@@ -556,7 +629,7 @@ function drawDrawer() {
     fullscreenIcon.y = fullscreen.y = settingsIcon.y - fullscreenIcon.getMeasuredHeight() - 30*scale;
 
     var fullscreenTarget = new createjs.Shape();
-    fullscreenTarget.graphics.beginFill("white").drawRect(-(fullscreenIcon.getMeasuredWidth()+60*scale), -fullscreenIcon.getMeasuredHeight()/2 - 8*scale, 300*scale, fullscreenIcon.getMeasuredHeight() + 16*scale);
+    fullscreenTarget.graphics.beginFill("white").drawRect(-(fullscreenIcon.getMeasuredWidth()+60*scale), -fullscreenIcon.getMeasuredHeight()/2 - 8*scale, drawerWidth*scale, fullscreenIcon.getMeasuredHeight() + 16*scale);
     fullscreen.hitArea = fullscreenTarget;
 
     fullscreen.removeAllEventListeners();
@@ -592,7 +665,10 @@ function drawDrawerInfo() {
     trumpValueText.x = trumpSuitIcon.getMeasuredWidth() + 60*scale;
     trumpValueIcon.y = trumpValueText.y = 168*scale;
 
-    trumpSuitIcon.textBaseline = trumpSuitText.textBaseline = trumpValueIcon.textBaseline = trumpValueText.textBaseline = "middle";
+    trumpSuitIcon.textBaseline = "middle";
+    trumpSuitText.textBaseline = "middle";
+    trumpValueIcon.textBaseline = "middle";
+    trumpValueText.textBaseline = "middle";
     drawer.addChild(trumpSuitIcon, trumpSuitText, trumpValueIcon, trumpValueText);
 }
 
@@ -645,10 +721,8 @@ function toggleFullScreen() {
 }
 
 function ticking(event) {
-        // console.log(createjs.Tween.hasActiveTweens());
     if (animating > 0) {
         stage.update();
-        console.log(animating);
     }
 }
 
@@ -679,7 +753,6 @@ function shuffle(array) {
 }
 
 function drawTestIcons() {
-
     drawMiniCard("\u2665", "red", "7", 300*scale, 50);
     drawMiniCard("\u2660", "black", "Q", 400*scale, 50);
     drawMiniCardDown(500*scale, 50);
