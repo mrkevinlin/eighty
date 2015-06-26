@@ -5,6 +5,7 @@ var context;
 var stage;
 var animating = 0;
 var scale;
+var fps = 60
 
 var drawer;
 
@@ -58,8 +59,8 @@ function initStage() {
     stage = new createjs.Stage("table");
 
     table.style.background = "#66BB6A";
-    createjs.Ticker.setFPS(60);
-    createjs.Ticker.addEventListener("tick", ticking); 
+    createjs.Ticker.setFPS(fps);
+    createjs.Ticker.addEventListener("tick", ticking);
     stage.enableMouseOver(30);
     createjs.Touch.enable(stage);
 
@@ -87,7 +88,7 @@ function initPlayerCoordinates() {
     centery = radius;
     var stretch = (table.width - 80)/(radius*2);
 
-    for (var i = 0; i < playerCount; i++) { 
+    for (var i = 0; i < playerCount; i++) {
 
         degrees.push(90 + (360/playerCount)*i);
 
@@ -180,7 +181,7 @@ function initHands() {
                 } else {
                     return 0;
                 }
-            } else { 
+            } else {
                 return a.cardValue - b.cardValue;
             }
         } else {
@@ -206,7 +207,7 @@ function drawEverything() {
     drawStart();
     drawEveryone();
     drawHand();
-    // drawOpponentHand(); 
+    // drawOpponentHand();
     drawDrawerIcon();
     drawDrawer();
 
@@ -248,7 +249,7 @@ function animateDeal() {
 }
 
 function drawEveryone() {
-    for (var i = 0; i < playerCount; i++) { 
+    for (var i = 0; i < playerCount; i++) {
             drawPlayer(players[i].playerID, players[i].xcoord, players[i].ycoord);
     }
 }
@@ -329,7 +330,7 @@ function drawMiniCardDown(x, y) {
     card.addChild(cardboard, picture);
     card.x = x;
     card.y = y;
-    
+
     stage.addChild(card);
 }
 
@@ -402,7 +403,7 @@ function drawCardDown(x, y) {
     card.addChild(cardboard, picture);
     card.x = x;
     card.y = y;
-    
+
     return card;
 }
 
@@ -486,7 +487,7 @@ function drawCard(suit, value, x, y) {
             clicked = !clicked;
         }
     });
-    
+
     card.mouseChildren = false;
 
     return card;
@@ -638,7 +639,7 @@ function toggleFullScreen() {
     if (document.fullscreenEnabled || document.webkitFullscreenEnabled || document.mozFullScreenEnabled || document.msFullscreenEnabled) {
 
         var i = document.documentElement;
- 
+
         if (document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement) {
             if (document.exitFullscreen) {
                 document.exitFullscreen();
@@ -672,7 +673,7 @@ function ticking(event) {
 }
 
 function finishAnimating() {
-    setTimeout(function () {animating--}, 20);
+    setTimeout(function () {animating--}, Math.ceil(1000/fps));
 }
 
 window.addEventListener('resize', function() {
