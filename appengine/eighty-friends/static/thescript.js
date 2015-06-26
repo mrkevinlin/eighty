@@ -672,7 +672,7 @@ function ticking(event) {
 }
 
 function finishAnimating() {
-    animating--;
+    setTimeout(function () {animating--}, 20);
 }
 
 window.addEventListener('resize', function() {
