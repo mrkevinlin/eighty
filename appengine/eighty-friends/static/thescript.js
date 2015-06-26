@@ -148,6 +148,9 @@ function initTrump(suit, value) {
     for (var i = 0; i < deck.length; i++) {
         if (deck[i].suit == trumpSuit) {
             deck[i].isTrump = true;
+            if (deck[i].cardValue == trumpValue) {
+            	deck[i].cardValue = 16;
+            }
         }
         if (deck[i].cardValue == trumpValue) {
             deck[i].cardValue = 15;
