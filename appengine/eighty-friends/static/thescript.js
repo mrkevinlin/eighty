@@ -146,6 +146,8 @@ Player.prototype.playCards = function() {
 	this.selectedIDs.length = 0;
 	this.selectedCards.length = 0;
 	drawHand();
+	animating++;
+	createjs.Tween.get(playButtonContainer).to({alpha: 0}, 150).call(finishAnimating);
 }
 
 function initDeck() {
@@ -518,12 +520,14 @@ function drawPlayButton() {
     playButtonShape.shadow = new createjs.Shadow("rgba(0,0,0,0.5)", 0, 2, 1);
 
     playButtonContainer.addChild(playButtonShape, playButtonText);
-    playButtonContainer.x = handContainer.x;
-    playButtonContainer.y = handContainer.y - 100;
+    playButtonContainer.regX = 60;
+    playButtonContainer.regY = 30;
+    playButtonContainer.x = table.width/2;
+    playButtonContainer.y = table.height/2;
     playButtonContainer.alpha = 0;
     playButtonContainer.on("click", function(evt) {
     	animating++;
-    	createjs.Tween.get(evt.target.parent).to({alpha: 0.8}, 60).to({alpha: 1}, 60).call(finishAnimating);
+    	createjs.Tween.get(evt.target.parent).to({alpha: 0.8}, 60).call(finishAnimating);
     	players[0].setSelectedCards();
     	checkLead(players[0].selectedCards);
     });
@@ -723,6 +727,7 @@ function toggleFullScreen() {
 function ticking(event) {
     if (animating > 0) {
         stage.update();
+        console.log("stage updating");
     }
 }
 
