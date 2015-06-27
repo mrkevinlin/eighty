@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>GPG Test</title>
+        <script src="globals.js"></script>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+        <script src="https://apis.google.com/js/client:platform.js?onload=start" async defer></script>
+        <script>
+            var auth2;
+            function start() {
+                gapi.load('auth2', function() {
+                    auth2 = gapi.auth2.init({
+                        client_id: googleSigninClientId,
+                        scope: googleSigninScope
+                    });
+                });
+            }
+        </script>
+    </head>
+    <body>
+        <button id="signinButton">Sign in with Google</button>
+        <script>
+            $('#signinButton').click(function() {
+                auth2.grantOfflineAccess({'redirect_uri': 'postmessage'}).then(signinCallback);
+            });
+        </script>
+        <div id="result"></div>
+        <script>
+            function signinCallback(authResult) {
+                if (authResult['code']) {
+                    $('#signinButton').attr('style', 'display: none');
+                    $.ajax({
+                            type: 'POST',
+                            url: '/gpg/user',
+                            contentType: 'application/octet-stream; charset=utf-8',
+                            success: function(result) {},
+                            processData: false,
+                            data: {
+                                userId: "idToken",
+                                userCode: authResult['code'],
+                                action: "connect"
+                            }
+                    });
+                } else {
+                  // There was an error.
+                }
+            }
+        </script>
+    </body>
+</html>

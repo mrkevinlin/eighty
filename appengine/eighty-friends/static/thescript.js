@@ -5,7 +5,7 @@ var context;
 var stage;
 var animating = 0;
 var scale = (screen.availWidth > 768) ? 1 : 4/3;
-var fps = 60
+var fps = 60;
 
 var tableGreen = "#66BB6A";
 var mdBlue = "#03A9F4";
