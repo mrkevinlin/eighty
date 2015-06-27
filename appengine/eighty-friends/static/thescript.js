@@ -26,6 +26,10 @@ var cardHeight = 168;
 var miniWidth = 60;
 var miniHeight = 84;
 
+var roundIsTractor = false;
+var roundCount;
+var roundSuit;
+
 var drawer = new createjs.Container();
 var drawerWidth = 300;
 var handContainer = new createjs.Container();
@@ -110,6 +114,7 @@ var Player = function(id) {
     this.hand = [];
     this.xcoord;
     this.ycoord;
+    this.leader = true;
     this.selectedIDs = [];
     this.selectedCards = [];
 };
@@ -123,13 +128,25 @@ Player.prototype.removeSelection = function(sel) {
 }
 
 Player.prototype.setSelectedCards = function() {
+	this.selectedCards.length = 0;
 	this.selectedIDs.sort(function(a, b) {return a-b;});
 	for (var i = 0; i < this.selectedIDs.length; i++) {
 		this.selectedCards.push(this.hand[this.selectedIDs[i]]);
 	}
 }
 
+Player.prototype.checkSelection = function() {
+	if (this.leader) {
+		checkLead(this.selectedCards);
+	} else {
+		// checkPlay(this.selectedCards);
+	}
+
+}
+
 Player.prototype.playCards = function() {
+	animating++;
+	createjs.Tween.get(playButtonContainer).to({alpha: 0}, 150).call(finishAnimating);
 	// Remove from array starting at higher indexes to prevent index change errors
 	for (var i = this.selectedIDs.length - 1; i >= 0; i--) {
 		this.hand.splice(this.selectedIDs[i],1);
@@ -137,8 +154,6 @@ Player.prototype.playCards = function() {
 	this.selectedIDs.length = 0;
 	this.selectedCards.length = 0;
 	drawHand();
-	animating++;
-	createjs.Tween.get(playButtonContainer).to({alpha: 0}, 150).call(finishAnimating);
 }
 
 function initDeck() {
@@ -499,7 +514,7 @@ function drawPlayButton() {
     	animating++;
     	createjs.Tween.get(evt.target.parent).to({alpha: 0.8}, 60).call(finishAnimating);
     	players[0].setSelectedCards();
-    	checkLead(players[0].selectedCards);
+    	players[0].checkSelection();
     });
     stage.addChild(playButtonContainer);
     stage.update();
@@ -507,14 +522,39 @@ function drawPlayButton() {
 
 function checkLead(cards) {
 	var valid = true;
+	console.log(cards);
 
-	//Check validity of the play
+	// Check if the play is a tractor if there are 4 or more cards
+	if (cards.length >= 4) {
+		valid = checkIsTractor();
+	}
+
+	// Check for valid sequence plays if not tractor
+	if (!roundIsTractor) {
+		for (var i = 0; i < cards.length - 1; i++) {
+			if (valid) {
+				valid = (cards[i].suit == cards[i+1].suit) && (cards[i].cardValue == cards[i+1].cardValue);
+			}
+		}
+	}
 
 	if (valid) {
+		roundCount = cards.length;
+		roundSuit = cards[0].suit;
 		players[0].playCards();
 	} else {
 		console.log("not valid");
 	}
+}
+
+function checkPlay(cards) {
+	// Check the validity of following player moves
+}
+
+function checkIsTractor() {
+	// Check for a valid tractor. If so, return true for valid and set roundIsTractor to true
+	roundIsTractor = false;
+	return true;
 }
 
 function drawDrawerIcon() {
