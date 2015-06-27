@@ -18,6 +18,7 @@
 
         #card {
             background:white;
+            font-size: 1em;
             padding:36px;
             width:25%;
             position:relative;
@@ -67,6 +68,10 @@
 
         @-webkit-keyframes rotatecount {
             100% { -webkit-transform:rotate(-360deg); }
+        }
+
+        @media screen and (min-resolution: 2dppx) {
+            #card {width: 50%; font-size: 2em;}
         }
     </style>
   </head>

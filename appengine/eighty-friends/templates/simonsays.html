@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<script type="text/javascript" src="/_ah/channel/jsapi" ></script>
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+	</head>
+	<style>
+		button {
+			padding: 50px;
+			font-size: 18px;
+			color: white;
+		}
+	</style>
+	<body>
+		<div>
+			<h1>Simon Says</h1>
+			<div id="playerCount">There are currently {{ players }} players</div>
+			<div id="playerNames">Current players: {{ usernames }}</div>
+		</div>
+		<div>
+			<button style="background-color: purple;">One</button>
+			<button style="background-color: blue;">Two</button>
+			<button style="background-color: green;">Three</button>
+		</div>
+		<a href="{{ url_for('.logoff') }}">Logoff</a>
+		<script>
+			var onOpened = function() {
+				console.log('channel opened');
+				requestUpdate('players');
+			};
+			var onMessage = function(message) {
+				var data = JSON.parse(message.data);
+				console.log(data['category'] + ' message received');
+				switch (data['category']) {
+					case 'players':
+						var names = data['player_names'];
+						var count = data['player_count'];
+						$('#playerCount').text('There are currently ' + count + ' players');
+						$('#playerNames').text('Current players: ' + names.join([separator=', ']));
+						break;
+					default:
+						alert('server sent message of unknown type');
+				}
+			};
+			var onError = function(error) {
+				console.log('error');
+			};
+			var onClose = function() {
+				console.log('channel closed');
+			};
+			var requestUpdate = function(category) {
+				$.get('simonsays/requestupdate', {'category': category});
+			};
+			channel = new goog.appengine.Channel('{{ token }}');
+			socket = channel.open();
+			socket.onopen = onOpened;
+			socket.onmessage = onMessage;
+			socket.onerror = onError;
+			socket.onclose = onClose;
+		</script>
+	</body>
+
+</html>
