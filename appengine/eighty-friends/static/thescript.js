@@ -133,6 +133,7 @@ Player.prototype.setSelectedCards = function() {
 	for (var i = 0; i < this.selectedIDs.length; i++) {
 		this.selectedCards.push(this.hand[this.selectedIDs[i]]);
 	}
+	this.selectedCards.sort(cardSort);
 }
 
 Player.prototype.checkSelection = function() {
@@ -212,7 +213,7 @@ function initHands() {
         }
     }
 
-    players[0].hand.sort(handSort);
+    players[0].hand.sort(cardSort);
 }
 
 function calculateDiscard() {
@@ -526,10 +527,10 @@ function checkLead(cards) {
 
 	// Check if the play is a tractor if there are 4 or more cards
 	if (cards.length >= 4) {
-		valid = checkIsTractor();
+		valid = checkIsTractor(cards);
 	}
 
-	// Check for valid sequence plays if not tractor
+	// Check for valid set plays if not tractor
 	if (!roundIsTractor) {
 		for (var i = 0; i < cards.length - 1; i++) {
 			if (valid) {
@@ -551,8 +552,17 @@ function checkPlay(cards) {
 	// Check the validity of following player moves
 }
 
-function checkIsTractor() {
+function checkIsTractor(cards) {
 	// Check for a valid tractor. If so, return true for valid and set roundIsTractor to true
+	var setCount = 0;
+	var sequenceCount = 0;
+	var uniques;
+
+	for (var i = 0; i < cards.length; i++) {
+		
+	}
+
+
 	roundIsTractor = false;
 	return true;
 }
@@ -749,7 +759,7 @@ window.addEventListener('resize', function() {
     drawEverything();
 });
 
-function handSort(a, b) {
+function cardSort(a, b) {
 	var sortFactor = (ascending) ? 1:-1;
     if (a.isTrump && !b.isTrump) {
         return 1*sortFactor;
