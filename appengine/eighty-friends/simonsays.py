@@ -45,10 +45,10 @@ def login():
     if request.method == 'POST' and 'username' in request.form:
         formname = unicode(request.form['username'])
         if not formname:
-            flash('Invalid username entered')
+            flash(u'Invalid username entered')
             return redirect(url_for('.login'))
         elif Player.get_by_id(formname):
-            flash('That username has already been taken')
+            flash(u'That username has already been taken')
             return redirect(url_for('.login'))
         else:
             session['username'] = formname
