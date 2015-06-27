@@ -5,7 +5,7 @@ class Player(ndb.Model):
     channel_token = ndb.StringProperty('channel_token')
 
 class Game(ndb.Model):
-    name = ndb.StringProperty('name', requied=True)
+    name = ndb.StringProperty('name', required=True)
     started = ndb.BooleanProperty('started', default=False)
     leader = ndb.StringProperty('leader')
     sequence_length = ndb.IntegerProperty('sequence_length', default=3)
