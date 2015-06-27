@@ -71,6 +71,9 @@ def logoff(username=None):
             player_key = player_ent.key
             game_ent = get_current_game()
             game_ent.players.remove(player_key)
+            if len(game_ent.players) == 0:
+                # TODO: this is really just for testing purposes, remove later
+                game_ent.started = False
             game_ent.put()
             player_key.delete()
     send_channel_update('players')
