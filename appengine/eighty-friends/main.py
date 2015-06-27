@@ -1,8 +1,3 @@
-from flask import Flask, request
-
-app = Flask(__name__, static_url_path='')
-app.config['DEBUG'] = False
-
 from __future__ import print_function
 from flask import Flask, request, render_template, session, redirect, url_for
 from google.appengine.api.channel import channel
@@ -32,7 +27,7 @@ def game():
 def user_request():
     action = request.form['action']
     user_id = request.form['userId']
-    print request.form
+    print(request.form)
 #    if action == "connect":
 #        try:
 #            id_info = client.verify_id_token(token, CLIENT_ID)
@@ -49,8 +44,8 @@ def gpg():
     return app.send_static_file('gpg.html')
 
 @app.route('/gpg/user', methods = ['POST'])
-def user_request():
-       print request.form
+def gpg_user_request():
+       print(request.form)
        return ""
 
 @app.errorhandler(404)
