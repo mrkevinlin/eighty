@@ -83,6 +83,15 @@ def channel_disconnected():
     client_id = request.form['from']
     return logoff(username=client_id.split(':')[-1])
 
+@simon_says.route('/submit', methods=['POST'])
+def submit():
+    g.sequence = map(int, request.form.getlist('sequence[]'))
+    game = get_current_game()
+    game.sequence = g.sequence
+    send_channel_update('copysequence', [x.name for x in ndb.get_multi(game.players)
+        if x.name != game.leader])
+    return '', 204
+
 """
 @simon_says.route('/requestupdate')
 def request_update():
@@ -109,6 +118,8 @@ def send_channel_update(category, clients=None):
         message['sequence_length'] = game_ent.sequence_length
     elif category == 'follower':
         message['leader'] = game_ent.leader
+    elif category == 'copysequence':
+        message['sequence'] = g.sequence
     else:
         abort(404)
     # slow, doing lots of membership testing

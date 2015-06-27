@@ -31,13 +31,33 @@
 			<div id="leaderText">{{ 'Leader: ' + leader if leader }}</div>
 		</div>
 		<div>
-			<button class="colored purple" type="button"></button>
-			<button class="colored blue" type="button"></button>
-			<button class="colored green" type="button"></button>
+			<button class="colored purple" onclick="buttonPressed(0)" type="button"></button>
+			<button class="colored blue" onclick="buttonPressed(1)" type="button"></button>
+			<button class="colored green" onclick="buttonPressed(2)" type="button"></button>
 		</div>
 		<div><button onclick="submitSequence()" type="button">Submit</button></div>
 		<div><a href="{{ url_for('.logoff') }}">Logoff</a><div>
 		<script>
+			var currentSequence = []
+			var sequenceLength;
+			var submitSequence = function() {
+				if (currentSequence.length < sequenceLength) {
+					alert('You need to press ' + (sequenceLength - currentSequence.length) + ' more buttons!');
+				} else {
+					$.post('/simonsays/submit',
+							{'sequence[]': currentSequence.slice(0, sequenceLength)},
+							function () {
+								$('#leaderText').text('Waiting on other players to copy your sequence');
+								currentSequence = [];
+							});
+				}
+			};
+			var buttonPressed = function(index) {
+				currentSequence.push(index);
+			};
+			var lookup = function(curVal, idx, arr) {
+				return ['Purple', 'Blue', 'Green'][curVal]
+			};
 			var onOpened = function() {
 				console.log('channel opened');
 				requestUpdate('players');
@@ -56,12 +76,16 @@
 						// FIXME: if leader refreshes, then they will lose
 						// leader text, perhaps ask server if you're the leader
 						// when joining?
-						var sequenceLength = data['sequence_length'];
+						sequenceLength = data['sequence_length'];
 						$('#leaderText').text('You\'re the leader! Please enter a sequence of length ' + sequenceLength + ' and press submit');
 						break;
 					case 'follower':
 						var leader = data['leader'];
 						$('#leaderText').text('Leader: ' + leader);
+						break;
+					case 'copysequence':
+						var sequence = data['sequence'];
+						$('#leaderText').text('Alright, now repeat after the leader! The sequence is ' + sequence.map(lookup).join(separator=', '));
 						break;
 					default:
 						alert('server sent message of unknown type: ' + data['category']);
