@@ -4,11 +4,12 @@ var table;
 var context;
 var stage;
 var animating = 0;
-var scale;
+var scale = (screen.availWidth > 768) ? 1 : 4/3;
 var fps = 60
 
-var drawer = new createjs.Container();
-var drawerWidth = 300;
+var tableGreen = "#66BB6A";
+var mdBlue = "#03A9F4";
+var mdGray = "#616161";
 
 var players = [];
 var playerCount;
@@ -20,8 +21,19 @@ var centery;
 var deck = [];
 var trumpSuit;
 var trumpValue;
+var cardWidth = 120;
+var cardHeight = 168;
+var miniWidth = 60;
+var miniHeight = 84;
 
+var roundIsTractor = false;
+var roundCount;
+var roundSuit;
+
+var drawer = new createjs.Container();
+var drawerWidth = 300;
 var handContainer = new createjs.Container();
+var ascending = true;
 var playButtonContainer = new createjs.Container();
 
 WebFont.load({
@@ -33,14 +45,9 @@ WebFont.load({
 function init() {
     table = document.getElementById("table");
 
-    if (screen.availWidth > 768) {scale = 1;}
-    else {scale = 4/3;}
-
-
     playerCount = 5;
     trumpSuit = "hearts";
     trumpValue = 2;
-
 
     sizeCanvas();
     initStage();
@@ -60,18 +67,11 @@ function sizeCanvas() {
 function initStage() {
     stage = new createjs.Stage("table");
 
-    table.style.background = "#66BB6A";
+    table.style.background = tableGreen;
     createjs.Ticker.setFPS(fps);
     createjs.Ticker.addEventListener("tick", ticking);
     stage.enableMouseOver(30);
     createjs.Touch.enable(stage);
-
-    //Clicking ANYWHERE stows the drawer
-    // stage.on("stagemousedown", function() {
-    //     if(drawer.x==0) {
-    //         createjs.Tween.get(drawer).to({x: -250*scale}, 60);
-    //     }
-    // });
 }
 
 function initPlayer() {
@@ -85,7 +85,7 @@ function initPlayer() {
 
 function initPlayerCoordinates() {
     degrees.length = 0;
-    radius = (table.height - 120*Math.pow(scale,3) - 60)/2;
+    radius = (table.height - cardHeight*scale)/2;
     centerx = table.width/2;
     centery = radius;
     var stretch = (table.width - 80)/(radius*2);
@@ -114,11 +114,10 @@ var Player = function(id) {
     this.hand = [];
     this.xcoord;
     this.ycoord;
+    this.leader = true;
     this.selectedIDs = [];
     this.selectedCards = [];
 };
-
-//asdfj
 
 Player.prototype.addSelection = function(sel) {
     this.selectedIDs.push(sel.parent.getChildIndex(sel));
@@ -129,18 +128,28 @@ Player.prototype.removeSelection = function(sel) {
 }
 
 Player.prototype.setSelectedCards = function() {
+	this.selectedCards.length = 0;
 	this.selectedIDs.sort(function(a, b) {return a-b;});
-	// console.log(this.selectedIDs);
 	for (var i = 0; i < this.selectedIDs.length; i++) {
 		this.selectedCards.push(this.hand[this.selectedIDs[i]]);
 	}
-	// console.log(this.selectedCards);
+	this.selectedCards.sort(cardSort);
+}
+
+Player.prototype.checkSelection = function() {
+	if (this.leader) {
+		checkLead(this.selectedCards);
+	} else {
+		// checkPlay(this.selectedCards);
+	}
+
 }
 
 Player.prototype.playCards = function() {
+	animating++;
+	createjs.Tween.get(playButtonContainer).to({alpha: 0}, 150).call(finishAnimating);
 	// Remove from array starting at higher indexes to prevent index change errors
 	for (var i = this.selectedIDs.length - 1; i >= 0; i--) {
-		// console.log(this.selectedIDs[i]);
 		this.hand.splice(this.selectedIDs[i],1);
 	}
 	this.selectedIDs.length = 0;
@@ -204,33 +213,7 @@ function initHands() {
         }
     }
 
-    players[0].hand.sort(function(a, b) {
-        if (a.isTrump && !b.isTrump) {
-            return 1;
-        } else if (b.isTrump && !a.isTrump) {
-            return -1;
-        } else if (a.isTrump && b.isTrump) {
-            if (a.cardValue == 15 && b.cardValue == 15) {
-                if (a.suit > b.suit) {
-                    return 1;
-                } else if (a.suit < b.suit) {
-                    return -1;
-                } else {
-                    return 0;
-                }
-            } else {
-                return a.cardValue - b.cardValue;
-            }
-        } else {
-            if (a.suit > b.suit) {
-                return 1;
-            } else if (a.suit < b.suit) {
-                return -1;
-            } else {
-                return a.cardValue - b.cardValue;
-            }
-        }
-    });
+    players[0].hand.sort(cardSort);
 }
 
 function calculateDiscard() {
@@ -261,7 +244,7 @@ function drawStart() {
     var startButton = new createjs.Container();
     var startText = new createjs.Text("GO!", 36*scale + "px Roboto Condensed", "white");
     var startColor = new createjs.Shape();
-    startColor.graphics.beginFill("#03A9F4").drawRoundRect(0, 0, 120, 60, 10);
+    startColor.graphics.beginFill(mdBlue).drawRoundRect(0, 0, 120, 60, 10);
     startText.textAlign = "center";
     startText.textBaseline = "middle";
     startText.x = 120/2;
@@ -302,24 +285,23 @@ function drawPlayer(id, x, y) {
 }
 
 function drawHand() {
-    var offset = 0;
+    var offset = 40*Math.pow(scale,3);
     handContainer.removeAllChildren();
     stage.addChild(handContainer);
 
     for (var i = 0; i < players[0].hand.length; i++) {
-        handContainer.addChild(drawCard(players[0].hand[i].suit, players[0].hand[i].cardName, offset, 0));
-        offset += 40*Math.pow(scale,3);
+        handContainer.addChild(drawCard(players[0].hand[i].suit, players[0].hand[i].cardName, offset*i, 0));
     }
 
-    handContainer.x = table.width/2 - ((players[0].hand.length-1) * 40*Math.pow(scale,3) + 120)/2;
-    handContainer.y = table.height - 120*scale*scale;
+    handContainer.regX = ((players[0].hand.length-1)*offset + cardWidth*scale)/2;
+    handContainer.regY = cardHeight*scale/2;
+    handContainer.x = table.width/2;
+    handContainer.y = table.height - 18*scale;
 
     var moveCards = false;
     var restart = true;
     var shift;
     var oldX;
-
-    // NOTE: REMOVED ALL EVENT LISTENERS FOR STAGE HERE (in case more listeners are added to stage in the future and I forget about this)
     stage.removeAllEventListeners();
     stage.on("stagemousedown", function() {moveCards = true; });
     stage.on("stagemouseup", function() {moveCards = false; restart = true;});
@@ -331,9 +313,9 @@ function drawHand() {
             } else {
                     shift = event.stageX - oldX;
                     if (shift > 0) {
-                        if (handContainer.x + shift > 40) {shift = 0;}
+                        if (handContainer.x - handContainer.getBounds().width/2 + shift > cardWidth) {shift = 0;}
                     } else {
-                        if (handContainer.x + handContainer.getBounds().width + shift < table.width - 130) {shift = 0;}
+                        if (handContainer.x + handContainer.getBounds().width/2 + shift < table.width - cardWidth) {shift = 0;}
                     }
                     handContainer.x += shift;
                     oldX = event.stageX;
@@ -347,14 +329,14 @@ function drawMiniCardDown(x, y) {
     var card = new createjs.Container();
 
     var cardboard = new createjs.Shape();
-    cardboard.graphics.beginFill('white').drawRoundRect(0, 0, 60*scale, 84*scale, 10);
+    cardboard.graphics.beginFill('white').drawRoundRect(0, 0, miniWidth*scale, miniHeight*scale, 10);
     cardboard.shadow = new createjs.Shadow("black", 0, 1, 2);
 
     var picture = new createjs.Text("\uE410", 64*scale + "px Material Icons", "lightblue");
     picture.textBaseline = "middle";
     picture.textAlign = "center";
-    picture.x = 30*scale;
-    picture.y = 42*scale;
+    picture.x = miniWidth/2*scale;
+    picture.y = miniHeight/2*scale;
 
     card.addChild(cardboard, picture);
     card.x = x;
@@ -363,8 +345,6 @@ function drawMiniCardDown(x, y) {
     stage.addChild(card);
 }
 
-//Save suit (unicode), value, and color variables in Card objects and consolidate those parameters
-//into a single Card object in this function. Pass in coordinates to start draw on.
 function drawMiniCard(suit, value, x, y) {
     var color = (suit == "diamonds" || suit == "hearts" || suit == "trump" && value == "B") ? "red" : "black";
 	suit = getSuitIcon(suit);
@@ -381,19 +361,19 @@ function drawMiniCard(suit, value, x, y) {
     var card = new createjs.Container();
 
     var cardboard = new createjs.Shape();
-    cardboard.graphics.beginFill('white').drawRoundRect(0, 0, 60*scale, 84*scale, 10);
+    cardboard.graphics.beginFill('white').drawRoundRect(0, 0, miniWidth*scale, miniHeight*scale, 10);
     cardboard.shadow = new createjs.Shadow("black", 0, 1, 2);
 
     var value = new createjs.Text(value, 36*scale + "px Roboto Condensed", color);
     value.textBaseline = "top";
     value.textAlign = "center";
-    value.x = 30*scale;
+    value.x = miniWidth/2*scale;
     value.y = 5*scale;
 
     var suitIcon = new createjs.Text(suit, 36*scale + "px Roboto Condensed", color);
     suitIcon.textBaseline = "top";
     suitIcon.textAlign = "center";
-    suitIcon.x = 30*scale;
+    suitIcon.x = miniWidth/2*scale;
     suitIcon.y = 5*scale + value.getMeasuredHeight();
 
     card.addChild(cardboard, suitIcon, value);
@@ -406,14 +386,14 @@ function drawCardDown(x, y) {
     var card = new createjs.Container();
 
     var cardboard = new createjs.Shape();
-    cardboard.graphics.beginFill('white').drawRoundRect(0, 0, 120*scale, 168*scale, 10);
+    cardboard.graphics.beginFill('white').drawRoundRect(0, 0, cardWidth*scale, cardHeight*scale, 10);
     cardboard.shadow = new createjs.Shadow("black", 0, 1, 2);
 
     var picture = new createjs.Text("\uE410", 80*scale + "px Material Icons", "lightblue");
     picture.textBaseline = "middle";
     picture.textAlign = "center";
-    picture.x = 60*scale;
-    picture.y = 84*scale;
+    picture.x = cardWidth/2*scale;
+    picture.y = cardHeight/2*scale;
 
     card.addChild(cardboard, picture);
     card.x = x;
@@ -422,7 +402,6 @@ function drawCardDown(x, y) {
     return card;
 }
 
-//Pass in Card object as parameter and use suit and value variables to set text.
 function drawCard(suit, value, x, y) {
     var color = (suit == "diamonds" || suit == "hearts" || suit == "trump" && value == "B") ? "red" : "black";
     suit = getSuitIcon(suit);
@@ -439,7 +418,7 @@ function drawCard(suit, value, x, y) {
     var card = new createjs.Container();
 
     var cardboard = new createjs.Shape();
-    cardboard.graphics.beginFill('white').drawRoundRect(0, 0, 120*scale, 168*scale, 10);
+    cardboard.graphics.beginFill('white').drawRoundRect(0, 0, cardWidth*scale, cardHeight*scale, 10);
     cardboard.shadow = new createjs.Shadow("black", 0, 1, 2);
 
     var value = new createjs.Text(value, 36*scale + "px Roboto Condensed", color);
@@ -477,11 +456,10 @@ function drawCard(suit, value, x, y) {
 
     card.addEventListener("click", function(evt) {
         if (!clicked) {
-            cardboard.shadow = new createjs.Shadow("orange", 0, 0, 20);
+            cardboard.shadow = new createjs.Shadow(mdBlue, 0, 0, 10);
             animating++;
             createjs.Tween.get(card).to({y: targetY}, 60).call(finishAnimating);
             clicked = !clicked;
-
             players[0].addSelection(evt.target);
 
         } else {
@@ -489,7 +467,6 @@ function drawCard(suit, value, x, y) {
             animating++;
             createjs.Tween.get(card).to({y: originalY}, 60).call(finishAnimating);
             clicked = !clicked;
-
             players[0].removeSelection(evt.target);
         }
 
@@ -501,7 +478,6 @@ function drawCard(suit, value, x, y) {
             createjs.Tween.get(playButtonContainer).to({alpha: 0}, 150).call(finishAnimating);
         }
     });
-
     card.mouseChildren = false;
 
     return card;
@@ -511,21 +487,35 @@ function drawPlayButton() {
     var playButtonText = new createjs.Text("Play", (32*scale) + "px Roboto Condensed", "white");
     playButtonText.textAlign = "center";
     playButtonText.textBaseline = "middle";
-    playButtonText.x = 60;
-    playButtonText.y = 30;
+    playButtonText.x = 60*scale;
+    playButtonText.y = 30*scale;
     var playButtonShape = new createjs.Shape();
-    playButtonShape.graphics.beginFill("#03A9F4").drawRoundRect(0, 0, 120, 60, 5);
+    playButtonShape.graphics.beginFill(mdBlue).drawRoundRect(0, 0, 120*scale, 60*scale, 5);
     playButtonShape.shadow = new createjs.Shadow("rgba(0,0,0,0.5)", 0, 2, 1);
 
     playButtonContainer.addChild(playButtonShape, playButtonText);
-    playButtonContainer.x = handContainer.x;
-    playButtonContainer.y = handContainer.y - 100;
+    playButtonContainer.regX = 60*scale;
+    playButtonContainer.regY = 30*scale;
+    playButtonContainer.x = table.width/2;
+    playButtonContainer.y = table.height/2;
     playButtonContainer.alpha = 0;
-    playButtonContainer.on("click", function(evt) {
+    playButtonContainer.addEventListener("mouseover", function(evt) {
+		evt.target.parent.scaleX = 1.01;
+		evt.target.parent.scaleY = 1.01;
+		evt.target.parent.y-=1
+		stage.update();
+    });
+    playButtonContainer.addEventListener("mouseout", function(evt) {
+		evt.target.parent.scaleX = 1/1.01;
+		evt.target.parent.scaleY = 1/1.01;
+		evt.target.parent.y+=1
+		stage.update();
+    });
+    playButtonContainer.addEventListener("click", function(evt) {
     	animating++;
-    	createjs.Tween.get(evt.target.parent).to({alpha: 0.8}, 60).to({alpha: 1}, 60).call(finishAnimating);
+    	createjs.Tween.get(evt.target.parent).to({alpha: 0.8}, 60).call(finishAnimating);
     	players[0].setSelectedCards();
-    	checkLead(players[0].selectedCards);
+    	players[0].checkSelection();
     });
     stage.addChild(playButtonContainer);
     stage.update();
@@ -533,14 +523,48 @@ function drawPlayButton() {
 
 function checkLead(cards) {
 	var valid = true;
+	console.log(cards);
 
-	//Check validity of the play
+	// Check if the play is a tractor if there are 4 or more cards
+	if (cards.length >= 4) {
+		valid = checkIsTractor(cards);
+	}
+
+	// Check for valid set plays if not tractor
+	if (!roundIsTractor) {
+		for (var i = 0; i < cards.length - 1; i++) {
+			if (valid) {
+				valid = (cards[i].suit == cards[i+1].suit) && (cards[i].cardValue == cards[i+1].cardValue);
+			}
+		}
+	}
 
 	if (valid) {
+		roundCount = cards.length;
+		roundSuit = cards[0].suit;
 		players[0].playCards();
 	} else {
 		console.log("not valid");
 	}
+}
+
+function checkPlay(cards) {
+	// Check the validity of following player moves
+}
+
+function checkIsTractor(cards) {
+	// Check for a valid tractor. If so, return true for valid and set roundIsTractor to true
+	var setCount = 0;
+	var sequenceCount = 0;
+	var uniques;
+
+	for (var i = 0; i < cards.length; i++) {
+		
+	}
+
+
+	roundIsTractor = false;
+	return true;
 }
 
 function drawDrawerIcon() {
@@ -564,7 +588,6 @@ function drawDrawerIcon() {
         createjs.Tween.get(drawerIcon)
         .to({alpha:0.6}, 100).call(finishAnimating);
     })
-
     drawerIcon.on("click", function() {
         animating++;
         createjs.Tween.get(drawerIcon)
@@ -581,7 +604,6 @@ function drawDrawer() {
 
     var drawerBack = new createjs.Shape();
     drawerBack.graphics.beginFill("white").drawRect(0, 0, drawerWidth*scale, table.height);
-
     drawerBack.shadow = new createjs.Shadow("black", -5, 0, 50);
 
     var close = new createjs.Text("\uE14C", (36*scale) + "px Material Icons", "black");
@@ -594,7 +616,7 @@ function drawDrawer() {
 
     close.removeAllEventListeners();
     close.on("mouseover", function() {
-        close.color = "#03A9F4";
+        close.color = mdBlue;
         stage.update();
     });
     close.on("mouseout", function() {
@@ -606,17 +628,17 @@ function drawDrawer() {
         createjs.Tween.get(drawer).to({x: -(drawerWidth+50)*scale}, 60).call(finishAnimating);
     });
 
-    var titleIcon = new createjs.Text("\uE14D", (28*scale) + "px Material Icons", "#808080");
+    var titleIcon = new createjs.Text("\uE14D", (28*scale) + "px Material Icons", mdGray);
     var title = new createjs.Text("Eighty", (24*scale) + "px Roboto Condensed", "black");
     titleIcon.y = title.y = 30*scale;
 
-    var fullscreenIcon = new createjs.Text("\uE5D0", (28*scale) + "px Material Icons", "#808080");
+    var fullscreenIcon = new createjs.Text("\uE5D0", (28*scale) + "px Material Icons", mdGray);
     var fullscreen = new createjs.Text("Full Screen", (24*scale) + "px Roboto Condensed", "black");
 
-    var settingsIcon = new createjs.Text("\uE8B8", (28*scale) + "px Material Icons", "#808080");
+    var settingsIcon = new createjs.Text("\uE8B8", (28*scale) + "px Material Icons", mdGray);
     var settings = new createjs.Text("Settings", (24*scale) + "px Roboto Condensed", "black");
 
-    var helpIcon = new createjs.Text("\uE887", (28*scale) + "px Material Icons", "#808080");
+    var helpIcon = new createjs.Text("\uE887", (28*scale) + "px Material Icons", mdGray);
     var help = new createjs.Text("Help", (24*scale) + "px Roboto Condensed", "black");
 
     fullscreenIcon.textBaseline = fullscreen.textBaseline = settingsIcon.textBaseline = settings.textBaseline = helpIcon.textBaseline = help.textBaseline = "middle";
@@ -634,7 +656,7 @@ function drawDrawer() {
 
     fullscreen.removeAllEventListeners();
     fullscreen.on("mouseover", function() {
-        fullscreen.color = "#03A9F4";
+        fullscreen.color = mdBlue;
         stage.update();
     });
     fullscreen.on("mouseout", function() {
@@ -723,6 +745,7 @@ function toggleFullScreen() {
 function ticking(event) {
     if (animating > 0) {
         stage.update();
+        // console.log("stage updating");
     }
 }
 
@@ -735,6 +758,35 @@ window.addEventListener('resize', function() {
     initPlayerCoordinates();
     drawEverything();
 });
+
+function cardSort(a, b) {
+	var sortFactor = (ascending) ? 1:-1;
+    if (a.isTrump && !b.isTrump) {
+        return 1*sortFactor;
+    } else if (b.isTrump && !a.isTrump) {
+        return -1*sortFactor;
+    } else if (a.isTrump && b.isTrump) {
+        if (a.cardValue == 15 && b.cardValue == 15) {
+            if (a.suit > b.suit) {
+                return 1*sortFactor;
+            } else if (a.suit < b.suit) {
+                return -1*sortFactor;
+            } else {
+                return 0;
+            }
+        } else {
+            return (a.cardValue - b.cardValue)*sortFactor;
+        }
+    } else {
+        if (a.suit > b.suit) {
+            return 1*sortFactor;
+        } else if (a.suit < b.suit) {
+            return -1*sortFactor;
+        } else {
+            return (a.cardValue - b.cardValue)*sortFactor;
+        }
+    }
+}
 
 function shuffle(array) {
     var counter = array.length, temp, index;
