@@ -4,11 +4,12 @@ var table;
 var context;
 var stage;
 var animating = 0;
-var scale;
+var scale = (screen.availWidth > 768) ? 1 : 4/3;
 var fps = 60
 
-var drawer = new createjs.Container();
-var drawerWidth = 300;
+var tableGreen = "#66BB6A";
+var mdBlue = "#03A9F4";
+var mdGray = "#616161";
 
 var players = [];
 var playerCount;
@@ -20,8 +21,15 @@ var centery;
 var deck = [];
 var trumpSuit;
 var trumpValue;
+var cardWidth = 120;
+var cardHeight = 184;
+var miniWidth;
+var miniHeight;
 
+var drawer = new createjs.Container();
+var drawerWidth = 300;
 var handContainer = new createjs.Container();
+var ascending = true;
 var playButtonContainer = new createjs.Container();
 
 WebFont.load({
@@ -33,14 +41,9 @@ WebFont.load({
 function init() {
     table = document.getElementById("table");
 
-    if (screen.availWidth > 768) {scale = 1;}
-    else {scale = 4/3;}
-
-
-    playerCount = 5;
+    playerCount = 6;
     trumpSuit = "hearts";
     trumpValue = 2;
-
 
     sizeCanvas();
     initStage();
@@ -60,18 +63,11 @@ function sizeCanvas() {
 function initStage() {
     stage = new createjs.Stage("table");
 
-    table.style.background = "#66BB6A";
+    table.style.background = tableGreen;
     createjs.Ticker.setFPS(fps);
     createjs.Ticker.addEventListener("tick", ticking);
     stage.enableMouseOver(30);
     createjs.Touch.enable(stage);
-
-    //Clicking ANYWHERE stows the drawer
-    // stage.on("stagemousedown", function() {
-    //     if(drawer.x==0) {
-    //         createjs.Tween.get(drawer).to({x: -250*scale}, 60);
-    //     }
-    // });
 }
 
 function initPlayer() {
@@ -85,7 +81,7 @@ function initPlayer() {
 
 function initPlayerCoordinates() {
     degrees.length = 0;
-    radius = (table.height - 120*Math.pow(scale,3) - 60)/2;
+    radius = (table.height - cardHeight*scale)/2;
     centerx = table.width/2;
     centery = radius;
     var stretch = (table.width - 80)/(radius*2);
@@ -118,8 +114,6 @@ var Player = function(id) {
     this.selectedCards = [];
 };
 
-//asdfj
-
 Player.prototype.addSelection = function(sel) {
     this.selectedIDs.push(sel.parent.getChildIndex(sel));
 }
@@ -130,17 +124,14 @@ Player.prototype.removeSelection = function(sel) {
 
 Player.prototype.setSelectedCards = function() {
 	this.selectedIDs.sort(function(a, b) {return a-b;});
-	// console.log(this.selectedIDs);
 	for (var i = 0; i < this.selectedIDs.length; i++) {
 		this.selectedCards.push(this.hand[this.selectedIDs[i]]);
 	}
-	// console.log(this.selectedCards);
 }
 
 Player.prototype.playCards = function() {
 	// Remove from array starting at higher indexes to prevent index change errors
 	for (var i = this.selectedIDs.length - 1; i >= 0; i--) {
-		// console.log(this.selectedIDs[i]);
 		this.hand.splice(this.selectedIDs[i],1);
 	}
 	this.selectedIDs.length = 0;
@@ -206,33 +197,7 @@ function initHands() {
         }
     }
 
-    players[0].hand.sort(function(a, b) {
-        if (a.isTrump && !b.isTrump) {
-            return 1;
-        } else if (b.isTrump && !a.isTrump) {
-            return -1;
-        } else if (a.isTrump && b.isTrump) {
-            if (a.cardValue == 15 && b.cardValue == 15) {
-                if (a.suit > b.suit) {
-                    return 1;
-                } else if (a.suit < b.suit) {
-                    return -1;
-                } else {
-                    return 0;
-                }
-            } else {
-                return a.cardValue - b.cardValue;
-            }
-        } else {
-            if (a.suit > b.suit) {
-                return 1;
-            } else if (a.suit < b.suit) {
-                return -1;
-            } else {
-                return a.cardValue - b.cardValue;
-            }
-        }
-    });
+    players[0].hand.sort(handSort);
 }
 
 function calculateDiscard() {
@@ -263,7 +228,7 @@ function drawStart() {
     var startButton = new createjs.Container();
     var startText = new createjs.Text("GO!", 36*scale + "px Roboto Condensed", "white");
     var startColor = new createjs.Shape();
-    startColor.graphics.beginFill("#03A9F4").drawRoundRect(0, 0, 120, 60, 10);
+    startColor.graphics.beginFill(mdBlue).drawRoundRect(0, 0, 120, 60, 10);
     startText.textAlign = "center";
     startText.textBaseline = "middle";
     startText.x = 120/2;
@@ -304,24 +269,23 @@ function drawPlayer(id, x, y) {
 }
 
 function drawHand() {
-    var offset = 0;
+    var offset = 40*Math.pow(scale,3);
     handContainer.removeAllChildren();
     stage.addChild(handContainer);
 
     for (var i = 0; i < players[0].hand.length; i++) {
-        handContainer.addChild(drawCard(players[0].hand[i].suit, players[0].hand[i].cardName, offset, 0));
-        offset += 40*Math.pow(scale,3);
+        handContainer.addChild(drawCard(players[0].hand[i].suit, players[0].hand[i].cardName, offset*i, 0));
     }
 
-    handContainer.x = table.width/2 - ((players[0].hand.length-1) * 40*Math.pow(scale,3) + 120)/2;
-    handContainer.y = table.height - 120*scale*scale;
+    handContainer.regX = ((players[0].hand.length-1)*offset + cardWidth*scale)/2;
+    handContainer.regY = cardHeight*scale/2;
+    handContainer.x = table.width/2;
+    handContainer.y = table.height - 18*scale;
 
     var moveCards = false;
     var restart = true;
     var shift;
     var oldX;
-
-    // NOTE: REMOVED ALL EVENT LISTENERS FOR STAGE HERE (in case more listeners are added to stage in the future and I forget about this)
     stage.removeAllEventListeners();
     stage.on("stagemousedown", function() {moveCards = true; });
     stage.on("stagemouseup", function() {moveCards = false; restart = true;});
@@ -333,9 +297,9 @@ function drawHand() {
             } else {
                     shift = event.stageX - oldX;
                     if (shift > 0) {
-                        if (handContainer.x + shift > 40) {shift = 0;}
+                        if (handContainer.x - handContainer.getBounds().width/2 + shift > cardWidth) {shift = 0;}
                     } else {
-                        if (handContainer.x + handContainer.getBounds().width + shift < table.width - 130) {shift = 0;}
+                        if (handContainer.x + handContainer.getBounds().width/2 + shift < table.width - cardWidth) {shift = 0;}
                     }
                     handContainer.x += shift;
                     oldX = event.stageX;
@@ -408,7 +372,7 @@ function drawCardDown(x, y) {
     var card = new createjs.Container();
 
     var cardboard = new createjs.Shape();
-    cardboard.graphics.beginFill('white').drawRoundRect(0, 0, 120*scale, 168*scale, 10);
+    cardboard.graphics.beginFill('white').drawRoundRect(0, 0, cardWidth*scale, cardHeight*scale, 10);
     cardboard.shadow = new createjs.Shadow("black", 0, 1, 2);
 
     var picture = new createjs.Text("\uE410", 80*scale + "px Material Icons", "lightblue");
@@ -441,7 +405,7 @@ function drawCard(suit, value, x, y) {
     var card = new createjs.Container();
 
     var cardboard = new createjs.Shape();
-    cardboard.graphics.beginFill('white').drawRoundRect(0, 0, 120*scale, 168*scale, 10);
+    cardboard.graphics.beginFill('white').drawRoundRect(0, 0, cardWidth*scale, cardHeight*scale, 10);
     cardboard.shadow = new createjs.Shadow("black", 0, 1, 2);
 
     var value = new createjs.Text(value, 36*scale + "px Roboto Condensed", color);
@@ -516,7 +480,7 @@ function drawPlayButton() {
     playButtonText.x = 60;
     playButtonText.y = 30;
     var playButtonShape = new createjs.Shape();
-    playButtonShape.graphics.beginFill("#03A9F4").drawRoundRect(0, 0, 120, 60, 5);
+    playButtonShape.graphics.beginFill(mdBlue).drawRoundRect(0, 0, 120, 60, 5);
     playButtonShape.shadow = new createjs.Shadow("rgba(0,0,0,0.5)", 0, 2, 1);
 
     playButtonContainer.addChild(playButtonShape, playButtonText);
@@ -525,7 +489,19 @@ function drawPlayButton() {
     playButtonContainer.x = table.width/2;
     playButtonContainer.y = table.height/2;
     playButtonContainer.alpha = 0;
-    playButtonContainer.on("click", function(evt) {
+    playButtonContainer.addEventListener("mouseover", function(evt) {
+		evt.target.parent.scaleX = 1.01;
+		evt.target.parent.scaleY = 1.01;
+		evt.target.parent.y-=1
+		stage.update();
+    });
+    playButtonContainer.addEventListener("mouseout", function(evt) {
+		evt.target.parent.scaleX = 1/1.01;
+		evt.target.parent.scaleY = 1/1.01;
+		evt.target.parent.y+=1
+		stage.update();
+    });
+    playButtonContainer.addEventListener("click", function(evt) {
     	animating++;
     	createjs.Tween.get(evt.target.parent).to({alpha: 0.8}, 60).call(finishAnimating);
     	players[0].setSelectedCards();
@@ -598,7 +574,7 @@ function drawDrawer() {
 
     close.removeAllEventListeners();
     close.on("mouseover", function() {
-        close.color = "#03A9F4";
+        close.color = mdBlue;
         stage.update();
     });
     close.on("mouseout", function() {
@@ -610,17 +586,17 @@ function drawDrawer() {
         createjs.Tween.get(drawer).to({x: -(drawerWidth+50)*scale}, 60).call(finishAnimating);
     });
 
-    var titleIcon = new createjs.Text("\uE14D", (28*scale) + "px Material Icons", "#808080");
+    var titleIcon = new createjs.Text("\uE14D", (28*scale) + "px Material Icons", mdGray);
     var title = new createjs.Text("Eighty", (24*scale) + "px Roboto Condensed", "black");
     titleIcon.y = title.y = 30*scale;
 
-    var fullscreenIcon = new createjs.Text("\uE5D0", (28*scale) + "px Material Icons", "#808080");
+    var fullscreenIcon = new createjs.Text("\uE5D0", (28*scale) + "px Material Icons", mdGray);
     var fullscreen = new createjs.Text("Full Screen", (24*scale) + "px Roboto Condensed", "black");
 
-    var settingsIcon = new createjs.Text("\uE8B8", (28*scale) + "px Material Icons", "#808080");
+    var settingsIcon = new createjs.Text("\uE8B8", (28*scale) + "px Material Icons", mdGray);
     var settings = new createjs.Text("Settings", (24*scale) + "px Roboto Condensed", "black");
 
-    var helpIcon = new createjs.Text("\uE887", (28*scale) + "px Material Icons", "#808080");
+    var helpIcon = new createjs.Text("\uE887", (28*scale) + "px Material Icons", mdGray);
     var help = new createjs.Text("Help", (24*scale) + "px Roboto Condensed", "black");
 
     fullscreenIcon.textBaseline = fullscreen.textBaseline = settingsIcon.textBaseline = settings.textBaseline = helpIcon.textBaseline = help.textBaseline = "middle";
@@ -638,7 +614,7 @@ function drawDrawer() {
 
     fullscreen.removeAllEventListeners();
     fullscreen.on("mouseover", function() {
-        fullscreen.color = "#03A9F4";
+        fullscreen.color = mdBlue;
         stage.update();
     });
     fullscreen.on("mouseout", function() {
@@ -740,6 +716,35 @@ window.addEventListener('resize', function() {
     initPlayerCoordinates();
     drawEverything();
 });
+
+function handSort(a, b) {
+	var sortFactor = (ascending) ? 1:-1;
+    if (a.isTrump && !b.isTrump) {
+        return 1*sortFactor;
+    } else if (b.isTrump && !a.isTrump) {
+        return -1*sortFactor;
+    } else if (a.isTrump && b.isTrump) {
+        if (a.cardValue == 15 && b.cardValue == 15) {
+            if (a.suit > b.suit) {
+                return 1*sortFactor;
+            } else if (a.suit < b.suit) {
+                return -1*sortFactor;
+            } else {
+                return 0;
+            }
+        } else {
+            return (a.cardValue - b.cardValue)*sortFactor;
+        }
+    } else {
+        if (a.suit > b.suit) {
+            return 1*sortFactor;
+        } else if (a.suit < b.suit) {
+            return -1*sortFactor;
+        } else {
+            return (a.cardValue - b.cardValue)*sortFactor;
+        }
+    }
+}
 
 function shuffle(array) {
     var counter = array.length, temp, index;
