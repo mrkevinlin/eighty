@@ -22,9 +22,9 @@ var deck = [];
 var trumpSuit;
 var trumpValue;
 var cardWidth = 120;
-var cardHeight = 184;
-var miniWidth;
-var miniHeight;
+var cardHeight = 168;
+var miniWidth = 60;
+var miniHeight = 84;
 
 var drawer = new createjs.Container();
 var drawerWidth = 300;
@@ -41,7 +41,7 @@ WebFont.load({
 function init() {
     table = document.getElementById("table");
 
-    playerCount = 6;
+    playerCount = 5;
     trumpSuit = "hearts";
     trumpValue = 2;
 
@@ -313,14 +313,14 @@ function drawMiniCardDown(x, y) {
     var card = new createjs.Container();
 
     var cardboard = new createjs.Shape();
-    cardboard.graphics.beginFill('white').drawRoundRect(0, 0, 60*scale, 84*scale, 10);
+    cardboard.graphics.beginFill('white').drawRoundRect(0, 0, miniWidth*scale, miniHeight*scale, 10);
     cardboard.shadow = new createjs.Shadow("black", 0, 1, 2);
 
     var picture = new createjs.Text("\uE410", 64*scale + "px Material Icons", "lightblue");
     picture.textBaseline = "middle";
     picture.textAlign = "center";
-    picture.x = 30*scale;
-    picture.y = 42*scale;
+    picture.x = miniWidth/2*scale;
+    picture.y = miniHeight/2*scale;
 
     card.addChild(cardboard, picture);
     card.x = x;
@@ -329,8 +329,6 @@ function drawMiniCardDown(x, y) {
     stage.addChild(card);
 }
 
-//Save suit (unicode), value, and color variables in Card objects and consolidate those parameters
-//into a single Card object in this function. Pass in coordinates to start draw on.
 function drawMiniCard(suit, value, x, y) {
     var color = (suit == "diamonds" || suit == "hearts" || suit == "trump" && value == "B") ? "red" : "black";
 	suit = getSuitIcon(suit);
@@ -347,19 +345,19 @@ function drawMiniCard(suit, value, x, y) {
     var card = new createjs.Container();
 
     var cardboard = new createjs.Shape();
-    cardboard.graphics.beginFill('white').drawRoundRect(0, 0, 60*scale, 84*scale, 10);
+    cardboard.graphics.beginFill('white').drawRoundRect(0, 0, miniWidth*scale, miniHeight*scale, 10);
     cardboard.shadow = new createjs.Shadow("black", 0, 1, 2);
 
     var value = new createjs.Text(value, 36*scale + "px Roboto Condensed", color);
     value.textBaseline = "top";
     value.textAlign = "center";
-    value.x = 30*scale;
+    value.x = miniWidth/2*scale;
     value.y = 5*scale;
 
     var suitIcon = new createjs.Text(suit, 36*scale + "px Roboto Condensed", color);
     suitIcon.textBaseline = "top";
     suitIcon.textAlign = "center";
-    suitIcon.x = 30*scale;
+    suitIcon.x = miniWidth/2*scale;
     suitIcon.y = 5*scale + value.getMeasuredHeight();
 
     card.addChild(cardboard, suitIcon, value);
@@ -378,8 +376,8 @@ function drawCardDown(x, y) {
     var picture = new createjs.Text("\uE410", 80*scale + "px Material Icons", "lightblue");
     picture.textBaseline = "middle";
     picture.textAlign = "center";
-    picture.x = 60*scale;
-    picture.y = 84*scale;
+    picture.x = cardWidth/2*scale;
+    picture.y = cardHeight/2*scale;
 
     card.addChild(cardboard, picture);
     card.x = x;
@@ -388,7 +386,6 @@ function drawCardDown(x, y) {
     return card;
 }
 
-//Pass in Card object as parameter and use suit and value variables to set text.
 function drawCard(suit, value, x, y) {
     var color = (suit == "diamonds" || suit == "hearts" || suit == "trump" && value == "B") ? "red" : "black";
     suit = getSuitIcon(suit);
@@ -443,11 +440,10 @@ function drawCard(suit, value, x, y) {
 
     card.addEventListener("click", function(evt) {
         if (!clicked) {
-            cardboard.shadow = new createjs.Shadow("orange", 0, 0, 20);
+            cardboard.shadow = new createjs.Shadow(mdBlue, 0, 0, 10);
             animating++;
             createjs.Tween.get(card).to({y: targetY}, 60).call(finishAnimating);
             clicked = !clicked;
-
             players[0].addSelection(evt.target);
 
         } else {
@@ -455,7 +451,6 @@ function drawCard(suit, value, x, y) {
             animating++;
             createjs.Tween.get(card).to({y: originalY}, 60).call(finishAnimating);
             clicked = !clicked;
-
             players[0].removeSelection(evt.target);
         }
 
@@ -467,7 +462,6 @@ function drawCard(suit, value, x, y) {
             createjs.Tween.get(playButtonContainer).to({alpha: 0}, 150).call(finishAnimating);
         }
     });
-
     card.mouseChildren = false;
 
     return card;
@@ -477,15 +471,15 @@ function drawPlayButton() {
     var playButtonText = new createjs.Text("Play", (32*scale) + "px Roboto Condensed", "white");
     playButtonText.textAlign = "center";
     playButtonText.textBaseline = "middle";
-    playButtonText.x = 60;
-    playButtonText.y = 30;
+    playButtonText.x = 60*scale;
+    playButtonText.y = 30*scale;
     var playButtonShape = new createjs.Shape();
-    playButtonShape.graphics.beginFill(mdBlue).drawRoundRect(0, 0, 120, 60, 5);
+    playButtonShape.graphics.beginFill(mdBlue).drawRoundRect(0, 0, 120*scale, 60*scale, 5);
     playButtonShape.shadow = new createjs.Shadow("rgba(0,0,0,0.5)", 0, 2, 1);
 
     playButtonContainer.addChild(playButtonShape, playButtonText);
-    playButtonContainer.regX = 60;
-    playButtonContainer.regY = 30;
+    playButtonContainer.regX = 60*scale;
+    playButtonContainer.regY = 30*scale;
     playButtonContainer.x = table.width/2;
     playButtonContainer.y = table.height/2;
     playButtonContainer.alpha = 0;
@@ -544,7 +538,6 @@ function drawDrawerIcon() {
         createjs.Tween.get(drawerIcon)
         .to({alpha:0.6}, 100).call(finishAnimating);
     })
-
     drawerIcon.on("click", function() {
         animating++;
         createjs.Tween.get(drawerIcon)
@@ -561,7 +554,6 @@ function drawDrawer() {
 
     var drawerBack = new createjs.Shape();
     drawerBack.graphics.beginFill("white").drawRect(0, 0, drawerWidth*scale, table.height);
-
     drawerBack.shadow = new createjs.Shadow("black", -5, 0, 50);
 
     var close = new createjs.Text("\uE14C", (36*scale) + "px Material Icons", "black");
@@ -703,7 +695,7 @@ function toggleFullScreen() {
 function ticking(event) {
     if (animating > 0) {
         stage.update();
-        console.log("stage updating");
+        // console.log("stage updating");
     }
 }
 
