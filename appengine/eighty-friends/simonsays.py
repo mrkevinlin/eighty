@@ -28,14 +28,15 @@ def game():
             token = channel.create_channel('simonsays:' + username)
             current_player.channel_token = token
             current_player.put()
-            if len(game_ent.players) > 1 and not game_ent.started:
-                # now we're ready to start the game
-                game_ent.started = True
-                game_ent.leader = random.choice([x for x in player_names if x != username])
-                game_ent.put()
+            if len(game_ent.players) > 1:
+                if not game_ent.started:
+                    # now we're ready to start the game
+                    game_ent.started = True
+                    game_ent.leader = random.choice([x for x in player_names if x != username])
+                    game_ent.put()
+                    send_channel_update('leader', [game_ent.leader])
+                    send_channel_update('follower', [x for x in player_names if x not in [game_ent.leader, username]])
                 template_dict['leader'] = game_ent.leader
-                send_channel_update('leader', [game_ent.leader])
-                send_channel_update('follower', [x for x in player_names if x not in [game_ent.leader, username]])
         template_dict['token'] = current_player.channel_token
         template_dict['usernames'] =', '.join(player_names)
         return render_template('simonsays.html', **template_dict)
