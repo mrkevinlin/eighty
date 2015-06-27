@@ -45,6 +45,15 @@ def user_request():
 #            return AppIdentityError.message
     return "Success."
 
+@app.route('/gpg')
+def gpg():
+    return app.send_static_file('gpg.html')
+
+@app.route('/gpg/user', methods = ['POST'])
+def user_request():
+       print request.form
+       return ""
+
 @app.errorhandler(404)
 def page_not_found(e):
     return app.send_static_file('notfound.html')
