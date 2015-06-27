@@ -1,60 +1,62 @@
 from __future__ import print_function
 from flask import (Blueprint, request, render_template, session, redirect,
-    url_for, flash, abort)
+    url_for, flash, abort, g)
 from google.appengine.api.channel import channel
+from google.appengine.ext import ndb
 import os, json, random
-
+from simonsays_models import Game
+from simonsays_models import Player
 
 simon_says = Blueprint('simonsays', __name__)
 
-ss_players = 0
-current_players = {}
-cp_keys = current_players.viewkeys()
-sequence_length = 3
-leader = ''
-game_started = False
+# just one game, its name and id are both 'default'
+GAME_KEY = Game.get_or_insert('default', id='default', name='default').key
 
 @simon_says.route('', methods=['GET','POST'])
 def game():
-    if 'username' not in session:
+    if 'username' not in session or not Player.get_by_id(session['username']):
         return redirect(url_for('.login'))
     else:
-        template_dict = {'players': ss_players}
+        game_ent = get_current_game()
+        player_names = [x.name for x in ndb.get_multi(game_ent.players)]
+        template_dict = {'player_count': len(game_ent.players)}
         username = session['username']
-        if 'channel_token' not in current_players[username]:
+        current_player = Player.get_by_id(username)
+        if current_player.channel_token is None:
             # this is a new player
             # scheme I'd like to follow for client ID is service:username
             token = channel.create_channel('simonsays:' + username)
-            current_players[username]['channel_token'] = token
-            global game_started, leader
-            if len(current_players) > 1 and not game_started:
+            current_player.channel_token = token
+            current_player.put()
+            if len(game_ent.players) > 1 and not game_ent.started:
                 # now we're ready to start the game
-                game_started = True
-                leader = random.choice([x for x in cp_keys if x != username])
-                template_dict['leader'] = leader
-                send_channel_update('leader', [leader])
-                print([x for x in cp_keys if x not in [leader, username]])
-                send_channel_update('follower', [x for x in cp_keys if x not in [leader, username]])
-        template_dict['token'] = current_players[username]['channel_token']
-        template_dict['usernames'] =', '.join([x for x in current_players])
+                game_ent.started = True
+                game_ent.leader = random.choice([x for x in player_names if x != username])
+                game_ent.put()
+                template_dict['leader'] = game_ent.leader
+                send_channel_update('leader', [game_ent.leader])
+                send_channel_update('follower', [x for x in player_names if x not in [game_ent.leader, username]])
+        template_dict['token'] = current_player.channel_token
+        template_dict['usernames'] =', '.join(player_names)
         return render_template('simonsays.html', **template_dict)
 
 @simon_says.route('/login', methods=['GET','POST'])
 def login():
     if request.method == 'POST' and 'username' in request.form:
         formname = unicode(request.form['username'])
-        if formname in current_players:
-            flash('That username has already been taken')
-            return redirect(url_for('.login'))
-        elif not formname:
+        if not formname:
             flash('Invalid username entered')
+            return redirect(url_for('.login'))
+        elif Player.get_by_id(formname):
+            flash('That username has already been taken')
             return redirect(url_for('.login'))
         else:
             session['username'] = formname
             session['score'] = 0
-            current_players[formname] = {}
-            global ss_players
-            ss_players += 1
+            new_player_key = Player(name=formname, id=formname).put()
+            game_ent = get_current_game()
+            game_ent.players.append(new_player_key)
+            game_ent.put()
             send_channel_update('players')
             return redirect(url_for('.game'))
     return render_template('login.html')
@@ -63,16 +65,21 @@ def login():
 def logoff(username=None):
     name = session.pop('username', None) or username
     if name:
-        current_players.pop(name, None)
+        player_ent = Player.get_by_id(name)
+        if player_ent:
+            player_key = player_ent.key
+            game_ent = get_current_game()
+            game_ent.players.remove(player_key)
+            game_ent.put()
+            player_key.delete()
     send_channel_update('players')
     return redirect(url_for('.game'))
 
 def channel_disconnected():
-    global ss_players
-    ss_players = max(0, ss_players - 1)
     client_id = request.form['from']
     return logoff(username=client_id.split(':')[-1])
 
+"""
 @simon_says.route('/requestupdate')
 def request_update():
     user = current_players[session['username']]
@@ -81,24 +88,34 @@ def request_update():
     update_category = request.args['category']
     send_channel_update(update_category, [session['username']])
     return ('', 204)
+"""
 
 def send_channel_update(category, clients=None):
-    recipients = cp_keys if clients is None else clients
+    game_ent = get_current_game()
+    players = [x for x in ndb.get_multi(game_ent.players)]
+    player_names = [x.name for x in players]
+    recipients = player_names if clients is None else clients
     message = {'category': category}
     if category == 'players':
-        message['player_count'] = ss_players
-        message['player_names'] = current_players.keys()
+        message['player_count'] = len(player_names)
+        message['player_names'] = player_names
         # always tell everyone about 'players' updates
-        recipients = cp_keys
+        recipients = player_names
     elif category == 'leader':
-        message['sequence_length'] = sequence_length
+        message['sequence_length'] = game_ent.sequence_length
     elif category == 'follower':
-        global leader
-        message['leader'] = leader
+        message['leader'] = game_ent.leader
     else:
         abort(404)
+    # slow, doing lots of membership testing
+    channels_to_send = [x.channel_token for x in players if x.name in
+            recipients and x.channel_token]
+    for channel_token in channels_to_send:
+        channel.send_message(channel_token, json.dumps(message))
 
-    for player in recipients:
-        if 'channel_token' in current_players[player]:
-            channel.send_message(current_players[player]['channel_token'], json.dumps(message))
-
+# TODO: consider combining all game_ent.put() calls into a teardown function
+def get_current_game():
+    if 'game_entity' not in g:
+        game = GAME_KEY.get()
+        g.game_entity = game
+    return g.game_entity
