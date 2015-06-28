@@ -1,6 +1,6 @@
 from __future__ import print_function
 from flask import (Blueprint, request, render_template, session, redirect,
-    url_for, flash, abort, g)
+    url_for, flash, abort, g, jsonify)
 from google.appengine.api.channel import channel
 from google.appengine.ext import ndb
 import os, json, random
@@ -85,11 +85,24 @@ def channel_disconnected():
 
 @simon_says.route('/submit', methods=['POST'])
 def submit():
-    g.sequence = map(int, request.form.getlist('sequence[]'))
     game = get_current_game()
-    game.sequence = g.sequence
-    send_channel_update('copysequence', [x.name for x in ndb.get_multi(game.players)
-        if x.name != game.leader])
+    sequence = map(int, request.form.getlist('sequence[]'))
+    g.sequence = sequence
+    if session['username'] == game.leader:
+        game.sequence = g.sequence
+        game.put()
+        send_channel_update('copysequence', [x.name for x in ndb.get_multi(game.players) if x.name != game.leader])
+        return jsonify(message='Waiting on other players to copy your sequence',
+                        result='none')
+    else:
+        if sequence == game.sequence:
+            return jsonify(message='Very good! Wait for the next round.',
+                            result='match')
+            #send_channel_update('sequencematch', [session['username']])
+        else:
+            return jsonify(message='You got it wrong :( oh well',
+                            result='mismatch')
+            #send_channel_update('sequencemismatch', [session['username']])
     return '', 204
 
 """
@@ -120,6 +133,10 @@ def send_channel_update(category, clients=None):
         message['leader'] = game_ent.leader
     elif category == 'copysequence':
         message['sequence'] = g.sequence
+    elif category == 'sequencematch':
+        pass
+    elif category == 'sequencemismatch':
+        pass
     else:
         abort(404)
     # slow, doing lots of membership testing

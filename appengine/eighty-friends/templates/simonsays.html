@@ -38,7 +38,9 @@
 		<div><button onclick="submitSequence()" type="button">Submit</button></div>
 		<div><a href="{{ url_for('.logoff') }}">Logoff</a><div>
 		<script>
-			var currentSequence = []
+			var True = true, False = false;
+			var currentSequence = [];
+			var isLeader = {{ leader is none }};
 			var sequenceLength;
 			var submitSequence = function() {
 				if (currentSequence.length < sequenceLength) {
@@ -46,8 +48,14 @@
 				} else {
 					$.post('/simonsays/submit',
 							{'sequence[]': currentSequence.slice(0, sequenceLength)},
-							function () {
-								$('#leaderText').text('Waiting on other players to copy your sequence');
+							function (data) {
+								var result = data.result;
+								$('#leaderText').text(data.message);
+								/*if (isLeader) {
+									$('#leaderText').text('Waiting on other players to copy your sequence');
+								} else {
+									$('#leaderText').text('Very good! Wait for the next round.');
+								}*/
 								currentSequence = [];
 							});
 				}
@@ -77,15 +85,23 @@
 						// leader text, perhaps ask server if you're the leader
 						// when joining?
 						sequenceLength = data['sequence_length'];
+						isLeader = true;
 						$('#leaderText').text('You\'re the leader! Please enter a sequence of length ' + sequenceLength + ' and press submit');
 						break;
 					case 'follower':
 						var leader = data['leader'];
+						isLeader = false;
 						$('#leaderText').text('Leader: ' + leader);
 						break;
 					case 'copysequence':
 						var sequence = data['sequence'];
 						$('#leaderText').text('Alright, now repeat after the leader! The sequence is ' + sequence.map(lookup).join(separator=', '));
+						break;
+					case 'sequencematch':
+						// increment score
+						break;
+					case 'sequencemismatch':
+						// shame
 						break;
 					default:
 						alert('server sent message of unknown type: ' + data['category']);
