@@ -14,3 +14,4 @@ class Game(ndb.Model):
     players = ndb.KeyProperty(kind=Player, repeated=True)
     sequence = ndb.IntegerProperty(repeated=True)
     players_played = ndb.IntegerProperty(default=0)
+    round_ = ndb.IntegerProperty(default=1)

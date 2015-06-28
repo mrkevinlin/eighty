@@ -36,6 +36,7 @@ def game():
                     send_channel_update('leader', [game_ent.leader])
                     send_channel_update('follower', [x for x in player_names if x not in [game_ent.leader, username]])
                 template_dict['leader'] = game_ent.leader
+        template_dict['game_round'] = game_ent.round_
         template_dict['token'] = current_player.channel_token
         template_dict['usernames'] =', '.join(player_names)
         return render_template('simonsays.html', **template_dict)
@@ -73,6 +74,7 @@ def logoff(username=None):
             if len(game_ent.players) == 0:
                 # TODO: this is really just for testing purposes, remove later
                 game_ent.started = False
+                game_ent.round_ = 1
             player_key.delete()
         send_channel_update('players')
     return redirect(url_for('.game'))
@@ -88,6 +90,7 @@ def start_round():
     game.leader = random.choice([x for x in player_names if x != game.leader])
     game.sequence = []
     game.sequence_length += 1
+    game.round_ += 1
     players = ndb.get_multi(game.players)
     for player_ in players:
         player_.played_this_round = False
@@ -152,10 +155,14 @@ def send_channel_update(category, clients=None):
         message['player_names'] = player_names
         # always tell everyone about 'players' updates
         recipients = player_names
-    elif category == 'leader':
-        message['sequence_length'] = game_ent.sequence_length
-    elif category == 'follower':
-        message['leader'] = game_ent.leader
+    # TODO: consider making a separate 'nextround' event
+    elif category == 'leader' or category == 'follower':
+        # handle common data first
+        message['round'] = game_ent.round_
+        if category == 'leader':
+            message['sequence_length'] = game_ent.sequence_length
+        elif category == 'follower':
+            message['leader'] = game_ent.leader
     elif category == 'copysequence':
         message['sequence'] = g.sequence
     elif category == 'sequencematch':

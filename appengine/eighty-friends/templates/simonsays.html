@@ -26,6 +26,7 @@
 	<body>
 		<div>
 			<h1>Simon Says</h1>
+			<h2 id="round">Round {{ game_round }}</h2>
 			<div id="playerCount">There are currently {{ player_count }} players</div>
 			<div id="playerNames">Current players: {{ usernames }}</div>
 			<div id="leaderText">{{ 'Leader: ' + leader if leader }}</div>
@@ -83,12 +84,18 @@
 						// when joining?
 						sequenceLength = data['sequence_length'];
 						isLeader = true;
+						// TODO: put 1 second delay here? maybe only in certain
+						// cases
 						$('#leaderText').text('You\'re the leader! Please enter a sequence of length ' + sequenceLength + ' and press submit');
+						$('#round').text('Round ' + data['round']);
 						break;
 					case 'follower':
 						var leader = data['leader'];
 						isLeader = false;
+						// TODO: put 1 second delay here? maybe only in certain
+						// cases
 						$('#leaderText').text('Leader: ' + leader);
+						$('#round').text('Round ' + data['round']);
 						break;
 					case 'copysequence':
 						var sequence = data['sequence'];
