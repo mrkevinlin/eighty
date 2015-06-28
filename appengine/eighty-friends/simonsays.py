@@ -54,6 +54,7 @@ def login():
         else:
             session['username'] = formname
             session['score'] = 0
+            session['played_this_round'] = False
             new_player_key = Player(name=formname, id=formname).put()
             game_ent = get_current_game()
             game_ent.players.append(new_player_key)
@@ -88,21 +89,23 @@ def submit():
     game = get_current_game()
     sequence = map(int, request.form.getlist('sequence[]'))
     g.sequence = sequence
-    if session['username'] == game.leader:
-        game.sequence = g.sequence
-        game.put()
-        send_channel_update('copysequence', [x.name for x in ndb.get_multi(game.players) if x.name != game.leader])
-        return jsonify(message='Waiting on other players to copy your sequence',
-                        result='none')
-    else:
-        if sequence == game.sequence:
-            return jsonify(message='Very good! Wait for the next round.',
-                            result='match')
-            #send_channel_update('sequencematch', [session['username']])
+    if not session['played_this_round']:
+        session['played_this_round'] = True
+        if session['username'] == game.leader:
+            game.sequence = g.sequence
+            game.put()
+            send_channel_update('copysequence', [x.name for x in ndb.get_multi(game.players) if x.name != game.leader])
+            return jsonify(message='Waiting on other players to copy your sequence',
+                            result='none')
         else:
-            return jsonify(message='You got it wrong :( oh well',
-                            result='mismatch')
-            #send_channel_update('sequencemismatch', [session['username']])
+            if sequence == game.sequence:
+                return jsonify(message='Very good! Wait for the next round.',
+                                result='match')
+                #send_channel_update('sequencematch', [session['username']])
+            else:
+                return jsonify(message='You got it wrong :( oh well',
+                                result='mismatch')
+                #send_channel_update('sequencemismatch', [session['username']])
     return '', 204
 
 """

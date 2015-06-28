@@ -49,13 +49,10 @@
 					$.post('/simonsays/submit',
 							{'sequence[]': currentSequence.slice(0, sequenceLength)},
 							function (data) {
-								var result = data.result;
-								$('#leaderText').text(data.message);
-								/*if (isLeader) {
-									$('#leaderText').text('Waiting on other players to copy your sequence');
-								} else {
-									$('#leaderText').text('Very good! Wait for the next round.');
-								}*/
+								if (typeof data != 'undefined') {
+									var result = data.result;
+									$('#leaderText').text(data.message);
+								}
 								currentSequence = [];
 							});
 				}
