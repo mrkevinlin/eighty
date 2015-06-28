@@ -33,7 +33,6 @@ def game():
                     # now we're ready to start the game
                     game_ent.started = True
                     game_ent.leader = random.choice([x for x in player_names if x != username])
-                    game_ent.put()
                     send_channel_update('leader', [game_ent.leader])
                     send_channel_update('follower', [x for x in player_names if x not in [game_ent.leader, username]])
                 template_dict['leader'] = game_ent.leader
@@ -58,7 +57,6 @@ def login():
             new_player_key = Player(name=formname, id=formname).put()
             game_ent = get_current_game()
             game_ent.players.append(new_player_key)
-            game_ent.put()
             send_channel_update('players')
             return redirect(url_for('.game'))
     return render_template('login.html')
@@ -75,7 +73,6 @@ def logoff(username=None):
             if len(game_ent.players) == 0:
                 # TODO: this is really just for testing purposes, remove later
                 game_ent.started = False
-            game_ent.put()
             player_key.delete()
     send_channel_update('players')
     return redirect(url_for('.game'))
@@ -93,7 +90,6 @@ def submit():
         session['played_this_round'] = True
         if session['username'] == game.leader:
             game.sequence = g.sequence
-            game.put()
             send_channel_update('copysequence', [x.name for x in ndb.get_multi(game.players) if x.name != game.leader])
             return jsonify(message='Waiting on other players to copy your sequence',
                             result='none')
@@ -148,9 +144,15 @@ def send_channel_update(category, clients=None):
     for channel_token in channels_to_send:
         channel.send_message(channel_token, json.dumps(message))
 
-# TODO: consider combining all game_ent.put() calls into a teardown function
 def get_current_game():
     if 'game_entity' not in g:
-        game = GAME_KEY.get()
-        g.game_entity = game
+        g.game_entity = GAME_KEY.get()
     return g.game_entity
+
+@simon_says.teardown_request
+def put_game(exception):
+    # only call put() if the game is in g, meaning it was accessed during this request
+    # might be able to use the modified property to more easily check
+    if 'game_entity' in g and not exception:
+        g.game_entity.put()
+        print('game written')
