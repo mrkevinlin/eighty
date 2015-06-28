@@ -554,14 +554,13 @@ function checkPlay(cards) {
 
 function checkIsTractor(cards) {
 	// Check for a valid tractor. If so, return true for valid and set roundIsTractor to true
-	var setCount = 0;
-	var sequenceCount = 0;
-	var uniques;
+	var setCount = 1;
 
 	for (var i = 0; i < cards.length; i++) {
-		
+		if (cards[i].suit == card[i+1].suit && card[i].value == card[i+1].value) {
+            setCount++;
+        }
 	}
-
 
 	roundIsTractor = false;
 	return true;
