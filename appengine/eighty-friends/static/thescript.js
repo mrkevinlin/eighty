@@ -560,6 +560,7 @@ function checkIsTractor(cards) {
 		if (cards[i].suit == card[i+1].suit && card[i].value == card[i+1].value) {
             setCount++;
         }
+        // A change
 	}
 
 	roundIsTractor = false;
