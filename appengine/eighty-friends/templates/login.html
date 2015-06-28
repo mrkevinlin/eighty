@@ -1,12 +1,12 @@
 <!doctype html>
 <html>
 	<title>Simon Says login</title>
-	{% with messages = get_flashed_messages() %}
-	  {% if messages and messages[0] %}
-	  	<div>{{ messages[0] }}</div>
-	  {% endif %}
-	{% endwith %}
 	<body>
+	# with messages = get_flashed_messages()
+		# if messages and messages[0]:
+			<div>{{ messages[0] }}</div>
+		# endif
+	# endwith
 	<form action="" method="post">
 		<p><input type=text name=username>
 		<p><input type=submit value=Login>
