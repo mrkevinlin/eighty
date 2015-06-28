@@ -81,27 +81,53 @@ def channel_disconnected():
     client_id = request.form['from']
     return logoff(username=client_id.split(':')[-1])
 
+def start_round():
+    game = get_current_game()
+    player_names = [x.name for x in ndb.get_multi(game.players)]
+    game.players_played = 0
+    game.leader = random.choice([x for x in player_names if x != game.leader])
+    game.sequence = []
+    game.sequence_length += 1
+    players = ndb.get_multi(game.players)
+    for player_ in players:
+        player_.played_this_round = False
+    ndb.put_multi(players)
+    send_channel_update('leader', [game.leader])
+    send_channel_update('follower', [x for x in player_names if x != game.leader])
+
 @simon_says.route('/submit', methods=['POST'])
 def submit():
     game = get_current_game()
+    player = Player.get_by_id(session['username'])
     sequence = map(int, request.form.getlist('sequence[]'))
     g.sequence = sequence
-    if not session['played_this_round']:
-        session['played_this_round'] = True
+    if not player.played_this_round:
+        json_result = None
+        player.played_this_round = True
+        player.put()
+        game.players_played += 1
         if session['username'] == game.leader:
             game.sequence = g.sequence
             send_channel_update('copysequence', [x.name for x in ndb.get_multi(game.players) if x.name != game.leader])
-            return jsonify(message='Waiting on other players to copy your sequence',
-                            result='none')
+            json_result = jsonify(message='Waiting on other players to copy your sequence',
+                                    result='none')
         else:
             if sequence == game.sequence:
-                return jsonify(message='Very good! Wait for the next round.',
-                                result='match')
+                json_result = jsonify(message='Very good! Wait for the next round.',
+                                        result='match')
                 #send_channel_update('sequencematch', [session['username']])
             else:
-                return jsonify(message='You got it wrong :( oh well',
-                                result='mismatch')
+                json_result = jsonify(message='You got it wrong :( oh well',
+                                        result='mismatch')
                 #send_channel_update('sequencemismatch', [session['username']])
+        if game.players_played == len(game.players):
+            # next round!
+            @after_this_request
+            def start_next_round(response):
+                print('starting the next round')
+                start_round()
+                return response
+        return json_result
     return '', 204
 
 """
@@ -156,3 +182,17 @@ def put_game(exception):
     if 'game_entity' in g and not exception:
         g.game_entity.put()
         print('game written')
+
+def after_this_request(func):
+    if not hasattr(g, 'call_after_request'):
+        g.call_after_request = []
+    g.call_after_request.append(func)
+    return func
+
+
+@simon_says.after_request
+def per_request_callbacks(response):
+    for func in getattr(g, 'call_after_request', ()):
+        response = func(response)
+    return response
+
