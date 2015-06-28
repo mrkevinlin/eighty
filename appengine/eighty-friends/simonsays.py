@@ -74,7 +74,7 @@ def logoff(username=None):
                 # TODO: this is really just for testing purposes, remove later
                 game_ent.started = False
             player_key.delete()
-    send_channel_update('players')
+        send_channel_update('players')
     return redirect(url_for('.game'))
 
 def channel_disconnected():
