@@ -523,7 +523,6 @@ function drawPlayButton() {
 
 function checkLead(cards) {
 	var valid = true;
-	console.log(cards);
 
 	// Check if the play is a tractor if there are 4 or more cards
 	if (cards.length >= 4) {
@@ -541,6 +540,7 @@ function checkLead(cards) {
 	}
 
 	if (valid) {
+		console.log("IS GOOD");
 		roundCount = cards.length;
 		roundSuit = cards[0].suit;
 		players[0].playCards();
@@ -567,49 +567,43 @@ function checkIsTractor(cards) {
 	// The set must be a pair at minimum and the play must have whole numbers of sets
 	if (setCount > 1 && cards.length%setCount==0) {
 
-		// Tractor check for non-trumps
-		if (!cards[0].isTrump) {
-
-			// Check that the first cards in each set are same suit and sequential
-			for (var i = 0; i < cards.length; i+=setCount) {
-
-				if (cards[i].suit == cards[i+setCount].suit) {
-					// Account for extraction of trump value from sequences
-					if (cards[i].cardValue+1 == trumpValue) {
-						if (!cards[i].cardValue + 2 == cards[i+setCount].cardValue) {
-							console.log("Not sequential sets");
-							return false;
-						}
-					} else {
-						if (!cards[i].cardValue + 1 == cards[i+setCount].cardValue) {
-							console.log("Not sequential sets");
-							return false;
-						}
+		// Check that the first cards in each set are the same suit and sequential
+		for (var i = 0; i < cards.length - setCount; i+=setCount) {
+			// Sequence set suits must match OR they must all be trumps
+			if (cards[i].suit == cards[i+setCount].suit || (cards[i].isTrump && cards[i+setCount].isTrump)) {
+				console.log("sequence check");
+				// Account for extraction of trump value from sequences
+				if (cards[i].cardValue+1 == trumpValue) {
+					if (!(cards[i].cardValue + 2 == cards[i+setCount].cardValue)) {
+						console.log("Not sequential sets");
+						return false;
 					}
 				} else {
-					console.log("Failed first set card suit check");
+					if (!(cards[i].cardValue + 1 == cards[i+setCount].cardValue)) {
+						console.log("Not sequential sets");
+						return false;
+					}
+				}
+			} 
+			else {
+				console.log("Failed first set card suit check");
+				return false;
+			}
+
+		}
+
+		// How many sets to check left in the play
+		for (var j = 1; j <= (cards.length - setCount)/setCount; j++) {
+
+			// Traverse through a set and check they are the same card
+			for (var k = 0; k < setCount-1; k++) {
+				var index = setCount * j + k;
+				if (!(cards[index].suit == cards[index+1].suit && cards[index].cardValue == cards[index+1].cardValue)) {
+					console.log("Failed set check");
 					return false;
 				}
 
 			}
-
-			// How many sets to check left in the play
-			for (var j = 1; j <= (cards.length - setCount)/setCount; j++) {
-
-				// Traverse through a set and check they are the same card
-				for (var k = 0; k < setCount-1; k++) {
-					var index = setCount * j + k;
-					if (!(cards[index].suit == cards[index+1].suit && cards[index].cardValue == cards[index+1].cardValue)) {
-						console.log("Failed set check");
-						return false;
-					}
-
-				}
-
-			}
-
-		} // Tractor check for trumps
-		else {
 
 		}
 
@@ -619,12 +613,12 @@ function checkIsTractor(cards) {
 	}
 
 	// IS A TRACTOR JESUS
-		return true;
+	return true;
 }
 
 function testHand() {
 	players[0].hand.length = 0;
-	var deckCount = 2;
+	var deckCount = 4;
 
 	var suit = ["spades", "diamonds", "clubs", "hearts"];
     var names = ["2", "3", "4", "5", "6", "7", "8", "9", "I0", "J", "Q", "K", "A"];
@@ -642,6 +636,19 @@ function testHand() {
         }
         players[0].hand.push(new Card("trump", "S", 17, true, 0));
         players[0].hand.push(new Card("trump", "B", 18, true, 0));
+    }
+
+    for (var i = 0; i < players[0].hand.length; i++) {
+        if (players[0].hand[i].suit == trumpSuit) {
+            players[0].hand[i].isTrump = true;
+            if (players[0].hand[i].cardValue == trumpValue) {
+            	players[0].hand[i].cardValue = 16;
+            }
+        }
+        if (players[0].hand[i].cardValue == trumpValue) {
+            players[0].hand[i].cardValue = 15;
+            players[0].hand[i].isTrump = true;
+        }
     }
     players[0].hand.sort(cardSort);
     drawHand();
