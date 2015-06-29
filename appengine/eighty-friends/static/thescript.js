@@ -187,7 +187,7 @@ var Card = function(suit, name, value, isTrump, points) {
     this.points = points;
 };
 
-function initTrump(suit, value) {
+function initTrump() {
     for (var i = 0; i < deck.length; i++) {
         if (deck[i].suit == trumpSuit) {
             deck[i].isTrump = true;
@@ -528,6 +528,7 @@ function checkLead(cards) {
 	// Check if the play is a tractor if there are 4 or more cards
 	if (cards.length >= 4) {
 		valid = checkIsTractor(cards);
+		roundIsTractor = valid;
 	}
 
 	// Check for valid set plays if not tractor
@@ -554,17 +555,96 @@ function checkPlay(cards) {
 
 function checkIsTractor(cards) {
 	// Check for a valid tractor. If so, return true for valid and set roundIsTractor to true
-	var setCount = 1;
+	
+	// Find the number of cards in each tractor set (ie pairs, triples, etc)
+	var setCount = 0;
+	do {setCount++;} 
+	while (cards[setCount-1].suit == cards[setCount].suit 
+		&& cards[setCount-1].cardValue == cards[setCount].cardValue)
 
-	for (var i = 0; i < cards.length; i++) {
-		if (cards[i].suit == card[i+1].suit && card[i].value == card[i+1].value) {
-            setCount++;
-        }
-        // A change
+	console.log("Set count: " + setCount);
+
+	// The set must be a pair at minimum and the play must have whole numbers of sets
+	if (setCount > 1 && cards.length%setCount==0) {
+
+		// Tractor check for non-trumps
+		if (!cards[0].isTrump) {
+
+			// Check that the first cards in each set are same suit and sequential
+			for (var i = 0; i < cards.length; i+=setCount) {
+
+				if (cards[i].suit == cards[i+setCount].suit) {
+					// Account for extraction of trump value from sequences
+					if (cards[i].cardValue+1 == trumpValue) {
+						if (!cards[i].cardValue + 2 == cards[i+setCount].cardValue) {
+							console.log("Not sequential sets");
+							return false;
+						}
+					} else {
+						if (!cards[i].cardValue + 1 == cards[i+setCount].cardValue) {
+							console.log("Not sequential sets");
+							return false;
+						}
+					}
+				} else {
+					console.log("Failed first set card suit check");
+					return false;
+				}
+
+			}
+
+			// How many sets to check left in the play
+			for (var j = 1; j <= (cards.length - setCount)/setCount; j++) {
+
+				// Traverse through a set and check they are the same card
+				for (var k = 0; k < setCount-1; k++) {
+					var index = setCount * j + k;
+					if (!(cards[index].suit == cards[index+1].suit && cards[index].cardValue == cards[index+1].cardValue)) {
+						console.log("Failed set check");
+						return false;
+					}
+
+				}
+
+			}
+
+		} // Tractor check for trumps
+		else {
+
+		}
+
+	} else {
+		console.log("Failed set count check and divisible play count check");
+		return false;
 	}
 
-	roundIsTractor = false;
-	return true;
+	// IS A TRACTOR JESUS
+		return true;
+}
+
+function testHand() {
+	players[0].hand.length = 0;
+	var deckCount = 2;
+
+	var suit = ["spades", "diamonds", "clubs", "hearts"];
+    var names = ["2", "3", "4", "5", "6", "7", "8", "9", "I0", "J", "Q", "K", "A"];
+    var points = 0;
+
+    for (var i = 0; i < deckCount; i++) {
+        for (var s = 0; s < 4; s++) {
+            for (var v = 0; v <= 12; v++) {
+                if (v==5 || v==10 || v==13) {
+                    points = (v==5) ? 5:10;
+                }
+                players[0].hand.push(new Card(suit[s], names[v], v+2, false, points));
+                points = 0;
+            }
+        }
+        players[0].hand.push(new Card("trump", "S", 17, true, 0));
+        players[0].hand.push(new Card("trump", "B", 18, true, 0));
+    }
+    players[0].hand.sort(cardSort);
+    drawHand();
 }
 
 function drawDrawerIcon() {
