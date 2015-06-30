@@ -75,6 +75,7 @@ def logoff(username=None):
                 # TODO: this is really just for testing purposes, remove later
                 game_ent.started = False
                 game_ent.round_ = 1
+                game_ent.sequence_length = 3
             player_key.delete()
         send_channel_update('players')
     return redirect(url_for('.game'))
