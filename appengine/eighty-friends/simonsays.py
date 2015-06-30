@@ -204,5 +204,15 @@ def per_request_callbacks(response):
         response = func(response)
     return response
 
+@simon_says.route('/resetdb', methods=['POST'])
+def reset_db():
+    from google.appengine.api import memcache
+
+    ndb.delete_multi(Game.query().iter(keys_only=True))
+    ndb.delete_multi(Player.query().iter(keys_only=True))
+    memcache.flush_all()
+    ndb.get_context().flush()
+    ndb.get_context().clear_cache()
+    return '', 204
 
 # vim:expandtab:tabstop=4:shiftwidth=4:softtabstop=4
