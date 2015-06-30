@@ -127,6 +127,10 @@ QUnit.test("AAS44D 4H", function(assert) {
 	var cards = genCards(['AS', 'AS', '4D', '4D'], '4H');
 	assert.ok(checkIsTractor(cards));
 });
+QUnit.test("AAS44s 4H", function(assert) {
+	var cards = genCards(['AS', 'AS', '4S', '4S'], '4H');
+	assert.ok(checkIsTractor(cards));
+});
 QUnit.test("44S44H 4H", function(assert) {
 	var cards = genCards(['4S', '4S', '4H', '4H'], '4H');
 	assert.ok(checkIsTractor(cards));
