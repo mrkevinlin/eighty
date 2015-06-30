@@ -555,7 +555,9 @@ function checkPlay(cards) {
 
 function checkIsTractor(cards) {
 	// Check for a valid tractor. If so, return true for valid and set roundIsTractor to true
-	
+	if (cards.length < 4) {
+		throw 'size of cards must be >= 4';
+	}
 	// Find the number of cards in each tractor set (ie pairs, triples, etc)
 	var setCount = 0;
 	do {setCount++;} 
