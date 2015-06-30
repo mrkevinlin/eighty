@@ -204,3 +204,5 @@ def per_request_callbacks(response):
         response = func(response)
     return response
 
+
+# vim:expandtab:tabstop=4:shiftwidth=4:softtabstop=4
