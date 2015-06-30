@@ -44,7 +44,7 @@ function genCards(cardSpecs, trumpSpec) {
 		}
 		if (card.cardValue === trumpCard.cardValue) {
 			card.isTrump = true;
-			card.cardValue = card.suit === trumpCard.suit ? 16 : 15;
+			card.cardValue = (card.suit === trumpCard.suit) ? 16 : 15;
 		}
 		cards.push(card);
 	}
@@ -68,6 +68,9 @@ QUnit.test("KD", function(assert) {
 QUnit.test("10C", function(assert) {
 	assert.deepEqual(genCard('10C'), new Card('clubs', '10', 10, false, 10));
 });
+QUnit.test("JD", function(assert) {
+	assert.deepEqual(genCard('JD'), new Card('diamonds', 'J', 11, false, 0));
+});
 QUnit.test("ST !isTrump", function(assert) {
 	assert.deepEqual(genCard('ST', false), new Card('trump', 'S', 17, true, 0));
 });
@@ -89,61 +92,76 @@ QUnit.test("AS AS", function(assert) {
 QUnit.test("AD AS", function(assert) {
 	assert.deepEqual(genCards(['AD'], 'AS'), [new Card('diamonds', 'A', 15, true, 0)]);
 });
+QUnit.test("JD QC", function(assert) {
+	assert.deepEqual(genCards(['JD'], 'QC'), [new Card('diamonds', 'J', 11, false, 0)]);
+});
 
 
 QUnit.module("tractor validation fail");
 QUnit.test("JQAAS", function(assert) {
 	var cards = genCards(['JS', 'QS', 'AS', 'AS'], '2S');
-	assert.notOk(checkIsTractor(cards));
+	assert.notOk(checkIsTractor(cards, genCard('2S', true)));
 });
 QUnit.test("2233S 3C", function(assert) {
 	var cards = genCards(['2S', '2S', '3S', '3S'], '3C');
-	assert.notOk(checkIsTractor(cards));
+	assert.notOk(checkIsTractor(cards, genCard('3C', true)));
 });
 QUnit.test("3344S 3C", function(assert) {
 	var cards = genCards(['3S', '3S', '4S', '4S'], '3C');
-	assert.notOk(checkIsTractor(cards));
+	assert.notOk(checkIsTractor(cards, genCard('3C', true)));
 });
 QUnit.test("33344S 2C", function(assert) {
 	var cards = genCards(['3S', '3S', '3S', '4S', '4S'], '2C');
-	assert.notOk(checkIsTractor(cards));
+	assert.notOk(checkIsTractor(cards, genCard('2C', true)));
 });
 
 
 QUnit.module("tractor validation succeed");
 QUnit.test("KKAAS 2S", function(assert) {
 	var cards = genCards(['KS', 'KS', 'AS', 'AS'], '2S');
-	assert.ok(checkIsTractor(cards));
+	assert.ok(checkIsTractor(cards, genCard('2S', true)));
 });
 QUnit.test("KKAAS22D 2S", function(assert) {
 	var cards = genCards(['KS', 'KS', 'AS', 'AS', '2D', '2D'], '2S');
-	assert.ok(checkIsTractor(cards));
+	assert.ok(checkIsTractor(cards, genCard('2S', true)));
 });
 QUnit.test("JJKKD QC", function(assert) {
 	var cards = genCards(['JD', 'JD', 'KD', 'KD'], 'QC');
-	assert.ok(checkIsTractor(cards));
+	assert.ok(checkIsTractor(cards, genCard('QC', true)));
 });
-QUnit.test("AAS44D 4H", function(assert) {
-	var cards = genCards(['AS', 'AS', '4D', '4D'], '4H');
-	assert.ok(checkIsTractor(cards));
+QUnit.test("JJJKKKD QC", function(assert) {
+	var cards = genCards(['JD', 'JD', 'JD', 'KD', 'KD', 'KD'], 'QC');
+	assert.ok(checkIsTractor(cards, genCard('QC', true)));
 });
-QUnit.test("AAS44s 4H", function(assert) {
+QUnit.test("AAS44D 4S", function(assert) {
+	var cards = genCards(['AS', 'AS', '4D', '4D'], '4S');
+	assert.ok(checkIsTractor(cards, genCard('4S', true)));
+});
+QUnit.test("AA44S 4H", function(assert) {
 	var cards = genCards(['AS', 'AS', '4S', '4S'], '4H');
-	assert.ok(checkIsTractor(cards));
+	assert.ok(checkIsTractor(cards, genCard('4H', true)));
 });
 QUnit.test("44S44H 4H", function(assert) {
 	var cards = genCards(['4S', '4S', '4H', '4H'], '4H');
-	assert.ok(checkIsTractor(cards));
+	assert.ok(checkIsTractor(cards, genCard('4H', true)));
 });
 QUnit.test("44HSS 4H", function(assert) {
 	var cards = genCards(['4H', '4H', 'ST', 'ST'], '4H');
-	assert.ok(checkIsTractor(cards));
+	assert.ok(checkIsTractor(cards, genCard('4H', true)));
 });
 QUnit.test("SSBB 4H", function(assert) {
 	var cards = genCards(['ST', 'ST', 'BT', 'BT'], '4H');
-	assert.ok(checkIsTractor(cards));
+	assert.ok(checkIsTractor(cards, genCard('4H', true)));
 });
 QUnit.test("333444S 2C", function(assert) {
 	var cards = genCards(['3S', '3S', '3S', '4S', '4S', '4S'], '2C');
-	assert.notOk(checkIsTractor(cards));
+	assert.ok(checkIsTractor(cards, genCard('2C', true)));
+});
+QUnit.test("3355H 4C", function(assert) {
+	var cards = genCards(['3H', '3H', '5H', '5H'], '4C');
+	assert.ok(checkIsTractor(cards, genCard('4C', true)));
+});
+QUnit.test("3355H 4H", function(assert) {
+	var cards = genCards(['3H', '3H', '5H', '5H'], '4H');
+	assert.ok(checkIsTractor(cards, genCard('4H', true)));
 });
