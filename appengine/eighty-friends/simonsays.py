@@ -115,13 +115,15 @@ def submit():
         game.players_played += 1
         if session['username'] == game.leader:
             game.sequence = g.sequence
+            session['score'] += 1
             send_channel_update('copysequence', [x.name for x in ndb.get_multi(game.players) if x.name != game.leader])
             json_result = jsonify(message='Waiting on other players to copy your sequence',
-                                    result='none')
+                                    result='leader')
         else:
             if sequence == game.sequence:
                 json_result = jsonify(message='Very good! Wait for the next round.',
                                         result='match')
+                session['score'] += 1
                 #send_channel_update('sequencematch', [session['username']])
             else:
                 json_result = jsonify(message='You got it wrong :( oh well',

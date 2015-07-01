@@ -30,6 +30,7 @@
 			<div id="playerCount">There are currently {{ player_count }} players</div>
 			<div id="playerNames">Current players: {{ usernames }}</div>
 			<div id="leaderText">{{ 'Leader: ' + leader if leader }}</div>
+			<div id="score">Score: 0</div>
 		</div>
 		<div>
 			<button class="colored purple" onclick="buttonPressed(0)" type="button"></button>
@@ -40,6 +41,7 @@
 		<div><a href="{{ url_for('.logoff') }}">Logoff</a><div>
 		<script>
 			var True = true, False = false;
+			var score = 0;
 			var currentSequence = [];
 			// remove this eventually, binds the JS to the html template, put in
 			// HTML data tag
@@ -52,8 +54,12 @@
 					$.post('/simonsays/submit',
 							{'sequence[]': currentSequence.slice(0, sequenceLength)},
 							function (data) {
-								if (typeof data != 'undefined') {
+								if (typeof data !== 'undefined') {
 									var result = data.result;
+									if (result === 'match' || result === 'leader') {
+										score++;
+										$('#score').text('Score: ' + score);
+									}
 									$('#leaderText').text(data.message);
 								}
 								currentSequence = [];
