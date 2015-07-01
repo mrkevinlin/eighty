@@ -2,6 +2,7 @@ from __future__ import print_function
 from flask import (Blueprint, request, render_template, session, redirect,
     url_for, flash, abort, g, jsonify)
 from google.appengine.api.channel import channel
+from google.appengine.ext import deferred
 from google.appengine.ext import ndb
 import os, json, random
 from simonsays_models import Game
@@ -93,11 +94,12 @@ def start_round():
     game.sequence_length += 1
     game.round_ += 1
     players = ndb.get_multi(game.players)
-    for player_ in players:
-        player_.played_this_round = False
+    for player in players:
+        player.played_this_round = False
     ndb.put_multi(players)
     send_channel_update('leader', [game.leader])
     send_channel_update('follower', [x for x in player_names if x != game.leader])
+    game.put()
 
 @simon_says.route('/submit', methods=['POST'])
 def submit():
@@ -126,11 +128,7 @@ def submit():
                 #send_channel_update('sequencemismatch', [session['username']])
         if game.players_played == len(game.players):
             # next round!
-            @after_this_request
-            def start_next_round(response):
-                print('starting the next round')
-                start_round()
-                return response
+            deferred.defer(start_round, _countdown=3)
         return json_result
     return '', 204
 
@@ -178,30 +176,20 @@ def send_channel_update(category, clients=None):
         channel.send_message(channel_token, json.dumps(message))
 
 def get_current_game():
-    if 'game_entity' not in g:
-        g.game_entity = GAME_KEY.get()
-    return g.game_entity
+    if g:
+        if 'game_entity' not in g:
+            g.game_entity = GAME_KEY.get()
+        return g.game_entity
+    else:
+        return GAME_KEY.get()
 
 @simon_says.teardown_request
 def put_game(exception):
     # only call put() if the game is in g, meaning it was accessed during this request
     # might be able to use the modified property to more easily check
-    if 'game_entity' in g and not exception:
+    if g and 'game_entity' in g and not exception:
         g.game_entity.put()
         print('game written')
-
-def after_this_request(func):
-    if not hasattr(g, 'call_after_request'):
-        g.call_after_request = []
-    g.call_after_request.append(func)
-    return func
-
-
-@simon_says.after_request
-def per_request_callbacks(response):
-    for func in getattr(g, 'call_after_request', ()):
-        response = func(response)
-    return response
 
 @simon_says.route('/resetdb', methods=['POST'])
 def reset_db():
