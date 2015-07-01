@@ -15,3 +15,5 @@ class Game(ndb.Model):
     sequence = ndb.IntegerProperty(repeated=True)
     players_played = ndb.IntegerProperty(default=0)
     round_ = ndb.IntegerProperty(default=1)
+
+# vim:expandtab:tabstop=4:shiftwidth=4:softtabstop=4

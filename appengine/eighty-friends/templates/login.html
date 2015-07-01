@@ -1,6 +1,9 @@
 <!doctype html>
 <html>
 	<title>Simon Says login</title>
+	<head>
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+	</head>
 	<body>
 	# with messages = get_flashed_messages()
 		# if messages and messages[0]:
@@ -11,5 +14,13 @@
 		<p><input type=text name=username>
 		<p><input type=submit value=Login>
 	</form>
+	<a id="resetdb" href="#">Reset Database (please don't click me)</a>
+	<script>
+		$('#resetdb').click(function() {
+			$.post('/simonsays/resetdb', function() {
+				alert('Database cleared');
+			});
+		});
+	</script>
 	</body>
 </html>

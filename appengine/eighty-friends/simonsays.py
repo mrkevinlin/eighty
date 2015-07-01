@@ -2,6 +2,7 @@ from __future__ import print_function
 from flask import (Blueprint, request, render_template, session, redirect,
     url_for, flash, abort, g, jsonify)
 from google.appengine.api.channel import channel
+from google.appengine.ext import deferred
 from google.appengine.ext import ndb
 import os, json, random
 from simonsays_models import Game
@@ -75,11 +76,13 @@ def logoff(username=None):
                 # TODO: this is really just for testing purposes, remove later
                 game_ent.started = False
                 game_ent.round_ = 1
+                game_ent.sequence_length = 3
             player_key.delete()
         send_channel_update('players')
     return redirect(url_for('.game'))
 
 def channel_disconnected():
+    abort(404)
     client_id = request.form['from']
     return logoff(username=client_id.split(':')[-1])
 
@@ -92,11 +95,12 @@ def start_round():
     game.sequence_length += 1
     game.round_ += 1
     players = ndb.get_multi(game.players)
-    for player_ in players:
-        player_.played_this_round = False
+    for player in players:
+        player.played_this_round = False
     ndb.put_multi(players)
     send_channel_update('leader', [game.leader])
     send_channel_update('follower', [x for x in player_names if x != game.leader])
+    game.put()
 
 @simon_says.route('/submit', methods=['POST'])
 def submit():
@@ -111,13 +115,15 @@ def submit():
         game.players_played += 1
         if session['username'] == game.leader:
             game.sequence = g.sequence
+            session['score'] += 1
             send_channel_update('copysequence', [x.name for x in ndb.get_multi(game.players) if x.name != game.leader])
             json_result = jsonify(message='Waiting on other players to copy your sequence',
-                                    result='none')
+                                    result='leader')
         else:
             if sequence == game.sequence:
                 json_result = jsonify(message='Very good! Wait for the next round.',
                                         result='match')
+                session['score'] += 1
                 #send_channel_update('sequencematch', [session['username']])
             else:
                 json_result = jsonify(message='You got it wrong :( oh well',
@@ -125,11 +131,7 @@ def submit():
                 #send_channel_update('sequencemismatch', [session['username']])
         if game.players_played == len(game.players):
             # next round!
-            @after_this_request
-            def start_next_round(response):
-                print('starting the next round')
-                start_round()
-                return response
+            deferred.defer(start_round, _countdown=3)
         return json_result
     return '', 204
 
@@ -159,9 +161,8 @@ def send_channel_update(category, clients=None):
     elif category == 'leader' or category == 'follower':
         # handle common data first
         message['round'] = game_ent.round_
-        if category == 'leader':
-            message['sequence_length'] = game_ent.sequence_length
-        elif category == 'follower':
+        message['sequence_length'] = game_ent.sequence_length
+        if category == 'follower':
             message['leader'] = game_ent.leader
     elif category == 'copysequence':
         message['sequence'] = g.sequence
@@ -178,28 +179,30 @@ def send_channel_update(category, clients=None):
         channel.send_message(channel_token, json.dumps(message))
 
 def get_current_game():
-    if 'game_entity' not in g:
-        g.game_entity = GAME_KEY.get()
-    return g.game_entity
+    if g:
+        if 'game_entity' not in g:
+            g.game_entity = GAME_KEY.get()
+        return g.game_entity
+    else:
+        return GAME_KEY.get()
 
 @simon_says.teardown_request
 def put_game(exception):
     # only call put() if the game is in g, meaning it was accessed during this request
     # might be able to use the modified property to more easily check
-    if 'game_entity' in g and not exception:
+    if g and 'game_entity' in g and not exception:
         g.game_entity.put()
         print('game written')
 
-def after_this_request(func):
-    if not hasattr(g, 'call_after_request'):
-        g.call_after_request = []
-    g.call_after_request.append(func)
-    return func
+@simon_says.route('/resetdb', methods=['POST'])
+def reset_db():
+    from google.appengine.api import memcache
 
+    ndb.delete_multi(Game.query().iter(keys_only=True))
+    ndb.delete_multi(Player.query().iter(keys_only=True))
+    memcache.flush_all()
+    ndb.get_context().flush()
+    ndb.get_context().clear_cache()
+    return '', 204
 
-@simon_says.after_request
-def per_request_callbacks(response):
-    for func in getattr(g, 'call_after_request', ()):
-        response = func(response)
-    return response
-
+# vim:expandtab:tabstop=4:shiftwidth=4:softtabstop=4

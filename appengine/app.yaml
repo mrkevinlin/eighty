@@ -5,6 +5,9 @@ api_version: 1
 threadsafe: yes
 
 handlers:
+- url: /_ah/queue/deferred
+  script: google.appengine.ext.deferred.deferred.application
+  login: admin
 - url: .*
   script: eighty-friends.main.app
   secure: always
@@ -23,3 +26,6 @@ libraries:
 
 inbound_services:
 - channel_presence
+
+builtins:
+- deferred: on

@@ -63,3 +63,5 @@ def channel_disconnected():
         return simonsays.channel_disconnected()
     else:
         abort(404)
+
+# vim:expandtab:tabstop=4:shiftwidth=4:softtabstop=4
