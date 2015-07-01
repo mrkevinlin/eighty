@@ -82,6 +82,7 @@ def logoff(username=None):
     return redirect(url_for('.game'))
 
 def channel_disconnected():
+    abort(404)
     client_id = request.form['from']
     return logoff(username=client_id.split(':')[-1])
 
