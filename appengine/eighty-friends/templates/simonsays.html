@@ -44,7 +44,7 @@
 			// remove this eventually, binds the JS to the html template, put in
 			// HTML data tag
 			var isLeader = {{ leader is none }};
-			var sequenceLength;
+			var sequenceLength = 3;
 			var submitSequence = function() {
 				if (currentSequence.length < sequenceLength) {
 					alert('You need to press ' + (sequenceLength - currentSequence.length) + ' more buttons!');
