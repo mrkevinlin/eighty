@@ -160,9 +160,8 @@ def send_channel_update(category, clients=None):
     elif category == 'leader' or category == 'follower':
         # handle common data first
         message['round'] = game_ent.round_
-        if category == 'leader':
-            message['sequence_length'] = game_ent.sequence_length
-        elif category == 'follower':
+        message['sequence_length'] = game_ent.sequence_length
+        if category == 'follower':
             message['leader'] = game_ent.leader
     elif category == 'copysequence':
         message['sequence'] = g.sequence

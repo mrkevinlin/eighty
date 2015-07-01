@@ -94,6 +94,7 @@
 					case 'follower':
 						var leader = data['leader'];
 						isLeader = false;
+						sequenceLength = data['sequence_length'];
 						// TODO: put 1 second delay here? maybe only in certain
 						// cases
 						$('#leaderText').text('Leader: ' + leader);
