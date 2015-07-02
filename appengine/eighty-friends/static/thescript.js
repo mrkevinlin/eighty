@@ -211,12 +211,20 @@ Player.prototype.playCards = function() {
     createjs.Tween.get(playButtonContainer).to({alpha: 0}, 150).call(finishAnimating);
     // Remove from array starting at higher indexes to prevent index change errors
     this.selectedIDs.sort(function(a, b) {return a-b;});
+    var point = handContainer.globalToLocal(handContainer.x-(this.selectedIDs.length*miniWidth/2), players[0].ycoord-120*scale);
     for (var i = this.selectedIDs.length - 1; i >= 0; i--) {
         this.hand.splice(this.selectedIDs[i],1);
+        animating++;
+        var j = 1;
+        createjs.Tween.get(handContainer.getChildAt(this.selectedIDs[i]))
+        .to({scaleX: .5, scaleY: .5, x: point.x + miniWidth*scale*i, y: point.y}, 200)
+        .call(drawHand)
+        .call(function(j) {console.log(j);drawMiniCard(players[0].selectedCards[i].suit, players[0].selectedCards[i].cardName, handContainer.x-(players[0].selectedIDs.length*miniWidth/2) + 40*scale*i, players[0].ycoord-120*scale);})
+        .call(finishAnimating);
     }
+
     this.selectedIDs.length = 0;
-    this.selectedCards.length = 0;
-    drawHand();
+    // this.selectedCards.length = 0;
 }
 
 var Card = function(suit, name, value, isTrump, points) {
@@ -700,20 +708,20 @@ function getSuitIcon(suit) {
 function checkLead(cards) {
     var valid = true;
 
-    // Check if the play is a tractor if there are 4 or more cards
-    if (cards.length >= 4) {
-        valid = checkTractor(cards);
-        roundIsTractor = valid;
-    }
+    // // Check if the play is a tractor if there are 4 or more cards
+    // if (cards.length >= 4) {
+    //     valid = checkTractor(cards);
+    //     roundIsTractor = valid;
+    // }
 
-    // Check for valid set plays if not tractor
-    if (!roundIsTractor) {
-        for (var i = 0; i < cards.length - 1; i++) {
-            if (valid) {
-                valid = (cards[i].suit == cards[i+1].suit) && (cards[i].cardValue == cards[i+1].cardValue);
-            }
-        }
-    }
+    // // Check for valid set plays if not tractor
+    // if (!roundIsTractor) {
+    //     for (var i = 0; i < cards.length - 1; i++) {
+    //         if (valid) {
+    //             valid = (cards[i].suit == cards[i+1].suit) && (cards[i].cardValue == cards[i+1].cardValue);
+    //         }
+    //     }
+    // }
 
     if (valid) {
         console.log("IS GOOD");
