@@ -33,6 +33,8 @@ var roundCount;
 var roundSuit;
 var roundIsTrump;
 
+var teamsSet;
+
 var drawer = new createjs.Container();
 var drawerWidth = 300;
 var handContainer = new createjs.Container();
@@ -48,9 +50,10 @@ WebFont.load({
 function init() {
     table = document.getElementById("table");
 
-    playerCount = 5;
+    playerCount = 7;
     trumpSuit = "hearts";
     trumpValue = 4;
+    teamsSet = false;
 
     sizeCanvas();
     initStage();
@@ -85,7 +88,7 @@ function initPlayer() {
         if(i%3==0) {players[i].level = 3;}
         else if(i%2==0) {players[i].level = 2;}
         else {players[i].level = "I0";}
-        players[i].points = 15*i;
+        players[i].points = 150*i;
     }
     players[0].leader = true;
 
@@ -95,10 +98,10 @@ function initPlayer() {
 
 function initPlayerCoordinates() {
     degrees.length = 0;
-    radius = (table.height - cardHeight*scale)/2;
+    radius = (table.height - cardHeight*scale*scale - 64*scale)/2;
     centerx = table.width/2;
-    centery = radius;
-    var stretch = (table.width - 80)/(radius*2);
+    centery = radius + 64*scale;
+    var stretch = (table.width - 108)/(radius*2);
 
     for (var i = 0; i < playerCount; i++) {
 
@@ -310,14 +313,14 @@ function drawPlayer(id, x, y) {
     playerContainer.addChild(levelCircle, level);
 
     if (players[id].defending) {
-        var team = new createjs.Text("\uE32A", 36*scale + "px Material Icons", "#E0E0E0");
-        team.textAlign = "center";
-        team.textBaseline = "middle";
-        team.shadow = new createjs.Shadow(mdGray, 0, 2, 5);
-        team.x = (-12-team.getMeasuredWidth()/2)*scale;
-        team.y = (12+team.getMeasuredHeight()/2)*scale;
-        playerContainer.addChild(team);
-    } else {
+        var teamDefense = new createjs.Text("\uE32A", 36*scale + "px Material Icons", "white");
+        teamDefense.textAlign = "center";
+        teamDefense.textBaseline = "middle";
+        teamDefense.shadow = new createjs.Shadow(mdGray, 0, 2, 5);
+        teamDefense.x = (-12-teamDefense.getMeasuredWidth()/2)*scale;
+        teamDefense.y = (12+teamDefense.getMeasuredHeight()/2)*scale;
+        playerContainer.addChild(teamDefense);
+    } else if (!teamsSet) {
         var pointRect = new createjs.Shape();
         var point = new createjs.Text(players[id].points, 26*scale + "px Roboto Condensed", mdGray);
         point.textBaseline = "middle";
@@ -330,6 +333,15 @@ function drawPlayer(id, x, y) {
         point.x = pointRect.x = 28*scale;
         point.y = pointRect.y = 28*scale;
         playerContainer.addChild(pointRect, point);
+    // } else {
+    	// var teamScore = new createjs.Text("\uE3B8", 36*scale + "px Material Icons", "white");
+     //    teamScore.textAlign = "center";
+     //    teamScore.textBaseline = "middle";
+     //    teamScore.shadow = new createjs.Shadow(mdGray, 0, 2, 5);
+     //    teamScore.x = (-12-teamScore.getMeasuredWidth()/2)*scale;
+     //    teamScore.y = (12+teamScore.getMeasuredHeight()/2)*scale;
+     //    teamScore.rotation = 180;
+     //    playerContainer.addChild(teamScore);
     }
 
     playerContainer.x = x;
@@ -350,7 +362,7 @@ function drawHand() {
     handContainer.regX = ((players[0].hand.length-1)*offset + cardWidth*scale)/2;
     handContainer.regY = cardHeight*scale/2;
     handContainer.x = table.width/2;
-    handContainer.y = table.height - 18*scale;
+    handContainer.y = table.height - 24*scale*scale;
 
     var moveCards = false;
     var restart = true;
