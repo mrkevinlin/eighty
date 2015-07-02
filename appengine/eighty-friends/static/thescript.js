@@ -65,11 +65,6 @@ function init() {
     drawEverything();
 }
 
-function sizeCanvas() {
-    table.width = (window.innerWidth >= 720) ? window.innerWidth : 720;
-    table.height = (window.innerHeight >= 720) ? window.innerHeight : 720;
-}
-
 function initStage() {
     stage = new createjs.Stage("table");
 
@@ -122,57 +117,6 @@ function initPlayerCoordinates() {
     }
 }
 
-var Player = function(id) {
-    this.playerID = id;
-    this.hand = [];
-    this.xcoord;
-    this.ycoord;
-    this.leader;
-    this.defending;
-    this.level;
-    this.points;
-    this.selectedIDs = [];
-    this.selectedCards = [];
-};
-
-Player.prototype.addSelection = function(sel) {
-    this.selectedIDs.push(sel.parent.getChildIndex(sel));
-}
-
-Player.prototype.removeSelection = function(sel) {
-    this.selectedIDs.splice(this.selectedIDs.indexOf(sel.parent.getChildIndex(sel)),1);
-}
-
-Player.prototype.setSelectedCards = function() {
-	this.selectedCards.length = 0;
-	this.selectedIDs.sort(function(a, b) {return a-b;});
-	for (var i = 0; i < this.selectedIDs.length; i++) {
-		this.selectedCards.push(this.hand[this.selectedIDs[i]]);
-	}
-	this.selectedCards.sort(cardSort);
-}
-
-Player.prototype.checkSelection = function() {
-	if (this.leader) {
-		checkLead(this.selectedCards);
-	} else {
-		// checkPlay(this.selectedCards);
-	}
-
-}
-
-Player.prototype.playCards = function() {
-	animating++;
-	createjs.Tween.get(playButtonContainer).to({alpha: 0}, 150).call(finishAnimating);
-	// Remove from array starting at higher indexes to prevent index change errors
-	for (var i = this.selectedIDs.length - 1; i >= 0; i--) {
-		this.hand.splice(this.selectedIDs[i],1);
-	}
-	this.selectedIDs.length = 0;
-	this.selectedCards.length = 0;
-	drawHand();
-}
-
 function initDeck() {
     var suit = ["spades", "diamonds", "clubs", "hearts"];
     var names = ["2", "3", "4", "5", "6", "7", "8", "9", "I0", "J", "Q", "K", "A"];
@@ -195,14 +139,6 @@ function initDeck() {
     deck = shuffle(deck);
 }
 
-var Card = function(suit, name, value, isTrump, points) {
-    this.suit = suit;
-    this.cardName = name;
-    this.cardValue = value;
-    this.isTrump = isTrump;
-    this.points = points;
-};
-
 function initTrump() {
     for (var i = 0; i < deck.length; i++) {
         if (deck[i].suit == trumpSuit) {
@@ -220,7 +156,8 @@ function initTrump() {
 
 function initHands() {
     var dealID = 0;
-    var cardCount = deck.length - calculateDiscard();
+    var discard = (playerCount == 6) ? 6 : 8;
+    var cardCount = deck.length - discard;
     for (var d = 0; d < cardCount; d++) {
         players[dealID].hand.push(deck[d]);
         dealID++;
@@ -232,15 +169,68 @@ function initHands() {
     players[0].hand.sort(cardSort);
 }
 
-function calculateDiscard() {
-    var discard = (playerCount == 6) ? 6 : 8;
-    return discard;
+var Player = function(id) {
+    this.playerID = id;
+    this.hand = [];
+    this.xcoord;
+    this.ycoord;
+    this.leader;
+    this.defending;
+    this.level;
+    this.points;
+    this.selectedIDs = [];
+    this.selectedCards = [];
+};
+
+Player.prototype.addSelection = function(sel) {
+    this.selectedIDs.push(sel.parent.getChildIndex(sel));
 }
+
+Player.prototype.removeSelection = function(sel) {
+    this.selectedIDs.splice(this.selectedIDs.indexOf(sel.parent.getChildIndex(sel)),1);
+}
+
+Player.prototype.setSelectedCards = function() {
+    this.selectedCards.length = 0;
+    for (var i = 0; i < this.selectedIDs.length; i++) {
+        this.selectedCards.push(this.hand[this.selectedIDs[i]]);
+    }
+    this.selectedCards.sort(cardSort);
+}
+
+Player.prototype.checkSelection = function() {
+    if (this.leader) {
+        checkLead(this.selectedCards);
+    } else {
+        // checkPlay(this.selectedCards);
+    }
+}
+
+Player.prototype.playCards = function() {
+    animating++;
+    createjs.Tween.get(playButtonContainer).to({alpha: 0}, 150).call(finishAnimating);
+    // Remove from array starting at higher indexes to prevent index change errors
+    this.selectedIDs.sort(function(a, b) {return a-b;});
+    for (var i = this.selectedIDs.length - 1; i >= 0; i--) {
+        this.hand.splice(this.selectedIDs[i],1);
+    }
+    this.selectedIDs.length = 0;
+    this.selectedCards.length = 0;
+    drawHand();
+}
+
+var Card = function(suit, name, value, isTrump, points) {
+    this.suit = suit;
+    this.cardName = name;
+    this.cardValue = value;
+    this.isTrump = isTrump;
+    this.points = points;
+};
 
 function drawEverything() {
     stage.removeAllChildren();
 
-    // drawStart();
+    // drawStartButton();
     drawEveryone();
     drawHand();
     // drawOpponentHand();
@@ -248,15 +238,10 @@ function drawEverything() {
     drawDrawerIcon();
     drawDrawer();
 
-    //Testing methods
-    // drawTestIcons();
-    // drawTestPlay();
-    // infoDump();
-
     stage.update();
 }
 
-function drawStart() {
+function drawStartButton() {
     var startButton = new createjs.Container();
     var startText = new createjs.Text("GO!", 36*scale + "px Roboto Condensed", "white");
     var startColor = new createjs.Shape();
@@ -273,16 +258,6 @@ function drawStart() {
     // startButton.addEventListener("click", animateDeal);
 
     stage.addChild(startButton);
-}
-
-function animateDeal() {
-    var startx = centerx;
-    var starty = 0;
-    for (var i = 0; i < playerCount; i++) {
-        var dealt = drawCardDown(startx, starty);
-        stage.addChild(dealt);
-        createjs.Tween.get(dealt).to({x: players[i].xcoord, y: players[i].ycoord}, 300).call(function() {stage.removeChild(dealt);});
-    }
 }
 
 function drawEveryone() {
@@ -588,132 +563,6 @@ function drawPlayButton() {
     stage.update();
 }
 
-function checkLead(cards) {
-	var valid = true;
-
-	// Check if the play is a tractor if there are 4 or more cards
-	if (cards.length >= 4) {
-		valid = checkTractor(cards);
-		roundIsTractor = valid;
-	}
-
-	// Check for valid set plays if not tractor
-	if (!roundIsTractor) {
-		for (var i = 0; i < cards.length - 1; i++) {
-			if (valid) {
-				valid = (cards[i].suit == cards[i+1].suit) && (cards[i].cardValue == cards[i+1].cardValue);
-			}
-		}
-	}
-
-	if (valid) {
-		console.log("IS GOOD");
-		roundCount = cards.length;
-		roundSuit = cards[0].suit;
-		roundIsTrump = cards[0].isTrump;
-		players[0].playCards();
-	} else {
-		console.log("not valid");
-	}
-}
-
-function checkPlay(cards) {
-	// Check the validity of following player moves
-}
-
-function checkTractor(cards) {
-	// Find the number of cards in each tractor set (ie pairs, triples, etc)
-	var setCount = 0;
-	do {setCount++;} 
-	while (cards[setCount-1].suit == cards[setCount].suit 
-		&& cards[setCount-1].cardValue == cards[setCount].cardValue)
-	// console.log("Set count: " + setCount);
-
-	// The set must be a pair at minimum and the play must have whole numbers of sets
-	if (setCount > 1 && cards.length%setCount==0) {
-		// Check that the first cards in each set are the same suit and sequential
-		for (var i = 0; i < cards.length - setCount; i+=setCount) {
-			// Sequence set suits must match OR they must all be trumps
-			if (cards[i].suit == cards[i+setCount].suit || (cards[i].isTrump && cards[i+setCount].isTrump)) {
-				// Account for extraction of trump value from sequences
-				if (cards[i].cardValue+1 == trumpValue) {
-					if (cards[i].cardValue + 2 != cards[i+setCount].cardValue) {
-						// console.log("Not sequential sets");
-						return false;
-					}
-				} else {
-					if (!(cards[i].cardValue + 1 == cards[i+setCount].cardValue)) {
-						// console.log("Not sequential sets");
-						return false;
-					}
-				}
-			} 
-			else {
-				// console.log("Failed first set card suit check");
-				return false;
-			}
-		}
-
-		// How many sets to check left in the play
-		for (var j = 1; j <= (cards.length - setCount)/setCount; j++) {
-			// Traverse through a set and check they are the same card
-			for (var k = 0; k < setCount-1; k++) {
-				var index = setCount * j + k;
-				if (!(cards[index].suit == cards[index+1].suit && cards[index].cardValue == cards[index+1].cardValue)) {
-					// console.log("Failed set check");
-					return false;
-				}
-			}
-		}
-	} else {
-		// console.log("Failed set count check and divisible play count check");
-		return false;
-	}
-
-	// Is a tractor!
-	tractorSetCount = setCount;
-	return true;
-}
-
-function testHand() {
-	players[0].hand.length = 0;
-    drawHand();
-	var deckCount = 4;
-
-	var suit = ["spades", "diamonds", "clubs", "hearts"];
-    var names = ["2", "3", "4", "5", "6", "7", "8", "9", "I0", "J", "Q", "K", "A"];
-    var points = 0;
-
-    for (var i = 0; i < deckCount; i++) {
-        for (var s = 0; s < 4; s++) {
-            for (var v = 0; v <= 12; v++) {
-                if (v==5 || v==10 || v==13) {
-                    points = (v==5) ? 5:10;
-                }
-                players[0].hand.push(new Card(suit[s], names[v], v+2, false, points));
-                points = 0;
-            }
-        }
-        players[0].hand.push(new Card("trump", "S", 17, true, 0));
-        players[0].hand.push(new Card("trump", "B", 18, true, 0));
-    }
-
-    for (var i = 0; i < players[0].hand.length; i++) {
-        if (players[0].hand[i].suit == trumpSuit) {
-            players[0].hand[i].isTrump = true;
-            if (players[0].hand[i].cardValue == trumpValue) {
-            	players[0].hand[i].cardValue = 16;
-            }
-        }
-        if (players[0].hand[i].cardValue == trumpValue) {
-            players[0].hand[i].cardValue = 15;
-            players[0].hand[i].isTrump = true;
-        }
-    }
-    players[0].hand.sort(cardSort);
-    drawHand();
-}
-
 function drawDrawerIcon() {
     var drawerIcon = new createjs.Text("\uE88E", (64*scale*scale) + "px Material Icons", "white");
 
@@ -786,40 +635,21 @@ function drawDrawer() {
     var title = new createjs.Text("Eighty", (24*scale) + "px Roboto Condensed", "black");
     titleIcon.y = title.y = 30*scale;
 
-    var fullscreenIcon = new createjs.Text("\uE5D0", (28*scale) + "px Material Icons", mdGray);
-    var fullscreen = new createjs.Text("Full Screen", (24*scale) + "px Roboto Condensed", "black");
-
     var settingsIcon = new createjs.Text("\uE8B8", (28*scale) + "px Material Icons", mdGray);
     var settings = new createjs.Text("Settings", (24*scale) + "px Roboto Condensed", "black");
 
     var helpIcon = new createjs.Text("\uE887", (28*scale) + "px Material Icons", mdGray);
     var help = new createjs.Text("Help", (24*scale) + "px Roboto Condensed", "black");
 
-    fullscreenIcon.textBaseline = fullscreen.textBaseline = settingsIcon.textBaseline = settings.textBaseline = helpIcon.textBaseline = help.textBaseline = "middle";
+    settingsIcon.textBaseline = settings.textBaseline = helpIcon.textBaseline = help.textBaseline = "middle";
 
-    titleIcon.x = fullscreenIcon.x = settingsIcon.x = helpIcon.x = 30*scale;
-    title.x = fullscreen.x = settings.x = help.x = titleIcon.getMeasuredWidth() + 60*scale;
+    titleIcon.x = settingsIcon.x = helpIcon.x = 30*scale;
+    title.x = settings.x = help.x = titleIcon.getMeasuredWidth() + 60*scale;
 
     helpIcon.y = help.y = table.height - helpIcon.getMeasuredHeight() - 30*scale;
     settingsIcon.y = settings.y = helpIcon.y - settingsIcon.getMeasuredHeight() - 30*scale;
-    fullscreenIcon.y = fullscreen.y = settingsIcon.y - fullscreenIcon.getMeasuredHeight() - 30*scale;
 
-    var fullscreenTarget = new createjs.Shape();
-    fullscreenTarget.graphics.beginFill("white").drawRect(-(fullscreenIcon.getMeasuredWidth()+60*scale), -fullscreenIcon.getMeasuredHeight()/2 - 8*scale, drawerWidth*scale, fullscreenIcon.getMeasuredHeight() + 16*scale);
-    fullscreen.hitArea = fullscreenTarget;
-
-    fullscreen.removeAllEventListeners();
-    fullscreen.on("mouseover", function() {
-        fullscreen.color = mdBlue;
-        stage.update();
-    });
-    fullscreen.on("mouseout", function() {
-        fullscreen.color = "black";
-        stage.update();
-    });
-    fullscreen.on("click", toggleFullScreen);
-
-    drawer.addChild(drawerBack, titleIcon, title, close, fullscreenIcon, fullscreen, settingsIcon, settings, helpIcon, help);
+    drawer.addChild(drawerBack, titleIcon, title, close, settingsIcon, settings, helpIcon, help);
     drawDrawerInfo();
     stage.addChild(drawer);
 }
@@ -867,33 +697,130 @@ function getSuitIcon(suit) {
     return code;
 }
 
-function toggleFullScreen() {
-    if (document.fullscreenEnabled || document.webkitFullscreenEnabled || document.mozFullScreenEnabled || document.msFullscreenEnabled) {
+function checkLead(cards) {
+    var valid = true;
 
-        var i = document.documentElement;
+    // Check if the play is a tractor if there are 4 or more cards
+    if (cards.length >= 4) {
+        valid = checkTractor(cards);
+        roundIsTractor = valid;
+    }
 
-        if (document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement) {
-            if (document.exitFullscreen) {
-                document.exitFullscreen();
-            } else if (document.webkitExitFullscreen) {
-                document.webkitExitFullscreen();
-            } else if (document.mozCancelFullScreen) {
-                document.mozCancelFullScreen();
-            } else if (document.msExitFullscreen) {
-                document.msExitFullscreen();
-            }
-        } else {
-            if (i.requestFullscreen) {
-                i.requestFullscreen();
-            } else if (i.webkitRequestFullscreen) {
-                i.webkitRequestFullscreen();
-            } else if (i.mozRequestFullScreen) {
-                i.mozRequestFullScreen();
-            } else if (i.msRequestFullscreen) {
-                i.msRequestFullscreen();
+    // Check for valid set plays if not tractor
+    if (!roundIsTractor) {
+        for (var i = 0; i < cards.length - 1; i++) {
+            if (valid) {
+                valid = (cards[i].suit == cards[i+1].suit) && (cards[i].cardValue == cards[i+1].cardValue);
             }
         }
     }
+
+    if (valid) {
+        console.log("IS GOOD");
+        roundCount = cards.length;
+        roundSuit = cards[0].suit;
+        roundIsTrump = cards[0].isTrump;
+        players[0].playCards();
+    } else {
+        console.log("not valid");
+    }
+}
+
+function checkPlay(cards) {
+    // Check the validity of following player moves
+}
+
+function checkTractor(cards) {
+    // Find the number of cards in each tractor set (ie pairs, triples, etc)
+    var setCount = 0;
+    do {setCount++;} 
+    while (cards[setCount-1].suit == cards[setCount].suit 
+        && cards[setCount-1].cardValue == cards[setCount].cardValue)
+    // console.log("Set count: " + setCount);
+
+    // The set must be a pair at minimum and the play must have whole numbers of sets
+    if (setCount > 1 && cards.length%setCount==0) {
+        // Check that the first cards in each set are the same suit and sequential
+        for (var i = 0; i < cards.length - setCount; i+=setCount) {
+            // Sequence set suits must match OR they must all be trumps
+            if (cards[i].suit == cards[i+setCount].suit || (cards[i].isTrump && cards[i+setCount].isTrump)) {
+                // Account for extraction of trump value from sequences
+                if (cards[i].cardValue+1 == trumpValue) {
+                    if (cards[i].cardValue + 2 != cards[i+setCount].cardValue) {
+                        // console.log("Not sequential sets");
+                        return false;
+                    }
+                } else {
+                    if (!(cards[i].cardValue + 1 == cards[i+setCount].cardValue)) {
+                        // console.log("Not sequential sets");
+                        return false;
+                    }
+                }
+            } 
+            else {
+                // console.log("Failed first set card suit check");
+                return false;
+            }
+        }
+
+        // How many sets to check left in the play
+        for (var j = 1; j <= (cards.length - setCount)/setCount; j++) {
+            // Traverse through a set and check they are the same card
+            for (var k = 0; k < setCount-1; k++) {
+                var index = setCount * j + k;
+                if (!(cards[index].suit == cards[index+1].suit && cards[index].cardValue == cards[index+1].cardValue)) {
+                    // console.log("Failed set check");
+                    return false;
+                }
+            }
+        }
+    } else {
+        // console.log("Failed set count check and divisible play count check");
+        return false;
+    }
+
+    // Is a tractor!
+    tractorSetCount = setCount;
+    return true;
+}
+
+function testHand() {
+    players[0].hand.length = 0;
+    drawHand();
+    var deckCount = 4;
+
+    var suit = ["spades", "diamonds", "clubs", "hearts"];
+    var names = ["2", "3", "4", "5", "6", "7", "8", "9", "I0", "J", "Q", "K", "A"];
+    var points = 0;
+
+    for (var i = 0; i < deckCount; i++) {
+        for (var s = 0; s < 4; s++) {
+            for (var v = 0; v <= 12; v++) {
+                if (v==5 || v==10 || v==13) {
+                    points = (v==5) ? 5:10;
+                }
+                players[0].hand.push(new Card(suit[s], names[v], v+2, false, points));
+                points = 0;
+            }
+        }
+        players[0].hand.push(new Card("trump", "S", 17, true, 0));
+        players[0].hand.push(new Card("trump", "B", 18, true, 0));
+    }
+
+    for (var i = 0; i < players[0].hand.length; i++) {
+        if (players[0].hand[i].suit == trumpSuit) {
+            players[0].hand[i].isTrump = true;
+            if (players[0].hand[i].cardValue == trumpValue) {
+                players[0].hand[i].cardValue = 16;
+            }
+        }
+        if (players[0].hand[i].cardValue == trumpValue) {
+            players[0].hand[i].cardValue = 15;
+            players[0].hand[i].isTrump = true;
+        }
+    }
+    players[0].hand.sort(cardSort);
+    drawHand();
 }
 
 function ticking(event) {
@@ -905,6 +832,11 @@ function ticking(event) {
 
 function finishAnimating() {
     setTimeout(function () {animating--}, Math.ceil(1000/fps));
+}
+
+function sizeCanvas() {
+    table.width = (window.innerWidth >= 720) ? window.innerWidth : 720;
+    table.height = (window.innerHeight >= 720) ? window.innerHeight : 720;
 }
 
 window.addEventListener('resize', function() {
@@ -956,56 +888,4 @@ function shuffle(array) {
     }
 
     return array;
-}
-
-function drawTestIcons() {
-    drawMiniCard("\u2665", "red", "7", 300*scale, 50);
-    drawMiniCard("\u2660", "black", "Q", 400*scale, 50);
-    drawMiniCardDown(500*scale, 50);
-}
-
-function drawTestPlay() {
-    var offset = 0;
-    var arraycolor = ["black", "red", "red", "black", "red", "black"];
-    var arraysuit = ["\u2663", "\u2665", "\u2666", "\u2660", "\u2665", "\u2663"];
-    var arrayvalue = ["J", "A", "7", "6", "6", "Q"];
-    for (var i = 0; i < 6; i++) {
-        drawMiniCard(arraysuit[i], arraycolor[i], arrayvalue[i], table.width-(6*40*scale)-60+offset, 300);
-        offset += 40*scale;
-    }
-}
-
-function infoDump() {
-    var color = "black";
-    var font = "24px Roboto Condensed";
-
-    var dw = new createjs.Text("Viewport width: " + window.innerWidth, font, color);
-    dw.x = 100;
-    dw.y = 50;
-
-    var dh = new createjs.Text("Viewport height: " + window.innerHeight, font, color);
-    dh.x = 100;
-    dh.y = 80;
-
-    var scaletext = new createjs.Text("Pixel ratio: " + scale, font, color);
-    scaletext.x = 100;
-    scaletext.y = 110;
-
-    var sw = new createjs.Text("Screen width: " + screen.width, font, color);
-    sw.x = 100;
-    sw.y = 140;
-
-    var sh = new createjs.Text("Screen height: " + screen.height, font, color);
-    sh.x = 100;
-    sh.y = 170;
-
-    var asw = new createjs.Text("Available screen width: " + screen.availWidth, font, color);
-    asw.x = 100;
-    asw.y = 200;
-
-    var ash = new createjs.Text("Available screen height: " + screen.availHeight, font, color);
-    ash.x = 100;
-    ash.y = 230;
-
-    stage.addChild(dw, dh, scaletext, sw, sh, asw, ash);
 }
