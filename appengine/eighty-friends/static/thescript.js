@@ -19,6 +19,10 @@ var radius;
 var centerx;
 var centery;
 
+var handContainer = new createjs.Container();
+var playButtonContainer = new createjs.Container();
+var playContainer = new createjs.Container();
+
 var deck = [];
 var trumpSuit;
 var trumpValue;
@@ -37,9 +41,8 @@ var teamsSet;
 
 var drawer = new createjs.Container();
 var drawerWidth = 300;
-var handContainer = new createjs.Container();
+
 var ascending = true;
-var playButtonContainer = new createjs.Container();
 
 WebFont.load({
     google: {
@@ -215,16 +218,26 @@ Player.prototype.playCards = function() {
     for (var i = this.selectedIDs.length - 1; i >= 0; i--) {
         this.hand.splice(this.selectedIDs[i],1);
         animating++;
-        var j = 1;
         createjs.Tween.get(handContainer.getChildAt(this.selectedIDs[i]))
-        .to({scaleX: .5, scaleY: .5, x: point.x + miniWidth*scale*i, y: point.y}, 200)
+        .to({scaleX: .5, scaleY: .5, x: point.x + 40*scale*i, y: point.y}, 900)
         .call(drawHand)
-        .call(drawMiniCard, [this.selectedCards[i].suit, this.selectedCards[i].cardName, handContainer.x-(this.selectedIDs.length*miniWidth/2) + 40*scale*i, this.ycoord-120*scale] ,this)
+        .call(drawPlayerPlay, [this.selectedCards], this) 
         .call(finishAnimating);
     }
 
     this.selectedIDs.length = 0;
     // this.selectedCards.length = 0;
+}
+
+function drawPlayerPlay(cards) {
+    for (var i = 0; i < cards.length; i++) {
+        playContainer.addChild(drawMiniCard(cards[i].suit, cards[i].cardName, 40*i, 0));
+    }
+    playContainer.regX = (((cards.length-1) * 40) + miniWidth)/2 * scale;
+    playContainer.regY = miniHeight/2 * scale;
+    playContainer.x = table.width/2;
+    playContainer.y = players[0].ycoord - (miniHeight+42)*scale;
+    stage.addChild(playContainer);
 }
 
 var Card = function(suit, name, value, isTrump, points) {
@@ -428,7 +441,8 @@ function drawMiniCard(suit, value, x, y) {
     card.addChild(cardboard, suitIcon, value);
     card.x = x;
     card.y = y;
-    stage.addChild(card);
+    
+    return card;
 }
 
 function drawCardDown(x, y) {
