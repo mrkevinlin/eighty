@@ -219,7 +219,7 @@ Player.prototype.playCards = function() {
         createjs.Tween.get(handContainer.getChildAt(this.selectedIDs[i]))
         .to({scaleX: .5, scaleY: .5, x: point.x + miniWidth*scale*i, y: point.y}, 200)
         .call(drawHand)
-        .call(function(j) {console.log(j);drawMiniCard(players[0].selectedCards[i].suit, players[0].selectedCards[i].cardName, handContainer.x-(players[0].selectedIDs.length*miniWidth/2) + 40*scale*i, players[0].ycoord-120*scale);})
+        .call(drawMiniCard, [this.selectedCards[i].suit, this.selectedCards[i].cardName, handContainer.x-(this.selectedIDs.length*miniWidth/2) + 40*scale*i, this.ycoord-120*scale] ,this)
         .call(finishAnimating);
     }
 
