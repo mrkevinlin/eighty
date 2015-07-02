@@ -27,9 +27,11 @@ var cardHeight = 168;
 var miniWidth = 60;
 var miniHeight = 84;
 
-var roundIsTractor = false;
+var roundIsTractor;
+var tractorSetCount;
 var roundCount;
 var roundSuit;
+var roundIsTrump;
 
 var drawer = new createjs.Container();
 var drawerWidth = 300;
@@ -579,7 +581,7 @@ function checkLead(cards) {
 
 	// Check if the play is a tractor if there are 4 or more cards
 	if (cards.length >= 4) {
-		valid = checkIsTractor(cards);
+		valid = checkTractor(cards);
 		roundIsTractor = valid;
 	}
 
@@ -596,6 +598,7 @@ function checkLead(cards) {
 		console.log("IS GOOD");
 		roundCount = cards.length;
 		roundSuit = cards[0].suit;
+		roundIsTrump = cards[0].isTrump;
 		players[0].playCards();
 	} else {
 		console.log("not valid");
@@ -606,20 +609,16 @@ function checkPlay(cards) {
 	// Check the validity of following player moves
 }
 
-function checkIsTractor(cards) {
-	// Check for a valid tractor. If so, return true for valid and set roundIsTractor to true
-	
+function checkTractor(cards) {
 	// Find the number of cards in each tractor set (ie pairs, triples, etc)
 	var setCount = 0;
 	do {setCount++;} 
 	while (cards[setCount-1].suit == cards[setCount].suit 
 		&& cards[setCount-1].cardValue == cards[setCount].cardValue)
-
-	console.log("Set count: " + setCount);
+	// console.log("Set count: " + setCount);
 
 	// The set must be a pair at minimum and the play must have whole numbers of sets
 	if (setCount > 1 && cards.length%setCount==0) {
-
 		// Check that the first cards in each set are the same suit and sequential
 		for (var i = 0; i < cards.length - setCount; i+=setCount) {
 			// Sequence set suits must match OR they must all be trumps
@@ -627,44 +626,40 @@ function checkIsTractor(cards) {
 				// Account for extraction of trump value from sequences
 				if (cards[i].cardValue+1 == trumpValue) {
 					if (cards[i].cardValue + 2 != cards[i+setCount].cardValue) {
-						console.log("Not sequential sets");
+						// console.log("Not sequential sets");
 						return false;
 					}
 				} else {
 					if (!(cards[i].cardValue + 1 == cards[i+setCount].cardValue)) {
-						console.log("Not sequential sets");
+						// console.log("Not sequential sets");
 						return false;
 					}
 				}
 			} 
 			else {
-				console.log("Failed first set card suit check");
+				// console.log("Failed first set card suit check");
 				return false;
 			}
-
 		}
 
 		// How many sets to check left in the play
 		for (var j = 1; j <= (cards.length - setCount)/setCount; j++) {
-
 			// Traverse through a set and check they are the same card
 			for (var k = 0; k < setCount-1; k++) {
 				var index = setCount * j + k;
 				if (!(cards[index].suit == cards[index+1].suit && cards[index].cardValue == cards[index+1].cardValue)) {
-					console.log("Failed set check");
+					// console.log("Failed set check");
 					return false;
 				}
-
 			}
-
 		}
-
 	} else {
-		console.log("Failed set count check and divisible play count check");
+		// console.log("Failed set count check and divisible play count check");
 		return false;
 	}
 
-	// IS A TRACTOR JESUS
+	// Is a tractor!
+	tractorSetCount = setCount;
 	return true;
 }
 
