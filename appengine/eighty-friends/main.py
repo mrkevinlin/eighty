@@ -45,8 +45,8 @@ def gpg():
 
 @app.route('/gpg/user', methods = ['POST'])
 def gpg_user_request():
-       print(request.form)
-       return ""
+    print(request.form)
+    return ""
 
 @app.errorhandler(404)
 def page_not_found(e):

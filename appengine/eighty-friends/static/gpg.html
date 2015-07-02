@@ -32,14 +32,12 @@
                     $.ajax({
                             type: 'POST',
                             url: '/gpg/user',
-                            contentType: 'application/octet-stream; charset=utf-8',
-                            success: function(result) {},
-                            processData: false,
                             data: {
                                 userId: "idToken",
                                 userCode: authResult['code'],
                                 action: "connect"
-                            }
+                            },
+                            success: function(result) {}
                     });
                 } else {
                   // There was an error.
