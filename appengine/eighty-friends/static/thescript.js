@@ -10,6 +10,7 @@ var fps = 60;
 var tableGreen = "#66BB6A";
 var mdBlue = "#03A9F4";
 var mdGray = "#616161";
+var mdOrange = "#FF9800";
 
 var players = [];
 var playerCount;
@@ -47,7 +48,7 @@ function init() {
 
     playerCount = 5;
     trumpSuit = "hearts";
-    trumpValue = 2;
+    trumpValue = 4;
 
     sizeCanvas();
     initStage();
@@ -77,7 +78,14 @@ function initStage() {
 function initPlayer() {
     for (var i = 0; i < playerCount; i++) {
         players.push(new Player(i));
+
+        players[i].defending = (i%3==0) ? true:false;
+        if(i%3==0) {players[i].level = 3;}
+        else if(i%2==0) {players[i].level = 2;}
+        else {players[i].level = "I0";}
+        players[i].points = 15*i;
     }
+    players[0].leader = true;
 
     degrees = [];
     initPlayerCoordinates();
@@ -100,8 +108,8 @@ function initPlayerCoordinates() {
         if (window.innerWidth > window.innerHeight) { xpoint += centerx; }
         else {
             if (xpoint == 0) { xpoint = centerx; }
-            else if (xpoint < 0) { xpoint = 36*scale; }
-            else { xpoint = table.width - 36*scale; }
+            else if (xpoint < 0) { xpoint = 80*scale; }
+            else { xpoint = table.width - 80*scale; }
         }
 
         players[i].xcoord = xpoint;
@@ -114,7 +122,10 @@ var Player = function(id) {
     this.hand = [];
     this.xcoord;
     this.ycoord;
-    this.leader = true;
+    this.leader;
+    this.defending;
+    this.level;
+    this.points;
     this.selectedIDs = [];
     this.selectedCards = [];
 };
@@ -187,7 +198,7 @@ var Card = function(suit, name, value, isTrump, points) {
     this.points = points;
 };
 
-function initTrump(suit, value) {
+function initTrump() {
     for (var i = 0; i < deck.length; i++) {
         if (deck[i].suit == trumpSuit) {
             deck[i].isTrump = true;
@@ -276,12 +287,53 @@ function drawEveryone() {
 }
 
 function drawPlayer(id, x, y) {
-    var playerID = new createjs.Text(id, 48*scale + "px Roboto Condensed", "black");
-    playerID.textAlign = "center";
-    playerID.x = x;
-    playerID.y = y;
+    var playerContainer = new createjs.Container();
+    playerContainer.removeAllChildren();
 
-    stage.addChild(playerID);
+    var avatar = new createjs.Shape();
+    avatar.graphics.beginFill(mdBlue).drawCircle(0,0,42*scale*scale);
+    avatar.shadow = new createjs.Shadow(mdGray, 0, 2, 5);
+    playerContainer.addChild(avatar);
+
+    var levelCircle = new createjs.Shape();
+    levelCircle.graphics.beginFill(mdOrange).drawCircle(0,0,16*scale);
+    levelCircle.shadow = new createjs.Shadow(mdGray, 0, 2, 5);
+    levelCircle.x = 32*scale;
+    levelCircle.y = -32*scale;
+    var level = new createjs.Text(players[id].level, 26*scale + "px Roboto Condensed", "white");
+    level.textBaseline = "middle";
+    level.textAlign = "center";
+    level.x = 32*scale;
+    level.y = -32*scale;
+    playerContainer.addChild(levelCircle, level);
+
+    if (players[id].defending) {
+        var team = new createjs.Text("\uE32A", 36*scale + "px Material Icons", "#E0E0E0");
+        team.textAlign = "center";
+        team.textBaseline = "middle";
+        team.shadow = new createjs.Shadow(mdGray, 0, 2, 5);
+        team.x = (-12-team.getMeasuredWidth()/2)*scale;
+        team.y = (12+team.getMeasuredHeight()/2)*scale;
+        playerContainer.addChild(team);
+    } else {
+        var pointRect = new createjs.Shape();
+        var point = new createjs.Text(players[id].points, 26*scale + "px Roboto Condensed", mdGray);
+        point.textBaseline = "middle";
+        point.textAlign = "center";
+        pointRect.graphics.beginFill("white").drawRoundRect(0, 0, point.getMeasuredWidth()+18*scale, point.getMeasuredHeight()+8*scale, 5);
+        pointRect.shadow = new createjs.Shadow(mdGray, 0, 2, 5);
+        pointRect.regX = (point.getMeasuredWidth()+18*scale)/2;
+        pointRect.regY = (point.getMeasuredHeight()+8*scale)/2;
+
+        point.x = pointRect.x = 28*scale;
+        point.y = pointRect.y = 28*scale;
+        playerContainer.addChild(pointRect, point);
+    }
+
+    playerContainer.x = x;
+    playerContainer.y = y;
+
+    stage.addChild(playerContainer);
 }
 
 function drawHand() {
@@ -499,6 +551,7 @@ function drawPlayButton() {
     playButtonContainer.x = table.width/2;
     playButtonContainer.y = table.height/2;
     playButtonContainer.alpha = 0;
+    playButtonContainer.removeAllEventListeners();
     playButtonContainer.addEventListener("mouseover", function(evt) {
 		evt.target.parent.scaleX = 1.01;
 		evt.target.parent.scaleY = 1.01;
@@ -523,11 +576,11 @@ function drawPlayButton() {
 
 function checkLead(cards) {
 	var valid = true;
-	console.log(cards);
 
 	// Check if the play is a tractor if there are 4 or more cards
 	if (cards.length >= 4) {
 		valid = checkIsTractor(cards);
+		roundIsTractor = valid;
 	}
 
 	// Check for valid set plays if not tractor
@@ -540,6 +593,7 @@ function checkLead(cards) {
 	}
 
 	if (valid) {
+		console.log("IS GOOD");
 		roundCount = cards.length;
 		roundSuit = cards[0].suit;
 		players[0].playCards();
@@ -554,17 +608,103 @@ function checkPlay(cards) {
 
 function checkIsTractor(cards) {
 	// Check for a valid tractor. If so, return true for valid and set roundIsTractor to true
+	
+	// Find the number of cards in each tractor set (ie pairs, triples, etc)
 	var setCount = 0;
-	var sequenceCount = 0;
-	var uniques;
+	do {setCount++;} 
+	while (cards[setCount-1].suit == cards[setCount].suit 
+		&& cards[setCount-1].cardValue == cards[setCount].cardValue)
 
-	for (var i = 0; i < cards.length; i++) {
-		
+	console.log("Set count: " + setCount);
+
+	// The set must be a pair at minimum and the play must have whole numbers of sets
+	if (setCount > 1 && cards.length%setCount==0) {
+
+		// Check that the first cards in each set are the same suit and sequential
+		for (var i = 0; i < cards.length - setCount; i+=setCount) {
+			// Sequence set suits must match OR they must all be trumps
+			if (cards[i].suit == cards[i+setCount].suit || (cards[i].isTrump && cards[i+setCount].isTrump)) {
+				// Account for extraction of trump value from sequences
+				if (cards[i].cardValue+1 == trumpValue) {
+					if (cards[i].cardValue + 2 != cards[i+setCount].cardValue) {
+						console.log("Not sequential sets");
+						return false;
+					}
+				} else {
+					if (!(cards[i].cardValue + 1 == cards[i+setCount].cardValue)) {
+						console.log("Not sequential sets");
+						return false;
+					}
+				}
+			} 
+			else {
+				console.log("Failed first set card suit check");
+				return false;
+			}
+
+		}
+
+		// How many sets to check left in the play
+		for (var j = 1; j <= (cards.length - setCount)/setCount; j++) {
+
+			// Traverse through a set and check they are the same card
+			for (var k = 0; k < setCount-1; k++) {
+				var index = setCount * j + k;
+				if (!(cards[index].suit == cards[index+1].suit && cards[index].cardValue == cards[index+1].cardValue)) {
+					console.log("Failed set check");
+					return false;
+				}
+
+			}
+
+		}
+
+	} else {
+		console.log("Failed set count check and divisible play count check");
+		return false;
 	}
 
-
-	roundIsTractor = false;
+	// IS A TRACTOR JESUS
 	return true;
+}
+
+function testHand() {
+	players[0].hand.length = 0;
+    drawHand();
+	var deckCount = 4;
+
+	var suit = ["spades", "diamonds", "clubs", "hearts"];
+    var names = ["2", "3", "4", "5", "6", "7", "8", "9", "I0", "J", "Q", "K", "A"];
+    var points = 0;
+
+    for (var i = 0; i < deckCount; i++) {
+        for (var s = 0; s < 4; s++) {
+            for (var v = 0; v <= 12; v++) {
+                if (v==5 || v==10 || v==13) {
+                    points = (v==5) ? 5:10;
+                }
+                players[0].hand.push(new Card(suit[s], names[v], v+2, false, points));
+                points = 0;
+            }
+        }
+        players[0].hand.push(new Card("trump", "S", 17, true, 0));
+        players[0].hand.push(new Card("trump", "B", 18, true, 0));
+    }
+
+    for (var i = 0; i < players[0].hand.length; i++) {
+        if (players[0].hand[i].suit == trumpSuit) {
+            players[0].hand[i].isTrump = true;
+            if (players[0].hand[i].cardValue == trumpValue) {
+            	players[0].hand[i].cardValue = 16;
+            }
+        }
+        if (players[0].hand[i].cardValue == trumpValue) {
+            players[0].hand[i].cardValue = 15;
+            players[0].hand[i].isTrump = true;
+        }
+    }
+    players[0].hand.sort(cardSort);
+    drawHand();
 }
 
 function drawDrawerIcon() {
@@ -594,6 +734,13 @@ function drawDrawerIcon() {
         .to({alpha:1}, 100)
         .to({alpha:0.6}, 100);
         createjs.Tween.get(drawer).to({x: 0}, 60).call(finishAnimating);
+    });
+
+    stage.on("stagemousedown", function(evt) {
+        if (evt.stageX > drawerWidth && drawer.x >= 0) {
+            animating++;
+            createjs.Tween.get(drawer).to({x: -(drawerWidth+50)*scale}, 60).call(finishAnimating);
+        }
     });
 
     stage.addChild(drawerIcon);
