@@ -15,6 +15,7 @@
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
         <script src="thescript.js"></script>
         <script>
+            var imageUrl = "CHANGE ME!";
             var auth2;
             var initClient = function() {
                 init();
@@ -46,6 +47,10 @@
                 console.log('ID: ' + profile.getId()); // Do not send to your backend! Use an ID token instead.
                 console.log('Name: ' + profile.getName());
                 console.log('Image URL: ' + profile.getImageUrl());
+                if (profile.getImageUrl()) {
+                    imageUrl = profile.getImageUrl();
+                }
+                document.getElementById("playerImg").src = imageUrl;
                 console.log('Email: ' + profile.getEmail());
                 var idToken = auth2.currentUser.get().getAuthResponse().id_token;
                 console.log("ID Token: " + idToken);
@@ -128,5 +133,6 @@
             <div id="my-signin2"></div>
         </div>
         <button onclick="signOut();" id="signout-button">Sign Out of Game</button>
+        <img id="playerImg" src="http://4.bp.blogspot.com/-6Y8blNYlkdo/UlXn4Xik9-I/AAAAAAAAvfQ/NpqSuXYD8Zg/s1600/profile.png" />
     </body>
 </html>

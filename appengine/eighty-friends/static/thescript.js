@@ -291,7 +291,13 @@ function drawPlayer(id, x, y) {
     playerContainer.removeAllChildren();
 
     var avatar = new createjs.Shape();
-    avatar.graphics.beginFill(mdBlue).drawCircle(0,0,42*scale*scale);
+    if (imageUrl) {
+        avatar.graphics.beginBitmapFill(document.getElementById("playerImg"), "repeat",
+            new createjs.Matrix2D(0.5,0,0,0.5,-42*scale*scale,-42*scale*scale)).drawCircle(0,0,42*scale*scale);
+    }
+    else {
+        avatar.graphics.beginFill(mdBlue).drawCircle(0,0,42*scale*scale);
+    }
     avatar.shadow = new createjs.Shadow(mdGray, 0, 2, 5);
     playerContainer.addChild(avatar);
 
@@ -608,11 +614,11 @@ function checkPlay(cards) {
 
 function checkIsTractor(cards) {
 	// Check for a valid tractor. If so, return true for valid and set roundIsTractor to true
-	
+
 	// Find the number of cards in each tractor set (ie pairs, triples, etc)
 	var setCount = 0;
-	do {setCount++;} 
-	while (cards[setCount-1].suit == cards[setCount].suit 
+	do {setCount++;}
+	while (cards[setCount-1].suit == cards[setCount].suit
 		&& cards[setCount-1].cardValue == cards[setCount].cardValue)
 
 	console.log("Set count: " + setCount);
@@ -636,7 +642,7 @@ function checkIsTractor(cards) {
 						return false;
 					}
 				}
-			} 
+			}
 			else {
 				console.log("Failed first set card suit check");
 				return false;
