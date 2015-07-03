@@ -214,14 +214,15 @@ Player.prototype.playCards = function() {
     createjs.Tween.get(playButtonContainer).to({alpha: 0}, 150).call(finishAnimating);
     // Remove from array starting at higher indexes to prevent index change errors
     this.selectedIDs.sort(function(a, b) {return a-b;});
-    var point = handContainer.globalToLocal(handContainer.x-(this.selectedIDs.length*miniWidth/2), players[0].ycoord-120*scale);
+    var animateToPoint = handContainer.globalToLocal(table.width/2-(((this.selectedIDs.length-1)*50*scale + miniWidth*scale)/2), (players[0].ycoord - miniHeight*scale - 64));
+    var drawPoint = handContainer.localToGlobal(animateToPoint.x, animateToPoint.y);
     for (var i = this.selectedIDs.length - 1; i >= 0; i--) {
         this.hand.splice(this.selectedIDs[i],1);
         animating++;
         createjs.Tween.get(handContainer.getChildAt(this.selectedIDs[i]))
-        .to({scaleX: .5, scaleY: .5, x: point.x + 40*scale*i, y: point.y}, 900)
+        .to({scaleX: .5, scaleY: .5, x: animateToPoint.x + 50*scale*i, y: animateToPoint.y}, 200, createjs.Ease.cubicOut)
         .call(drawHand)
-        .call(drawPlayerPlay, [this.selectedCards], this) 
+        .call(drawPlayerPlay, [this.selectedCards, drawPoint], this) 
         .call(finishAnimating);
     }
 
@@ -229,14 +230,12 @@ Player.prototype.playCards = function() {
     // this.selectedCards.length = 0;
 }
 
-function drawPlayerPlay(cards) {
+function drawPlayerPlay(cards, pt) {
     for (var i = 0; i < cards.length; i++) {
-        playContainer.addChild(drawMiniCard(cards[i].suit, cards[i].cardName, 40*i, 0));
+        playContainer.addChild(drawMiniCard(cards[i].suit, cards[i].cardName, 50*scale*i, 0));
     }
-    playContainer.regX = (((cards.length-1) * 40) + miniWidth)/2 * scale;
-    playContainer.regY = miniHeight/2 * scale;
-    playContainer.x = table.width/2;
-    playContainer.y = players[0].ycoord - (miniHeight+42)*scale;
+    playContainer.x = pt.x;
+    playContainer.y = pt.y;
     stage.addChild(playContainer);
 }
 
@@ -292,7 +291,7 @@ function drawPlayer(id, x, y) {
     playerContainer.removeAllChildren();
 
     var avatar = new createjs.Shape();
-    avatar.graphics.beginFill(mdBlue).drawCircle(0,0,42*scale*scale);
+    avatar.graphics.beginFill(mdBlue).drawCircle(0,0,42*scale);
     avatar.shadow = new createjs.Shadow(mdGray, 0, 2, 5);
     playerContainer.addChild(avatar);
 
@@ -424,7 +423,7 @@ function drawMiniCard(suit, value, x, y) {
 
     var cardboard = new createjs.Shape();
     cardboard.graphics.beginFill('white').drawRoundRect(0, 0, miniWidth*scale, miniHeight*scale, 10);
-    cardboard.shadow = new createjs.Shadow("black", 0, 1, 2);
+    cardboard.shadow = new createjs.Shadow(mdGray, 0, 1, 2);
 
     var value = new createjs.Text(value, 36*scale + "px Roboto Condensed", color);
     value.textBaseline = "top";
