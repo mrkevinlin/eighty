@@ -38,9 +38,14 @@ var roundSuit;
 var roundIsTrump;
 
 var teamsSet;
-
 var drawer = new createjs.Container();
 var drawerWidth = 300;
+var dpx = 48; // drawerPaddingX
+var dpy = 48; // drawerPaddingY
+var trumpInfoY;
+var scoreInfoY;
+var scoreTeamY;
+var defendTeamY;
 
 var ascending = true;
 
@@ -658,31 +663,36 @@ function drawDrawer() {
     });
 
     var titleIcon = new createjs.Text("\uE14D", (28*scale) + "px Material Icons", mdGray);
-    var title = new createjs.Text("Eighty", (24*scale) + "px Roboto Condensed", "black");
-    titleIcon.y = title.y = 30*scale;
+    var titleText = new createjs.Text("Eighty", (24*scale) + "px Roboto Condensed", "black");
+    titleIcon.textBaseline = titleText.textBaseline = "middle";
+    titleIcon.y = titleText.y = dpy*scale;
 
     var settingsIcon = new createjs.Text("\uE8B8", (28*scale) + "px Material Icons", mdGray);
-    var settings = new createjs.Text("Settings", (24*scale) + "px Roboto Condensed", "black");
+    var settingsText = new createjs.Text("Settings", (24*scale) + "px Roboto Condensed", "black");
 
     var helpIcon = new createjs.Text("\uE887", (28*scale) + "px Material Icons", mdGray);
-    var help = new createjs.Text("Help", (24*scale) + "px Roboto Condensed", "black");
+    var helpText = new createjs.Text("Help", (24*scale) + "px Roboto Condensed", "black");
 
-    settingsIcon.textBaseline = settings.textBaseline = helpIcon.textBaseline = help.textBaseline = "middle";
+    titleIcon.textAlign = settingsIcon.textAlign = helpIcon.textAlign = "center";
+    helpIcon.textBaseline = helpText.textBaseline = settingsIcon.textBaseline = settingsText.textBaseline = "middle";
 
-    titleIcon.x = settingsIcon.x = helpIcon.x = 30*scale;
-    title.x = settings.x = help.x = titleIcon.getMeasuredWidth() + 60*scale;
+    titleIcon.x = settingsIcon.x = helpIcon.x = dpx*scale;
+    titleText.x = settingsText.x = helpText.x = dpx*2*scale;
 
-    helpIcon.y = help.y = table.height - helpIcon.getMeasuredHeight() - 30*scale;
-    settingsIcon.y = settings.y = helpIcon.y - settingsIcon.getMeasuredHeight() - 30*scale;
+    helpIcon.y = helpText.y = table.height - (dpy*scale);
+    settingsIcon.y = settingsText.y = helpIcon.y - (dpy*scale);
 
-    drawer.addChild(drawerBack, titleIcon, title, close, settingsIcon, settings, helpIcon, help);
+    drawer.addChild(drawerBack, titleIcon, titleText, close, settingsIcon, settingsText, helpIcon, helpText);
+    trumpInfoY = titleText.y + titleText.getMeasuredHeight();
     drawDrawerInfo();
     stage.addChild(drawer);
 }
 
 function drawDrawerInfo() {
     drawTrumpInfo();
-    drawTeamInfoTitle();
+    drawScore();
+    drawScoreTeam();
+    drawDefendTeam();
 }
 
 function drawTrumpInfo() {
@@ -691,16 +701,19 @@ function drawTrumpInfo() {
 
     var trumpSuitIcon = new createjs.Text(trumpSuitPic, (28*scale) + "px Roboto Condensed", trumpsColor);
     var trumpSuitText = new createjs.Text("Trump suit", (24*scale) + "px Roboto Condensed", "black");
-    trumpSuitIcon.x = 30*scale;
-    trumpSuitText.x = trumpSuitIcon.getMeasuredWidth() + 60*scale;
-    trumpSuitIcon.y = trumpSuitText.y = 120*scale;
+    trumpSuitIcon.textAlign = "center";
+    trumpSuitIcon.textBaseline = trumpSuitText.textBaseline = "middle";
+    trumpSuitIcon.x = dpx*scale;
+    trumpSuitText.x = dpx*2*scale;
+    trumpSuitIcon.y = trumpSuitText.y = trumpInfoY + (dpy*scale);
 
     var trumpValueIcon = new createjs.Text(trumpValue, (28*scale) + "px Roboto Condensed", trumpsColor);
     var trumpValueText = new createjs.Text("Trump value", (24*scale) + "px Roboto Condensed", "black");
     trumpValueIcon.textAlign = "center";
-    trumpValueIcon.x = 30*scale + trumpSuitIcon.getMeasuredWidth()/2;
-    trumpValueText.x = trumpSuitIcon.getMeasuredWidth() + 60*scale;
-    trumpValueIcon.y = trumpValueText.y = 168*scale;
+    trumpValueIcon.textBaseline = trumpValueText.textBaseline = "middle";
+    trumpValueIcon.x = dpx*scale;
+    trumpValueText.x = dpx*2*scale;
+    trumpValueIcon.y = trumpValueText.y = trumpSuitIcon.y + dpy*scale;
 
     trumpSuitIcon.textBaseline = "middle";
     trumpSuitText.textBaseline = "middle";
@@ -708,38 +721,63 @@ function drawTrumpInfo() {
     trumpValueText.textBaseline = "middle";
 
     drawer.addChild(trumpSuitIcon, trumpSuitText, trumpValueIcon, trumpValueText);
+
+    scoreInfoY = trumpValueIcon.y + trumpValueIcon.getMeasuredHeight()/2;
 }
 
-function drawTeamInfoTitle() {
+function drawScore() {
+    var scoreIcon = new createjs.Text("\uE147", (28*scale) + "px Material Icons", mdOrange);
+    var scoreText = new createjs.Text("Score:", (24*scale) + "px Roboto Condensed", "black");
+    scoreIcon.textAlign = "center";
+    scoreIcon.textBaseline = scoreText.textBaseline = "middle";
+    scoreIcon.x = dpx*scale;
+    scoreText.x = dpx*2*scale;
+    scoreIcon.y = scoreText.y = scoreInfoY + dpy*1.2*scale;
+
+    scoreTeamY = scoreIcon.y + scoreIcon.getMeasuredHeight()/2;
+
+	drawer.addChild(scoreIcon, scoreText);
+}
+
+function drawScoreTeam() {
 	var scoreTeamIcon = new createjs.Text("\uE3B8", (28*scale) + "px Material Icons", mdGray);
-	scoreTeamIcon.rotation = 180;
-	var scoreTeamText = new createjs.Text("Scoring Team", (24*scale) + "px Roboto Condensed", "black");
+    scoreTeamIcon.rotation = 180;
+    var scoreTeamText = new createjs.Text("Scoring Team", (24*scale) + "px Roboto Condensed", "black");
+    scoreTeamIcon.textAlign = "center";
+    scoreTeamIcon.textBaseline = scoreTeamText.textBaseline = "middle";
 
-	var scoreIcon = new createjs.Text("\uE147", (28*scale) + "px Material Icons", mdGray);
-	var scoreText = new createjs.Text("Score:", (24*scale) + "px Roboto Condensed", "black");
+    scoreTeamIcon.x = dpx*scale;
+    scoreTeamText.x = dpx*2*scale;
+    scoreTeamIcon.y = scoreTeamText.y = scoreTeamY + dpy*1.2*scale;
 
-	var defendTeamIcon = new createjs.Text("\uE32A", (28*scale) + "px Material Icons", mdGray);
-	var defendTeamText = new createjs.Text("Defending Team", (24*scale) + "px Roboto Condensed", "black");
+    var scoreTeamContainer = drawTeamList(false);
+    scoreTeamContainer.x = dpx*scale;
+    scoreTeamContainer.y = scoreTeamIcon.y + dpy*scale;
 
-	scoreTeamIcon.textBaseline = scoreTeamText.textBaseline = scoreIcon.textBaseline = scoreText.textBaseline = defendTeamIcon.textBaseline = defendTeamText.textBaseline = "middle";
-	scoreIcon.textAlign = scoreTeamIcon.textAlign = defendTeamIcon.textAlign = "center";
+    // Change to last person on scoring team list
+    defendTeamY = scoreTeamContainer.y;
+     // + scoreTeamContainer.getBounds().height;
 
-	scoreTeamIcon.x = defendTeamIcon.x = scoreIcon.x = 30*scale + scoreTeamIcon.getMeasuredWidth()/2;
-	scoreTeamText.x = defendTeamText.x = scoreText.x = scoreTeamIcon.getMeasuredWidth() + 60*scale;
-
-	scoreIcon.y = scoreText.y = 240*scale;
-	scoreTeamIcon.y = scoreTeamText.y = 300*scale;
-	defendTeamIcon.y = defendTeamText.y = 360*scale;
-
-	drawer.addChild(scoreIcon, scoreText, scoreTeamIcon, scoreTeamText, defendTeamIcon, defendTeamText);
+    drawer.addChild(scoreTeamIcon, scoreTeamText, scoreTeamContainer);
 }
 
-function drawTeamInfo() {
-	
+function drawDefendTeam() {
+    var defendTeamIcon = new createjs.Text("\uE32A", (28*scale) + "px Material Icons", mdGray);
+    var defendTeamText = new createjs.Text("Defending Team", (24*scale) + "px Roboto Condensed", "black");
+
+    defendTeamIcon.textAlign = "center";
+    defendTeamIcon.textBaseline = defendTeamText.textBaseline = "middle";
+    defendTeamIcon.x = dpx*scale;
+    defendTeamText.x = dpx*2*scale;
+    defendTeamIcon.y = defendTeamText.y = defendTeamY + dpy*1.2*scale;
+
+    drawer.addChild(defendTeamIcon, defendTeamText);
 }
 
-function drawScoreInfo() {
+function drawTeamList(defending) {
+    var teamContainer = new createjs.Container();
 
+    return teamContainer;
 }
 
 function getSuitIcon(suit) {
