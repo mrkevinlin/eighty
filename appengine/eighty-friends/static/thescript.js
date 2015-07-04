@@ -623,7 +623,12 @@ function drawDrawerIcon() {
     stage.addChild(drawerIcon);
 }
 
+// Todo: Come up with good ways to pad elements vertically in the drawer. Currently hardcoded. (Pass heights/y values into subsequent draw methods?).
+// 
+// Also use consistent paddings for x values, not measuredWidths(). Jeeeeeeez
+
 function drawDrawer() {
+	drawer.removeAllChildren();
     drawer.x = -(drawerWidth+50)*scale;
 
     var drawerBack = new createjs.Shape();
@@ -676,7 +681,12 @@ function drawDrawer() {
 }
 
 function drawDrawerInfo() {
-    var trumpSuitPic = getSuitIcon(trumpSuit);
+    drawTrumpInfo();
+    drawTeamInfoTitle();
+}
+
+function drawTrumpInfo() {
+	var trumpSuitPic = getSuitIcon(trumpSuit);
     var trumpsColor = (trumpSuit == "diamonds" || trumpSuit == "hearts") ? "red" : "black";
 
     var trumpSuitIcon = new createjs.Text(trumpSuitPic, (28*scale) + "px Roboto Condensed", trumpsColor);
@@ -696,7 +706,40 @@ function drawDrawerInfo() {
     trumpSuitText.textBaseline = "middle";
     trumpValueIcon.textBaseline = "middle";
     trumpValueText.textBaseline = "middle";
+
     drawer.addChild(trumpSuitIcon, trumpSuitText, trumpValueIcon, trumpValueText);
+}
+
+function drawTeamInfoTitle() {
+	var scoreTeamIcon = new createjs.Text("\uE3B8", (28*scale) + "px Material Icons", mdGray);
+	scoreTeamIcon.rotation = 180;
+	var scoreTeamText = new createjs.Text("Scoring Team", (24*scale) + "px Roboto Condensed", "black");
+
+	var scoreIcon = new createjs.Text("\uE147", (28*scale) + "px Material Icons", mdGray);
+	var scoreText = new createjs.Text("Score:", (24*scale) + "px Roboto Condensed", "black");
+
+	var defendTeamIcon = new createjs.Text("\uE32A", (28*scale) + "px Material Icons", mdGray);
+	var defendTeamText = new createjs.Text("Defending Team", (24*scale) + "px Roboto Condensed", "black");
+
+	scoreTeamIcon.textBaseline = scoreTeamText.textBaseline = scoreIcon.textBaseline = scoreText.textBaseline = defendTeamIcon.textBaseline = defendTeamText.textBaseline = "middle";
+	scoreIcon.textAlign = scoreTeamIcon.textAlign = defendTeamIcon.textAlign = "center";
+
+	scoreTeamIcon.x = defendTeamIcon.x = scoreIcon.x = 30*scale + scoreTeamIcon.getMeasuredWidth()/2;
+	scoreTeamText.x = defendTeamText.x = scoreText.x = scoreTeamIcon.getMeasuredWidth() + 60*scale;
+
+	scoreIcon.y = scoreText.y = 240*scale;
+	scoreTeamIcon.y = scoreTeamText.y = 300*scale;
+	defendTeamIcon.y = defendTeamText.y = 360*scale;
+
+	drawer.addChild(scoreIcon, scoreText, scoreTeamIcon, scoreTeamText, defendTeamIcon, defendTeamText);
+}
+
+function drawTeamInfo() {
+	
+}
+
+function drawScoreInfo() {
+
 }
 
 function getSuitIcon(suit) {
