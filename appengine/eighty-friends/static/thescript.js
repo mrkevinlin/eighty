@@ -290,14 +290,12 @@ function drawPlayer(id, x, y) {
     var playerContainer = new createjs.Container();
     playerContainer.removeAllChildren();
 
-    var avatar = new createjs.Shape();
-    if (imageUrl) {
-        avatar.graphics.beginBitmapFill(document.getElementById("playerImg"), "repeat",
-            new createjs.Matrix2D(0.5,0,0,0.5,-42*scale*scale,-42*scale*scale)).drawCircle(0,0,42*scale*scale);
-    }
-    else {
-        avatar.graphics.beginFill(mdBlue).drawCircle(0,0,42*scale*scale);
-    }
+	var avatar = new createjs.Bitmap(imageUrl);
+	var maskGraphics = new createjs.Graphics().drawCircle(0, 0, 48);
+	var circleMask = new createjs.Shape(maskGraphics);
+	avatar.x = -48;
+	avatar.y = -48;
+	avatar.mask = circleMask;
     avatar.shadow = new createjs.Shadow(mdGray, 0, 2, 5);
     playerContainer.addChild(avatar);
 
