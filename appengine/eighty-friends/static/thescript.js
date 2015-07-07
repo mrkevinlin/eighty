@@ -76,6 +76,7 @@ function init() {
 
 function initStage() {
     stage = new createjs.Stage("table");
+    stage.addChild(playContainer);
 
     table.style.background = tableGreen;
     createjs.Ticker.setFPS(fps);
@@ -153,7 +154,7 @@ function initTrump() {
         if (deck[i].suit == trumpSuit) {
             deck[i].isTrump = true;
             if (deck[i].cardValue == trumpValue) {
-            	deck[i].cardValue = 16;
+                deck[i].cardValue = 16;
             }
         }
         if (deck[i].cardValue == trumpValue) {
@@ -199,7 +200,7 @@ Player.prototype.removeSelection = function(sel) {
 }
 
 Player.prototype.checkSelection = function() {
-	this.selectedCards.sort(cardSort);
+    this.selectedCards.sort(cardSort);
     if (this.leader) {
         checkLead(this.selectedCards);
     } else {
@@ -208,8 +209,8 @@ Player.prototype.checkSelection = function() {
 }
 
 Player.prototype.clearSelection = function() {
-	this.selectedCards.length = 0;
-	console.log("CLEARED");
+    this.selectedCards.length = 0;
+    console.log("CLEARED");
 }
 
 Player.prototype.playCards = function() {
@@ -218,44 +219,45 @@ Player.prototype.playCards = function() {
 
     var animateToPoint = handContainer.globalToLocal(table.width/2-(((this.selectedCards.length-1)*50*scale + miniWidth*scale)/2), (players[0].ycoord - miniHeight*scale - 64));
     var drawPoint = handContainer.localToGlobal(animateToPoint.x, animateToPoint.y);
-    for (var i = 0; i < this.selectedCards.length; i++) {
+    playContainer.removeAllChildren();
+    playContainer.x = drawPoint.x;
+    playContainer.y = drawPoint.y;
+    for (var i = this.selectedCards.length-1; i >= 0; i--) {
         animating++;
-        createjs.Tween.get(handContainer.getChildAt(this.hand.indexOf(this.selectedCards[i])))
+        var card = this.selectedCards[i];
+        createjs.Tween.get(handContainer.getChildAt(this.hand.indexOf(card)))
         .to({scaleX: .5, scaleY: .5, x: animateToPoint.x + 50*scale*i, y: animateToPoint.y}, 150, createjs.Ease.cubicOut)
-        .call(drawHand)
-        .call(drawPlayerPlay, [this.selectedCards, drawPoint], this) 
-        .call(finishAnimating);
+        .call(finishAnimating)
+        .call(drawPlayCard, [card, i], this);
     }
 
-    for (var i = 0; i < this.selectedCards.length; i++) {
-    	this.hand.splice(this.hand.indexOf(this.selectedCards[i]),1);
+    function drawPlayCard(card, i) {
+        playContainer.addChild(drawMiniCard(card.suit, card.cardName, 50*scale*i, 0));
+        stage.addChild(playContainer);
+        this.hand.splice(this.hand.indexOf(card),1);
+        this.selectedCards.splice(this.selectedCards.length-1,1);
+        if (this.selectedCards.length === 0) {
+            drawHand();
+        }
     }
-
-    // this.selectedCards.length = 0;
 }
 
-function drawPlayerPlay(cards, pt) {
-	playContainer.removeAllChildren();
-    for (var i = 0; i < cards.length; i++) {
-        playContainer.addChild(drawMiniCard(cards[i].suit, cards[i].cardName, 50*scale*i, 0));
-    }
-    playContainer.x = pt.x;
-    playContainer.y = pt.y;
+//function drawPlayCard(card, pt) {
 
-    var clear = new createjs.Text("Clear play", "48px Roboto Condensed", "white");
-    clear.x = table.width - clear.getMeasuredWidth();
-    clear.y = 0;
-    var target = new createjs.Shape();
-    target.graphics.beginFill("white").drawRect(0, 0, clear.getMeasuredWidth(), clear.getMeasuredHeight());
-    clear.hitArea = target;
+    //var clear = new createjs.Text("Clear play", "48px Roboto Condensed", "white");
+    //clear.x = table.width - clear.getMeasuredWidth();
+    //clear.y = 0;
+    //var target = new createjs.Shape();
+    //target.graphics.beginFill("white").drawRect(0, 0, clear.getMeasuredWidth(), clear.getMeasuredHeight());
+    //clear.hitArea = target;
 
-    clear.addEventListener("click", function() {
-    	stage.removeChild(playContainer);
-    	stage.update();
-    });
+    //clear.addEventListener("click", function() {
+        //stage.removeChild(playContainer);
+        //stage.update();
+    //});
 
-    stage.addChild(playContainer, clear);
-}
+    //stage.addChild(playContainer, clear);
+//}
 
 var Card = function(suit, name, value, isTrump, points) {
     this.suit = suit;
@@ -344,7 +346,7 @@ function drawPlayer(id, x, y) {
         point.y = pointRect.y = 28*scale;
         playerContainer.addChild(pointRect, point);
     // } else {
-    	// var teamScore = new createjs.Text("\uE3B8", 36*scale + "px Material Icons", "white");
+        // var teamScore = new createjs.Text("\uE3B8", 36*scale + "px Material Icons", "white");
      //    teamScore.textAlign = "center";
      //    teamScore.textBaseline = "middle";
      //    teamScore.shadow = new createjs.Shadow(mdGray, 0, 2, 5);
@@ -422,7 +424,7 @@ function drawMiniCardDown(x, y) {
 
 function drawMiniCard(suit, value, x, y) {
     var color = (suit == "diamonds" || suit == "hearts" || suit == "trump" && value == "B") ? "red" : "black";
-	suit = getSuitIcon(suit);
+    suit = getSuitIcon(suit);
 
     switch (value) {
         case "B":
@@ -454,7 +456,7 @@ function drawMiniCard(suit, value, x, y) {
     card.addChild(cardboard, suitIcon, value);
     card.x = x;
     card.y = y;
-    
+
     return card;
 }
 
@@ -478,8 +480,8 @@ function drawCardDown(x, y) {
 }
 
 function drawCard(card, x, y) {
-	var suit = card.suit;
-	var value = card.cardName;
+    var suit = card.suit;
+    var value = card.cardName;
     var color = (suit == "diamonds" || suit == "hearts" || suit == "trump" && value == "B") ? "red" : "black";
     suit = getSuitIcon(suit);
 
@@ -578,21 +580,21 @@ function drawPlayButton() {
     playButtonContainer.alpha = 0;
     playButtonContainer.removeAllEventListeners();
   //   playButtonContainer.addEventListener("mouseover", function(evt) {
-		// evt.target.parent.scaleX = 1.01;
-		// evt.target.parent.scaleY = 1.01;
-		// evt.target.parent.y-=1
-		// stage.update();
+        // evt.target.parent.scaleX = 1.01;
+        // evt.target.parent.scaleY = 1.01;
+        // evt.target.parent.y-=1
+        // stage.update();
   //   });
   //   playButtonContainer.addEventListener("mouseout", function(evt) {
-		// evt.target.parent.scaleX = 1/1.01;
-		// evt.target.parent.scaleY = 1/1.01;
-		// evt.target.parent.y+=1
-		// stage.update();
+        // evt.target.parent.scaleX = 1/1.01;
+        // evt.target.parent.scaleY = 1/1.01;
+        // evt.target.parent.y+=1
+        // stage.update();
   //   });
     playButtonContainer.addEventListener("click", function(evt) {
-    	animating++;
-    	createjs.Tween.get(evt.target.parent).to({alpha: 0.8}, 60).call(finishAnimating);
-    	players[0].checkSelection();
+        animating++;
+        createjs.Tween.get(evt.target.parent).to({alpha: 0.8}, 60).call(finishAnimating);
+        players[0].checkSelection();
     });
     stage.addChild(playButtonContainer);
     stage.update();
@@ -642,7 +644,7 @@ function drawDrawerIcon() {
 // Also use consistent paddings for x values, not measuredWidths(). Jeeeeeeez
 
 function drawDrawer() {
-	drawer.removeAllChildren();
+    drawer.removeAllChildren();
     drawer.x = -(drawerWidth+50)*scale;
 
     var drawerBack = new createjs.Shape();
@@ -705,7 +707,7 @@ function drawDrawerInfo() {
 }
 
 function drawTrumpInfo() {
-	var trumpSuitPic = getSuitIcon(trumpSuit);
+    var trumpSuitPic = getSuitIcon(trumpSuit);
     var trumpsColor = (trumpSuit == "diamonds" || trumpSuit == "hearts") ? "red" : "black";
 
     var trumpSuitIcon = new createjs.Text(trumpSuitPic, (28*scale) + "px Roboto Condensed", trumpsColor);
@@ -745,11 +747,11 @@ function drawScore() {
 
     scoreTeamY = scoreIcon.y + scoreIcon.getMeasuredHeight()/2;
 
-	drawer.addChild(scoreIcon, scoreText);
+    drawer.addChild(scoreIcon, scoreText);
 }
 
 function drawScoreTeam() {
-	var scoreTeamIcon = new createjs.Text("\uE3B8", (28*scale) + "px Material Icons", mdGray);
+    var scoreTeamIcon = new createjs.Text("\uE3B8", (28*scale) + "px Material Icons", mdGray);
     scoreTeamIcon.rotation = 180;
     var scoreTeamText = new createjs.Text("Scoring Team", (24*scale) + "px Roboto Condensed", "black");
     scoreTeamIcon.textAlign = "center";
@@ -790,8 +792,8 @@ function drawTeamList(defending) {
 }
 
 function getSuitIcon(suit) {
-	var code;
-	switch (suit) {
+    var code;
+    switch (suit) {
         case "spades":
             code = "\u2660";
             break;
@@ -951,7 +953,7 @@ function sizeCanvas() {
 }
 
 function centerText() {
-	return {textBaseline: "middle", textAlign: "center"};
+    return {textBaseline: "middle", textAlign: "center"};
 }
 
 window.addEventListener('resize', function() {
@@ -961,7 +963,7 @@ window.addEventListener('resize', function() {
 });
 
 function cardSort(a, b) {
-	var sortFactor = (ascending) ? 1:-1;
+    var sortFactor = (ascending) ? 1:-1;
     if (a.isTrump && !b.isTrump) {
         return 1*sortFactor;
     } else if (b.isTrump && !a.isTrump) {
