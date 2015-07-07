@@ -62,6 +62,7 @@ function init() {
     trumpSuit = "hearts";
     trumpValue = 4;
     teamsSet = false;
+    ascending = true;
 
     sizeCanvas();
     initStage();
@@ -206,6 +207,11 @@ Player.prototype.checkSelection = function() {
     }
 }
 
+Player.prototype.clearSelection = function() {
+	this.selectedCards.length = 0;
+	console.log("CLEARED");
+}
+
 Player.prototype.playCards = function() {
     animating++;
     createjs.Tween.get(playButtonContainer).to({alpha: 0}, 150).call(finishAnimating);
@@ -245,7 +251,6 @@ function drawPlayerPlay(cards, pt) {
 
     clear.addEventListener("click", function() {
     	stage.removeChild(playContainer);
-    	players[0].selectedCards.length = 0;
     	stage.update();
     });
 
@@ -303,38 +308,35 @@ function drawPlayer(id, x, y) {
     var playerContainer = new createjs.Container();
     playerContainer.removeAllChildren();
 
+    var badgeShadow = new createjs.Shadow("rgba(0, 0, 0, 0.5)", 0, 2, 5);
+
     var avatar = new createjs.Shape();
     avatar.graphics.beginFill(mdBlue).drawCircle(0,0,42*scale);
-    avatar.shadow = new createjs.Shadow(mdGray, 0, 2, 5);
+    avatar.set({shadow: badgeShadow});
     playerContainer.addChild(avatar);
 
     var levelCircle = new createjs.Shape();
     levelCircle.graphics.beginFill(mdOrange).drawCircle(0,0,16*scale);
-    levelCircle.shadow = new createjs.Shadow(mdGray, 0, 2, 5);
-    levelCircle.x = 32*scale;
-    levelCircle.y = -32*scale;
+    levelCircle.set({shadow: badgeShadow, x: 32*scale, y: -32*scale});
+
     var level = new createjs.Text(players[id].level, 26*scale + "px Roboto Condensed", "white");
-    level.textBaseline = "middle";
-    level.textAlign = "center";
-    level.x = 32*scale;
-    level.y = -32*scale;
+    level.set(centerText());
+    level.set({x: 32*scale, y: -32*scale});
     playerContainer.addChild(levelCircle, level);
 
     if (players[id].defending) {
         var teamDefense = new createjs.Text("\uE32A", 36*scale + "px Material Icons", "white");
-        teamDefense.textAlign = "center";
-        teamDefense.textBaseline = "middle";
-        teamDefense.shadow = new createjs.Shadow(mdGray, 0, 2, 5);
+        teamDefense.set(centerText());
+        teamDefense.shadow = badgeShadow;
         teamDefense.x = (-12-teamDefense.getMeasuredWidth()/2)*scale;
         teamDefense.y = (12+teamDefense.getMeasuredHeight()/2)*scale;
         playerContainer.addChild(teamDefense);
     } else if (!teamsSet) {
         var pointRect = new createjs.Shape();
         var point = new createjs.Text(players[id].points, 26*scale + "px Roboto Condensed", mdGray);
-        point.textBaseline = "middle";
-        point.textAlign = "center";
+        point.set(centerText());
         pointRect.graphics.beginFill("white").drawRoundRect(0, 0, point.getMeasuredWidth()+18*scale, point.getMeasuredHeight()+8*scale, 5);
-        pointRect.shadow = new createjs.Shadow(mdGray, 0, 2, 5);
+        pointRect.shadow = badgeShadow;
         pointRect.regX = (point.getMeasuredWidth()+18*scale)/2;
         pointRect.regY = (point.getMeasuredHeight()+8*scale)/2;
 
@@ -407,8 +409,7 @@ function drawMiniCardDown(x, y) {
     cardboard.shadow = new createjs.Shadow("black", 0, 1, 2);
 
     var picture = new createjs.Text("\uE410", 64*scale + "px Material Icons", "lightblue");
-    picture.textBaseline = "middle";
-    picture.textAlign = "center";
+    picture.set(centerText());
     picture.x = miniWidth/2*scale;
     picture.y = miniHeight/2*scale;
 
@@ -465,8 +466,7 @@ function drawCardDown(x, y) {
     cardboard.shadow = new createjs.Shadow("black", 0, 1, 2);
 
     var picture = new createjs.Text("\uE410", 80*scale + "px Material Icons", "lightblue");
-    picture.textBaseline = "middle";
-    picture.textAlign = "center";
+    picture.set(centerText());
     picture.x = cardWidth/2*scale;
     picture.y = cardHeight/2*scale;
 
@@ -563,8 +563,7 @@ function drawCard(card, x, y) {
 
 function drawPlayButton() {
     var playButtonText = new createjs.Text("Play", (32*scale) + "px Roboto Condensed", "white");
-    playButtonText.textAlign = "center";
-    playButtonText.textBaseline = "middle";
+    playButtonText.set(centerText());
     playButtonText.x = 60*scale;
     playButtonText.y = 30*scale;
     var playButtonShape = new createjs.Shape();
@@ -949,6 +948,10 @@ function finishAnimating() {
 function sizeCanvas() {
     table.width = (window.innerWidth >= 720) ? window.innerWidth : 720;
     table.height = (window.innerHeight >= 720) ? window.innerHeight : 720;
+}
+
+function centerText() {
+	return {textBaseline: "middle", textAlign: "center"};
 }
 
 window.addEventListener('resize', function() {
