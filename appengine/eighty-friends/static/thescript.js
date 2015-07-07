@@ -186,27 +186,19 @@ var Player = function(id) {
     this.defending;
     this.level;
     this.points;
-    this.selectedIDs = [];
     this.selectedCards = [];
 };
 
 Player.prototype.addSelection = function(sel) {
-    this.selectedIDs.push(sel.parent.getChildIndex(sel));
+    this.selectedCards.push(sel);
 }
 
 Player.prototype.removeSelection = function(sel) {
-    this.selectedIDs.splice(this.selectedIDs.indexOf(sel.parent.getChildIndex(sel)),1);
-}
-
-Player.prototype.setSelectedCards = function() {
-    this.selectedCards.length = 0;
-    for (var i = 0; i < this.selectedIDs.length; i++) {
-        this.selectedCards.push(this.hand[this.selectedIDs[i]]);
-    }
-    this.selectedCards.sort(cardSort);
+    this.selectedCards.splice(this.selectedCards.indexOf(sel),1);
 }
 
 Player.prototype.checkSelection = function() {
+	this.selectedCards.sort(cardSort);
     if (this.leader) {
         checkLead(this.selectedCards);
     } else {
@@ -217,31 +209,47 @@ Player.prototype.checkSelection = function() {
 Player.prototype.playCards = function() {
     animating++;
     createjs.Tween.get(playButtonContainer).to({alpha: 0}, 150).call(finishAnimating);
-    // Remove from array starting at higher indexes to prevent index change errors
-    this.selectedIDs.sort(function(a, b) {return a-b;});
-    var animateToPoint = handContainer.globalToLocal(table.width/2-(((this.selectedIDs.length-1)*50*scale + miniWidth*scale)/2), (players[0].ycoord - miniHeight*scale - 64));
+
+    var animateToPoint = handContainer.globalToLocal(table.width/2-(((this.selectedCards.length-1)*50*scale + miniWidth*scale)/2), (players[0].ycoord - miniHeight*scale - 64));
     var drawPoint = handContainer.localToGlobal(animateToPoint.x, animateToPoint.y);
-    for (var i = this.selectedIDs.length - 1; i >= 0; i--) {
-        this.hand.splice(this.selectedIDs[i],1);
+    for (var i = 0; i < this.selectedCards.length; i++) {
         animating++;
-        createjs.Tween.get(handContainer.getChildAt(this.selectedIDs[i]))
-        .to({scaleX: .5, scaleY: .5, x: animateToPoint.x + 50*scale*i, y: animateToPoint.y}, 200, createjs.Ease.cubicOut)
+        createjs.Tween.get(handContainer.getChildAt(this.hand.indexOf(this.selectedCards[i])))
+        .to({scaleX: .5, scaleY: .5, x: animateToPoint.x + 50*scale*i, y: animateToPoint.y}, 150, createjs.Ease.cubicOut)
         .call(drawHand)
         .call(drawPlayerPlay, [this.selectedCards, drawPoint], this) 
         .call(finishAnimating);
     }
 
-    this.selectedIDs.length = 0;
+    for (var i = 0; i < this.selectedCards.length; i++) {
+    	this.hand.splice(this.hand.indexOf(this.selectedCards[i]),1);
+    }
+
     // this.selectedCards.length = 0;
 }
 
 function drawPlayerPlay(cards, pt) {
+	playContainer.removeAllChildren();
     for (var i = 0; i < cards.length; i++) {
         playContainer.addChild(drawMiniCard(cards[i].suit, cards[i].cardName, 50*scale*i, 0));
     }
     playContainer.x = pt.x;
     playContainer.y = pt.y;
-    stage.addChild(playContainer);
+
+    var clear = new createjs.Text("Clear play", "48px Roboto Condensed", "white");
+    clear.x = table.width - clear.getMeasuredWidth();
+    clear.y = 0;
+    var target = new createjs.Shape();
+    target.graphics.beginFill("white").drawRect(0, 0, clear.getMeasuredWidth(), clear.getMeasuredHeight());
+    clear.hitArea = target;
+
+    clear.addEventListener("click", function() {
+    	stage.removeChild(playContainer);
+    	players[0].selectedCards.length = 0;
+    	stage.update();
+    });
+
+    stage.addChild(playContainer, clear);
 }
 
 var Card = function(suit, name, value, isTrump, points) {
@@ -356,7 +364,7 @@ function drawHand() {
     stage.addChild(handContainer);
 
     for (var i = 0; i < players[0].hand.length; i++) {
-        handContainer.addChild(drawCard(players[0].hand[i].suit, players[0].hand[i].cardName, offset*i, 0));
+        handContainer.addChild(drawCard(players[0].hand[i], offset*i, 0));
     }
 
     handContainer.regX = ((players[0].hand.length-1)*offset + cardWidth*scale)/2;
@@ -469,7 +477,9 @@ function drawCardDown(x, y) {
     return card;
 }
 
-function drawCard(suit, value, x, y) {
+function drawCard(card, x, y) {
+	var suit = card.suit;
+	var value = card.cardName;
     var color = (suit == "diamonds" || suit == "hearts" || suit == "trump" && value == "B") ? "red" : "black";
     suit = getSuitIcon(suit);
 
@@ -482,7 +492,8 @@ function drawCard(suit, value, x, y) {
             break;
     }
 
-    var card = new createjs.Container();
+    var cardContainer = new createjs.Container();
+    cardContainer.cardObj = card;
 
     var cardboard = new createjs.Shape();
     cardboard.graphics.beginFill('white').drawRoundRect(0, 0, cardWidth*scale, cardHeight*scale, 10);
@@ -501,43 +512,44 @@ function drawCard(suit, value, x, y) {
 
     value.x = 5*scale + (suitIcon.getMeasuredWidth()/2);
 
-    card.addChild(cardboard, suitIcon, value);
-    card.x = x;
-    card.y = y;
+    cardContainer.addChild(cardboard, suitIcon, value);
+    cardContainer.x = x;
+    cardContainer.y = y;
     var originalY = y;
     var targetY = y-30*scale
     var clicked = false;
 
-    card.removeAllEventListeners();
-    card.addEventListener("mouseover", function() {
+    cardContainer.removeAllEventListeners();
+    cardContainer.addEventListener("mouseover", function() {
         animating++;
-        createjs.Tween.get(card).to({y: targetY},60).call(finishAnimating);
+        createjs.Tween.get(cardContainer).to({y: targetY},60).call(finishAnimating);
     });
 
-    card.addEventListener("mouseout", function() {
+    cardContainer.addEventListener("mouseout", function() {
         if (!clicked) {
             animating++;
-            createjs.Tween.get(card).to({y: originalY},60).call(finishAnimating);
+            createjs.Tween.get(cardContainer).to({y: originalY},60).call(finishAnimating);
         }
     });
 
-    card.addEventListener("click", function(evt) {
+    cardContainer.addEventListener("click", function(evt) {
+    	console.log(evt.target.cardObj);
         if (!clicked) {
             cardboard.shadow = new createjs.Shadow(mdBlue, 0, 0, 10);
             animating++;
-            createjs.Tween.get(card).to({y: targetY}, 60).call(finishAnimating);
+            createjs.Tween.get(cardContainer).to({y: targetY}, 60).call(finishAnimating);
             clicked = !clicked;
-            players[0].addSelection(evt.target);
+            players[0].addSelection(evt.target.cardObj);
 
         } else {
             cardboard.shadow = new createjs.Shadow("black", 0, 1, 2);
             animating++;
-            createjs.Tween.get(card).to({y: originalY}, 60).call(finishAnimating);
+            createjs.Tween.get(cardContainer).to({y: originalY}, 60).call(finishAnimating);
             clicked = !clicked;
-            players[0].removeSelection(evt.target);
+            players[0].removeSelection(evt.target.cardObj);
         }
 
-        if (players[0].selectedIDs.length > 0) {
+        if (players[0].selectedCards.length > 0) {
             animating++;
             createjs.Tween.get(playButtonContainer).to({alpha: 1}, 150).call(finishAnimating);
         } else {
@@ -545,9 +557,9 @@ function drawCard(suit, value, x, y) {
             createjs.Tween.get(playButtonContainer).to({alpha: 0}, 150).call(finishAnimating);
         }
     });
-    card.mouseChildren = false;
+    cardContainer.mouseChildren = false;
 
-    return card;
+    return cardContainer;
 }
 
 function drawPlayButton() {
@@ -567,22 +579,21 @@ function drawPlayButton() {
     playButtonContainer.y = table.height/2;
     playButtonContainer.alpha = 0;
     playButtonContainer.removeAllEventListeners();
-    playButtonContainer.addEventListener("mouseover", function(evt) {
-		evt.target.parent.scaleX = 1.01;
-		evt.target.parent.scaleY = 1.01;
-		evt.target.parent.y-=1
-		stage.update();
-    });
-    playButtonContainer.addEventListener("mouseout", function(evt) {
-		evt.target.parent.scaleX = 1/1.01;
-		evt.target.parent.scaleY = 1/1.01;
-		evt.target.parent.y+=1
-		stage.update();
-    });
+  //   playButtonContainer.addEventListener("mouseover", function(evt) {
+		// evt.target.parent.scaleX = 1.01;
+		// evt.target.parent.scaleY = 1.01;
+		// evt.target.parent.y-=1
+		// stage.update();
+  //   });
+  //   playButtonContainer.addEventListener("mouseout", function(evt) {
+		// evt.target.parent.scaleX = 1/1.01;
+		// evt.target.parent.scaleY = 1/1.01;
+		// evt.target.parent.y+=1
+		// stage.update();
+  //   });
     playButtonContainer.addEventListener("click", function(evt) {
     	animating++;
     	createjs.Tween.get(evt.target.parent).to({alpha: 0.8}, 60).call(finishAnimating);
-    	players[0].setSelectedCards();
     	players[0].checkSelection();
     });
     stage.addChild(playButtonContainer);
