@@ -533,7 +533,6 @@ function drawCard(card, x, y) {
     });
 
     cardContainer.addEventListener("click", function(evt) {
-    	console.log(evt.target.cardObj);
         if (!clicked) {
             cardboard.shadow = new createjs.Shadow(mdBlue, 0, 0, 10);
             animating++;
