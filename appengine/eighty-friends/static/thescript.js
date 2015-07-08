@@ -227,7 +227,7 @@ Player.prototype.playCards = function() {
         var handCard = handContainer.getChildAt(this.hand.indexOf(card));
         animating++;
         createjs.Tween.get(handCard)
-        .to({scaleX: .5, scaleY: .5, x: animateToPoint.x + 50*scale*i, y: animateToPoint.y}, 150, createjs.Ease.cubicOut)
+        .to({scaleX: .5, scaleY: .5, x: animateToPoint.x + 50*scale*i, y: animateToPoint.y}, 200, createjs.Ease.cubicOut)
         .call(finishAnimating)
         .call(drawPlayCard, [card, i], this);
         // TODO: Make enum for card children 0=cardboard, 1=suitIcon, 2=value
@@ -235,17 +235,17 @@ Player.prototype.playCards = function() {
         animating++;
         var cardboard = handCard.getChildAt(0);
         createjs.Tween.get(cardboard.graphics.command)
-        .to({radiusBL:20, radiusBR:20, radiusTL:20, radiusTR:20}, 150, createjs.Ease.cubicOut)
+        .to({radiusBL:20, radiusBR:20, radiusTL:20, radiusTR:20}, 200, createjs.Ease.cubicOut)
         .call(finishAnimating);
         animating++;
         var value = handCard.getChildAt(2);
         createjs.Tween.get(value)
-        .to({scaleX: 2, scaleY: 2, x: cardWidth/2*scale, y: 5*scale}, 150, createjs.Ease.cubicOut)
+        .to({scaleX: 2, scaleY: 2, x: cardWidth/2*scale, y: 5*scale}, 200, createjs.Ease.cubicOut)
         .call(finishAnimating);
         animating++;
         var suitIcon = handCard.getChildAt(1);
         createjs.Tween.get(suitIcon)
-        .to({scaleX: 2, scaleY: 2, x: cardWidth/2*scale, y: 2*(5*scale + value.getMeasuredHeight())}, 150, createjs.Ease.cubicOut)
+        .to({scaleX: 2, scaleY: 2, x: cardWidth/2*scale, y: 2*(5*scale + value.getMeasuredHeight())}, 200, createjs.Ease.cubicOut)
         .call(finishAnimating);
     }
 
@@ -564,6 +564,7 @@ function drawCard(card, x, y) {
 }
 
 function drawPlayButton() {
+	playButtonContainer.removeAllChildren();
     var playButtonText = new createjs.Text("Play", (32*scale) + "px Roboto Condensed", "white");
     playButtonText.set(centerText());
     playButtonText.x = 60*scale;
