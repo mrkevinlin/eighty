@@ -76,8 +76,6 @@ function init() {
 
 function initStage() {
     stage = new createjs.Stage("table");
-    stage.addChild(playContainer);
-
     table.style.background = tableGreen;
     createjs.Ticker.setFPS(fps);
     createjs.Ticker.addEventListener("tick", ticking);
@@ -216,6 +214,7 @@ Player.prototype.clearSelection = function() {
 Player.prototype.playCards = function() {
     animating++;
     createjs.Tween.get(playButtonContainer).to({alpha: 0}, 150).call(finishAnimating);
+    stage.addChild(playContainer);
 
     var animateToPoint = handContainer.globalToLocal(table.width/2-(((this.selectedCards.length-1)*50*scale + miniWidth*scale)/2), (players[0].ycoord - miniHeight*scale - 64));
     var drawPoint = handContainer.localToGlobal(animateToPoint.x, animateToPoint.y);
@@ -233,7 +232,6 @@ Player.prototype.playCards = function() {
 
     function drawPlayCard(card, i) {
         playContainer.addChild(drawMiniCard(card.suit, card.cardName, 50*scale*i, 0));
-        stage.addChild(playContainer);
         this.hand.splice(this.hand.indexOf(card),1);
         this.selectedCards.splice(this.selectedCards.length-1,1);
         if (this.selectedCards.length === 0) {
@@ -241,23 +239,6 @@ Player.prototype.playCards = function() {
         }
     }
 }
-
-//function drawPlayCard(card, pt) {
-
-    //var clear = new createjs.Text("Clear play", "48px Roboto Condensed", "white");
-    //clear.x = table.width - clear.getMeasuredWidth();
-    //clear.y = 0;
-    //var target = new createjs.Shape();
-    //target.graphics.beginFill("white").drawRect(0, 0, clear.getMeasuredWidth(), clear.getMeasuredHeight());
-    //clear.hitArea = target;
-
-    //clear.addEventListener("click", function() {
-        //stage.removeChild(playContainer);
-        //stage.update();
-    //});
-
-    //stage.addChild(playContainer, clear);
-//}
 
 var Card = function(suit, name, value, isTrump, points) {
     this.suit = suit;
