@@ -187,19 +187,27 @@ var Player = function(id) {
     this.defending;
     this.level;
     this.points;
+    this.numCardsSelected = 0;
     this.selectedCards = [];
 };
 
-Player.prototype.addSelection = function(sel) {
-    this.selectedCards.push(sel);
-}
+//Player.prototype.addSelection = function(sel) {
+    //this.selectedCards.push(sel);
+//}
 
-Player.prototype.removeSelection = function(sel) {
-    this.selectedCards.splice(this.selectedCards.indexOf(sel),1);
-}
+//Player.prototype.removeSelection = function(sel) {
+    //this.selectedCards.splice(this.selectedCards.indexOf(sel),1);
+//}
 
 Player.prototype.checkSelection = function() {
-    this.selectedCards.sort(cardSort);
+    for (var i = 0; i < this.hand.length; i++) {
+        var card = this.hand[i];
+        if (card.isSelected) {
+            card.isSelected = false;
+            this.selectedCards.push(card);
+        }
+    }
+
     if (this.leader) {
         checkLead(this.selectedCards);
     } else {
@@ -255,6 +263,7 @@ Player.prototype.playCards = function() {
         this.selectedCards.splice(this.selectedCards.length-1,1);
         if (this.selectedCards.length === 0) {
             drawHand();
+            this.numCardsSelected = 0;
         }
     }
 }
@@ -265,6 +274,7 @@ var Card = function(suit, name, value, isTrump, points) {
     this.cardValue = value;
     this.isTrump = isTrump;
     this.points = points;
+    this.isSelected = false;
 };
 
 function drawEverything() {
@@ -539,18 +549,18 @@ function drawCard(card, x, y) {
             cardboard.shadow = new createjs.Shadow(mdBlue, 0, 0, 10);
             animating++;
             createjs.Tween.get(cardContainer).to({y: targetY}, 60).call(finishAnimating);
-            clicked = !clicked;
-            players[0].addSelection(evt.target.cardObj);
-
+            players[0].numCardsSelected++;
         } else {
             cardboard.shadow = new createjs.Shadow("black", 0, 1, 2);
             animating++;
             createjs.Tween.get(cardContainer).to({y: originalY}, 60).call(finishAnimating);
-            clicked = !clicked;
-            players[0].removeSelection(evt.target.cardObj);
+            players[0].numCardsSelected--;
         }
 
-        if (players[0].selectedCards.length > 0) {
+        clicked = !clicked;
+        evt.target.cardObj.isSelected = clicked;
+
+        if (players[0].numCardsSelected > 0) {
             animating++;
             createjs.Tween.get(playButtonContainer).to({alpha: 1}, 150).call(finishAnimating);
         } else {
