@@ -215,7 +215,6 @@ Player.prototype.clearSelection = function() {
 Player.prototype.playCards = function() {
     animating++;
     createjs.Tween.get(playButtonContainer).to({alpha: 0}, 150).call(finishAnimating);
-    stage.addChild(playContainer);
 
     var animateToPoint = handContainer.globalToLocal(table.width/2-(((this.selectedCards.length-1)*50*scale + miniWidth*scale)/2), (players[0].ycoord - miniHeight*scale - 64));
     var drawPoint = handContainer.localToGlobal(animateToPoint.x, animateToPoint.y);
