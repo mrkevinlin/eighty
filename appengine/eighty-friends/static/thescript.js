@@ -288,16 +288,21 @@ function drawEveryone() {
 
 function drawPlayer(id, x, y) {
     var playerContainer = new createjs.Container();
-    playerContainer.removeAllChildren();
 
+	var avatarContainer = new createjs.Container();
 	var avatar = new createjs.Bitmap(imageUrl);
-	var maskGraphics = new createjs.Graphics().drawCircle(0, 0, 48);
-	var circleMask = new createjs.Shape(maskGraphics);
+	avatar.image.onload = function() {
+		stage.update();
+	};
+	var circleShadowGfx = new createjs.Graphics().beginFill('white').drawCircle(0, 0, 48).endFill();
+	var circleOverlayGfx = new createjs.Graphics().setStrokeStyle(3).beginStroke('white').drawCircle(0, 0, 47).endStroke();
+	var circleMask = new createjs.Shape(circleShadowGfx);
+	var circleOverlay = new createjs.Shape(circleOverlayGfx);
+    circleMask.shadow = new createjs.Shadow(mdGray, 0, 2, 5);
 	avatar.x = -48;
 	avatar.y = -48;
 	avatar.mask = circleMask;
-    avatar.shadow = new createjs.Shadow(mdGray, 0, 2, 5);
-    playerContainer.addChild(avatar);
+	playerContainer.addChild(circleMask, avatar, circleOverlay);
 
     var levelCircle = new createjs.Shape();
     levelCircle.graphics.beginFill(mdOrange).drawCircle(0,0,16*scale);
