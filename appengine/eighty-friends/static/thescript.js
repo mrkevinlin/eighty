@@ -227,25 +227,26 @@ Player.prototype.playCards = function() {
         var handCard = handContainer.getChildAt(this.hand.indexOf(card));
         animating++;
         createjs.Tween.get(handCard)
-        .to({scaleX: .5, scaleY: .5, x: animateToPoint.x + 50*scale*i, y: animateToPoint.y}, 200, createjs.Ease.cubicOut)
+        .to({scaleX: .5, scaleY: .5, x: animateToPoint.x + 50*scale*i, y: animateToPoint.y}, 300, createjs.Ease.cubicOut)
         .call(finishAnimating)
         .call(drawPlayCard, [card, i], this);
         // TODO: Make enum for card children 0=cardboard, 1=suitIcon, 2=value
         // these animations take into account the container scaling, i.e. multiplies by 2
         animating++;
         var cardboard = handCard.getChildAt(0);
+        cardboard.shadow = new createjs.Shadow(mdGray, 0, 1, 2);
         createjs.Tween.get(cardboard.graphics.command)
-        .to({radiusBL:20, radiusBR:20, radiusTL:20, radiusTR:20}, 200, createjs.Ease.cubicOut)
+        .to({radiusBL:20, radiusBR:20, radiusTL:20, radiusTR:20}, 300, createjs.Ease.cubicOut)
         .call(finishAnimating);
         animating++;
         var value = handCard.getChildAt(2);
         createjs.Tween.get(value)
-        .to({scaleX: 2, scaleY: 2, x: cardWidth/2*scale, y: 5*scale}, 200, createjs.Ease.cubicOut)
+        .to({scaleX: 2, scaleY: 2, x: cardWidth/2*scale, y: 9*scale}, 300, createjs.Ease.cubicOut)
         .call(finishAnimating);
         animating++;
         var suitIcon = handCard.getChildAt(1);
         createjs.Tween.get(suitIcon)
-        .to({scaleX: 2, scaleY: 2, x: cardWidth/2*scale, y: 2*(5*scale + value.getMeasuredHeight())}, 200, createjs.Ease.cubicOut)
+        .to({scaleX: 2, scaleY: 2, x: cardWidth/2*scale, y: 2*(5*scale + value.getMeasuredHeight())}, 300, createjs.Ease.cubicOut)
         .call(finishAnimating);
     }
 
@@ -501,20 +502,20 @@ function drawCard(card, x, y) {
     cardboard.graphics.beginFill('white').drawRoundRect(0, 0, cardWidth*scale, cardHeight*scale, 10);
     cardboard.shadow = new createjs.Shadow("black", 0, 1, 2);
 
-    var value = new createjs.Text(value, 36*scale + "px Roboto Condensed", color);
-    value.textBaseline = "top";
-    value.textAlign = "center";
-    value.y = 10*scale;
+    var valueText = new createjs.Text(value, 36*scale + "px Roboto Condensed", color);
+    valueText.textBaseline = "top";
+    valueText.textAlign = "center";
+    valueText.y = 10*scale;
 
     var suitIcon = new createjs.Text(suit, 36*scale + "px Roboto Condensed", color);
     suitIcon.textBaseline = "top";
     suitIcon.textAlign = "center";
-    suitIcon.y = 10*scale + value.getMeasuredHeight();
+    suitIcon.y = 10*scale + valueText.getMeasuredHeight();
 
-    value.x = 5*scale + (suitIcon.getMeasuredWidth()/2);
+    valueText.x = 5*scale + (suitIcon.getMeasuredWidth()/2);
     suitIcon.x = 5*scale + (suitIcon.getMeasuredWidth()/2);
 
-    cardContainer.addChild(cardboard, suitIcon, value);
+    cardContainer.addChild(cardboard, suitIcon, valueText);
     cardContainer.x = x;
     cardContainer.y = y;
     var originalY = y;
