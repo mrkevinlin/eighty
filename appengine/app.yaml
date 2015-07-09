@@ -8,9 +8,14 @@ handlers:
 - url: /_ah/queue/deferred
   script: google.appengine.ext.deferred.deferred.application
   login: admin
-- url: .*
+- url: /(game|screentest\.html)
   script: eighty-friends.main.app
   secure: always
+  login: admin
+- url: /.*
+  script: eighty-friends.main.app
+  secure: always
+  login: required
 # - url: /
 #   static_files: static_files/index.html
 #   upload: static_files/index.html

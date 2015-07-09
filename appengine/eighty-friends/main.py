@@ -1,6 +1,7 @@
 from __future__ import print_function
 from flask import Flask, request, render_template, session, redirect, url_for, abort
 from google.appengine.api.channel import channel
+from google.appengine.api import users
 from simonsays import simon_says
 import simonsays
 import os, json
@@ -22,6 +23,24 @@ def home():
 @app.route('/game')
 def game():
     return app.send_static_file('game.html')
+
+@app.route('/admincheck')
+def admincheck():
+    user = users.get_current_user()
+    response = ''
+    if user:
+        response = user.nickname()
+        if users.is_current_user_admin():
+            return response + ' is an admin'
+        else:
+            return response + ' is not an admin'
+
+    else:
+        return 'You don\'t exist, how did you get here?'
+
+@app.route('/googlogout')
+def googlogout():
+    return redirect(users.create_logout_url(''))
 
 @app.route('/game/user', methods = ['POST'])
 def user_request():
