@@ -50,10 +50,8 @@
                 console.log('Image URL: ' + profile.getImageUrl());
                 if (profile.getImageUrl()) {
                     imageUrl = profile.getImageUrl();
-                    drawEveryone();
-                    drawHand();
-                    drawDrawer();
-                    stage.update();
+                } else {
+                    imageUrl = "img/default-profile.png";
                 }
                 console.log('Email: ' + profile.getEmail());
                 var idToken = auth2.currentUser.get().getAuthResponse().id_token;
@@ -68,6 +66,10 @@
                     success: success,
                     dataType: dataType*/
                 });
+                drawEveryone();
+                drawHand();
+                drawDrawer();
+                stage.update();
             }
             var onFailure = function() {
             }
