@@ -10,6 +10,7 @@ var fps = 60;
 var tableGreen = "#66BB6A";
 var mdBlue = "#03A9F4";
 var mdGray = "#616161";
+var mdOrange = "#FF9800";
 
 var players = [];
 var playerCount;
@@ -17,6 +18,10 @@ var degrees;
 var radius;
 var centerx;
 var centery;
+
+var handContainer = new createjs.Container();
+var playButtonContainer = new createjs.Container();
+var playContainer = new createjs.Container();
 
 var deck = [];
 var trumpSuit;
@@ -26,15 +31,23 @@ var cardHeight = 168;
 var miniWidth = 60;
 var miniHeight = 84;
 
-var roundIsTractor = false;
+var roundIsTractor;
+var tractorSetCount;
 var roundCount;
 var roundSuit;
+var roundIsTrump;
 
+var teamsSet;
 var drawer = new createjs.Container();
 var drawerWidth = 300;
-var handContainer = new createjs.Container();
+var dpx = 48; // drawerPaddingX
+var dpy = 48; // drawerPaddingY
+var trumpInfoY;
+var scoreInfoY;
+var scoreTeamY;
+var defendTeamY;
+
 var ascending = true;
-var playButtonContainer = new createjs.Container();
 
 WebFont.load({
     google: {
@@ -45,9 +58,10 @@ WebFont.load({
 function init() {
     table = document.getElementById("table");
 
-    playerCount = 5;
+    playerCount = 7;
     trumpSuit = "hearts";
-    trumpValue = 2;
+    trumpValue = 4;
+    teamsSet = false;
 
     sizeCanvas();
     initStage();
@@ -57,11 +71,6 @@ function init() {
     initHands();
 
     drawEverything();
-}
-
-function sizeCanvas() {
-    table.width = (window.innerWidth >= 720) ? window.innerWidth : 720;
-    table.height = (window.innerHeight >= 720) ? window.innerHeight : 720;
 }
 
 function initStage() {
@@ -77,7 +86,14 @@ function initStage() {
 function initPlayer() {
     for (var i = 0; i < playerCount; i++) {
         players.push(new Player(i));
+
+        players[i].defending = (i%3==0) ? true:false;
+        if(i%3==0) {players[i].level = 3;}
+        else if(i%2==0) {players[i].level = 2;}
+        else {players[i].level = "I0";}
+        players[i].points = 150*i;
     }
+    players[0].leader = true;
 
     degrees = [];
     initPlayerCoordinates();
@@ -85,10 +101,10 @@ function initPlayer() {
 
 function initPlayerCoordinates() {
     degrees.length = 0;
-    radius = (table.height - cardHeight*scale)/2;
+    radius = (table.height - cardHeight*scale*scale - 64*scale)/2;
     centerx = table.width/2;
-    centery = radius;
-    var stretch = (table.width - 80)/(radius*2);
+    centery = radius + 64*scale;
+    var stretch = (table.width - 108)/(radius*2);
 
     for (var i = 0; i < playerCount; i++) {
 
@@ -100,61 +116,13 @@ function initPlayerCoordinates() {
         if (window.innerWidth > window.innerHeight) { xpoint += centerx; }
         else {
             if (xpoint == 0) { xpoint = centerx; }
-            else if (xpoint < 0) { xpoint = 36*scale; }
-            else { xpoint = table.width - 36*scale; }
+            else if (xpoint < 0) { xpoint = 80*scale; }
+            else { xpoint = table.width - 80*scale; }
         }
 
         players[i].xcoord = xpoint;
         players[i].ycoord = ypoint;
     }
-}
-
-var Player = function(id) {
-    this.playerID = id;
-    this.hand = [];
-    this.xcoord;
-    this.ycoord;
-    this.leader = true;
-    this.selectedIDs = [];
-    this.selectedCards = [];
-};
-
-Player.prototype.addSelection = function(sel) {
-    this.selectedIDs.push(sel.parent.getChildIndex(sel));
-}
-
-Player.prototype.removeSelection = function(sel) {
-    this.selectedIDs.splice(this.selectedIDs.indexOf(sel.parent.getChildIndex(sel)),1);
-}
-
-Player.prototype.setSelectedCards = function() {
-	this.selectedCards.length = 0;
-	this.selectedIDs.sort(function(a, b) {return a-b;});
-	for (var i = 0; i < this.selectedIDs.length; i++) {
-		this.selectedCards.push(this.hand[this.selectedIDs[i]]);
-	}
-	this.selectedCards.sort(cardSort);
-}
-
-Player.prototype.checkSelection = function() {
-	if (this.leader) {
-		checkLead(this.selectedCards);
-	} else {
-		// checkPlay(this.selectedCards);
-	}
-
-}
-
-Player.prototype.playCards = function() {
-	animating++;
-	createjs.Tween.get(playButtonContainer).to({alpha: 0}, 150).call(finishAnimating);
-	// Remove from array starting at higher indexes to prevent index change errors
-	for (var i = this.selectedIDs.length - 1; i >= 0; i--) {
-		this.hand.splice(this.selectedIDs[i],1);
-	}
-	this.selectedIDs.length = 0;
-	this.selectedCards.length = 0;
-	drawHand();
 }
 
 function initDeck() {
@@ -179,15 +147,7 @@ function initDeck() {
     deck = shuffle(deck);
 }
 
-var Card = function(suit, name, value, isTrump, points) {
-    this.suit = suit;
-    this.cardName = name;
-    this.cardValue = value;
-    this.isTrump = isTrump;
-    this.points = points;
-};
-
-function initTrump(suit, value) {
+function initTrump() {
     for (var i = 0; i < deck.length; i++) {
         if (deck[i].suit == trumpSuit) {
             deck[i].isTrump = true;
@@ -204,7 +164,8 @@ function initTrump(suit, value) {
 
 function initHands() {
     var dealID = 0;
-    var cardCount = deck.length - calculateDiscard();
+    var discard = (playerCount == 6) ? 6 : 8;
+    var cardCount = deck.length - discard;
     for (var d = 0; d < cardCount; d++) {
         players[dealID].hand.push(deck[d]);
         dealID++;
@@ -216,15 +177,85 @@ function initHands() {
     players[0].hand.sort(cardSort);
 }
 
-function calculateDiscard() {
-    var discard = (playerCount == 6) ? 6 : 8;
-    return discard;
+var Player = function(id) {
+    this.playerID = id;
+    this.hand = [];
+    this.xcoord;
+    this.ycoord;
+    this.leader;
+    this.defending;
+    this.level;
+    this.points;
+    this.selectedIDs = [];
+    this.selectedCards = [];
+};
+
+Player.prototype.addSelection = function(sel) {
+    this.selectedIDs.push(sel.parent.getChildIndex(sel));
 }
+
+Player.prototype.removeSelection = function(sel) {
+    this.selectedIDs.splice(this.selectedIDs.indexOf(sel.parent.getChildIndex(sel)),1);
+}
+
+Player.prototype.setSelectedCards = function() {
+    this.selectedCards.length = 0;
+    for (var i = 0; i < this.selectedIDs.length; i++) {
+        this.selectedCards.push(this.hand[this.selectedIDs[i]]);
+    }
+    this.selectedCards.sort(cardSort);
+}
+
+Player.prototype.checkSelection = function() {
+    if (this.leader) {
+        checkLead(this.selectedCards);
+    } else {
+        // checkPlay(this.selectedCards);
+    }
+}
+
+Player.prototype.playCards = function() {
+    animating++;
+    createjs.Tween.get(playButtonContainer).to({alpha: 0}, 150).call(finishAnimating);
+    // Remove from array starting at higher indexes to prevent index change errors
+    this.selectedIDs.sort(function(a, b) {return a-b;});
+    var animateToPoint = handContainer.globalToLocal(table.width/2-(((this.selectedIDs.length-1)*50*scale + miniWidth*scale)/2), (players[0].ycoord - miniHeight*scale - 64));
+    var drawPoint = handContainer.localToGlobal(animateToPoint.x, animateToPoint.y);
+    for (var i = this.selectedIDs.length - 1; i >= 0; i--) {
+        this.hand.splice(this.selectedIDs[i],1);
+        animating++;
+        createjs.Tween.get(handContainer.getChildAt(this.selectedIDs[i]))
+        .to({scaleX: .5, scaleY: .5, x: animateToPoint.x + 50*scale*i, y: animateToPoint.y}, 200, createjs.Ease.cubicOut)
+        .call(drawHand)
+        .call(drawPlayerPlay, [this.selectedCards, drawPoint], this) 
+        .call(finishAnimating);
+    }
+
+    this.selectedIDs.length = 0;
+    // this.selectedCards.length = 0;
+}
+
+function drawPlayerPlay(cards, pt) {
+    for (var i = 0; i < cards.length; i++) {
+        playContainer.addChild(drawMiniCard(cards[i].suit, cards[i].cardName, 50*scale*i, 0));
+    }
+    playContainer.x = pt.x;
+    playContainer.y = pt.y;
+    stage.addChild(playContainer);
+}
+
+var Card = function(suit, name, value, isTrump, points) {
+    this.suit = suit;
+    this.cardName = name;
+    this.cardValue = value;
+    this.isTrump = isTrump;
+    this.points = points;
+};
 
 function drawEverything() {
     stage.removeAllChildren();
 
-    // drawStart();
+    // drawStartButton();
     drawEveryone();
     drawHand();
     // drawOpponentHand();
@@ -232,15 +263,10 @@ function drawEverything() {
     drawDrawerIcon();
     drawDrawer();
 
-    //Testing methods
-    // drawTestIcons();
-    // drawTestPlay();
-    // infoDump();
-
     stage.update();
 }
 
-function drawStart() {
+function drawStartButton() {
     var startButton = new createjs.Container();
     var startText = new createjs.Text("GO!", 36*scale + "px Roboto Condensed", "white");
     var startColor = new createjs.Shape();
@@ -259,16 +285,6 @@ function drawStart() {
     stage.addChild(startButton);
 }
 
-function animateDeal() {
-    var startx = centerx;
-    var starty = 0;
-    for (var i = 0; i < playerCount; i++) {
-        var dealt = drawCardDown(startx, starty);
-        stage.addChild(dealt);
-        createjs.Tween.get(dealt).to({x: players[i].xcoord, y: players[i].ycoord}, 300).call(function() {stage.removeChild(dealt);});
-    }
-}
-
 function drawEveryone() {
     for (var i = 0; i < playerCount; i++) {
             drawPlayer(players[i].playerID, players[i].xcoord, players[i].ycoord);
@@ -276,12 +292,62 @@ function drawEveryone() {
 }
 
 function drawPlayer(id, x, y) {
-    var playerID = new createjs.Text(id, 48*scale + "px Roboto Condensed", "black");
-    playerID.textAlign = "center";
-    playerID.x = x;
-    playerID.y = y;
+    var playerContainer = new createjs.Container();
+    playerContainer.removeAllChildren();
 
-    stage.addChild(playerID);
+    var avatar = new createjs.Shape();
+    avatar.graphics.beginFill(mdBlue).drawCircle(0,0,42*scale);
+    avatar.shadow = new createjs.Shadow(mdGray, 0, 2, 5);
+    playerContainer.addChild(avatar);
+
+    var levelCircle = new createjs.Shape();
+    levelCircle.graphics.beginFill(mdOrange).drawCircle(0,0,16*scale);
+    levelCircle.shadow = new createjs.Shadow(mdGray, 0, 2, 5);
+    levelCircle.x = 32*scale;
+    levelCircle.y = -32*scale;
+    var level = new createjs.Text(players[id].level, 26*scale + "px Roboto Condensed", "white");
+    level.textBaseline = "middle";
+    level.textAlign = "center";
+    level.x = 32*scale;
+    level.y = -32*scale;
+    playerContainer.addChild(levelCircle, level);
+
+    if (players[id].defending) {
+        var teamDefense = new createjs.Text("\uE32A", 36*scale + "px Material Icons", "white");
+        teamDefense.textAlign = "center";
+        teamDefense.textBaseline = "middle";
+        teamDefense.shadow = new createjs.Shadow(mdGray, 0, 2, 5);
+        teamDefense.x = (-12-teamDefense.getMeasuredWidth()/2)*scale;
+        teamDefense.y = (12+teamDefense.getMeasuredHeight()/2)*scale;
+        playerContainer.addChild(teamDefense);
+    } else if (!teamsSet) {
+        var pointRect = new createjs.Shape();
+        var point = new createjs.Text(players[id].points, 26*scale + "px Roboto Condensed", mdGray);
+        point.textBaseline = "middle";
+        point.textAlign = "center";
+        pointRect.graphics.beginFill("white").drawRoundRect(0, 0, point.getMeasuredWidth()+18*scale, point.getMeasuredHeight()+8*scale, 5);
+        pointRect.shadow = new createjs.Shadow(mdGray, 0, 2, 5);
+        pointRect.regX = (point.getMeasuredWidth()+18*scale)/2;
+        pointRect.regY = (point.getMeasuredHeight()+8*scale)/2;
+
+        point.x = pointRect.x = 28*scale;
+        point.y = pointRect.y = 28*scale;
+        playerContainer.addChild(pointRect, point);
+    // } else {
+    	// var teamScore = new createjs.Text("\uE3B8", 36*scale + "px Material Icons", "white");
+     //    teamScore.textAlign = "center";
+     //    teamScore.textBaseline = "middle";
+     //    teamScore.shadow = new createjs.Shadow(mdGray, 0, 2, 5);
+     //    teamScore.x = (-12-teamScore.getMeasuredWidth()/2)*scale;
+     //    teamScore.y = (12+teamScore.getMeasuredHeight()/2)*scale;
+     //    teamScore.rotation = 180;
+     //    playerContainer.addChild(teamScore);
+    }
+
+    playerContainer.x = x;
+    playerContainer.y = y;
+
+    stage.addChild(playerContainer);
 }
 
 function drawHand() {
@@ -296,7 +362,7 @@ function drawHand() {
     handContainer.regX = ((players[0].hand.length-1)*offset + cardWidth*scale)/2;
     handContainer.regY = cardHeight*scale/2;
     handContainer.x = table.width/2;
-    handContainer.y = table.height - 18*scale;
+    handContainer.y = table.height - 24*scale*scale;
 
     var moveCards = false;
     var restart = true;
@@ -362,7 +428,7 @@ function drawMiniCard(suit, value, x, y) {
 
     var cardboard = new createjs.Shape();
     cardboard.graphics.beginFill('white').drawRoundRect(0, 0, miniWidth*scale, miniHeight*scale, 10);
-    cardboard.shadow = new createjs.Shadow("black", 0, 1, 2);
+    cardboard.shadow = new createjs.Shadow(mdGray, 0, 1, 2);
 
     var value = new createjs.Text(value, 36*scale + "px Roboto Condensed", color);
     value.textBaseline = "top";
@@ -379,7 +445,8 @@ function drawMiniCard(suit, value, x, y) {
     card.addChild(cardboard, suitIcon, value);
     card.x = x;
     card.y = y;
-    stage.addChild(card);
+    
+    return card;
 }
 
 function drawCardDown(x, y) {
@@ -499,6 +566,7 @@ function drawPlayButton() {
     playButtonContainer.x = table.width/2;
     playButtonContainer.y = table.height/2;
     playButtonContainer.alpha = 0;
+    playButtonContainer.removeAllEventListeners();
     playButtonContainer.addEventListener("mouseover", function(evt) {
 		evt.target.parent.scaleX = 1.01;
 		evt.target.parent.scaleY = 1.01;
@@ -519,52 +587,6 @@ function drawPlayButton() {
     });
     stage.addChild(playButtonContainer);
     stage.update();
-}
-
-function checkLead(cards) {
-	var valid = true;
-	console.log(cards);
-
-	// Check if the play is a tractor if there are 4 or more cards
-	if (cards.length >= 4) {
-		valid = checkIsTractor(cards);
-	}
-
-	// Check for valid set plays if not tractor
-	if (!roundIsTractor) {
-		for (var i = 0; i < cards.length - 1; i++) {
-			if (valid) {
-				valid = (cards[i].suit == cards[i+1].suit) && (cards[i].cardValue == cards[i+1].cardValue);
-			}
-		}
-	}
-
-	if (valid) {
-		roundCount = cards.length;
-		roundSuit = cards[0].suit;
-		players[0].playCards();
-	} else {
-		console.log("not valid");
-	}
-}
-
-function checkPlay(cards) {
-	// Check the validity of following player moves
-}
-
-function checkIsTractor(cards) {
-	// Check for a valid tractor. If so, return true for valid and set roundIsTractor to true
-	var setCount = 0;
-	var sequenceCount = 0;
-	var uniques;
-
-	for (var i = 0; i < cards.length; i++) {
-		
-	}
-
-
-	roundIsTractor = false;
-	return true;
 }
 
 function drawDrawerIcon() {
@@ -596,10 +618,22 @@ function drawDrawerIcon() {
         createjs.Tween.get(drawer).to({x: 0}, 60).call(finishAnimating);
     });
 
+    stage.on("stagemousedown", function(evt) {
+        if (evt.stageX > drawerWidth && drawer.x >= 0) {
+            animating++;
+            createjs.Tween.get(drawer).to({x: -(drawerWidth+50)*scale}, 60).call(finishAnimating);
+        }
+    });
+
     stage.addChild(drawerIcon);
 }
 
+// Todo: Come up with good ways to pad elements vertically in the drawer. Currently hardcoded. (Pass heights/y values into subsequent draw methods?).
+// 
+// Also use consistent paddings for x values, not measuredWidths(). Jeeeeeeez
+
 function drawDrawer() {
+	drawer.removeAllChildren();
     drawer.x = -(drawerWidth+50)*scale;
 
     var drawerBack = new createjs.Shape();
@@ -629,69 +663,121 @@ function drawDrawer() {
     });
 
     var titleIcon = new createjs.Text("\uE14D", (28*scale) + "px Material Icons", mdGray);
-    var title = new createjs.Text("Eighty", (24*scale) + "px Roboto Condensed", "black");
-    titleIcon.y = title.y = 30*scale;
-
-    var fullscreenIcon = new createjs.Text("\uE5D0", (28*scale) + "px Material Icons", mdGray);
-    var fullscreen = new createjs.Text("Full Screen", (24*scale) + "px Roboto Condensed", "black");
+    var titleText = new createjs.Text("Eighty", (24*scale) + "px Roboto Condensed", "black");
+    titleIcon.textBaseline = titleText.textBaseline = "middle";
+    titleIcon.y = titleText.y = dpy*scale;
 
     var settingsIcon = new createjs.Text("\uE8B8", (28*scale) + "px Material Icons", mdGray);
-    var settings = new createjs.Text("Settings", (24*scale) + "px Roboto Condensed", "black");
+    var settingsText = new createjs.Text("Settings", (24*scale) + "px Roboto Condensed", "black");
 
     var helpIcon = new createjs.Text("\uE887", (28*scale) + "px Material Icons", mdGray);
-    var help = new createjs.Text("Help", (24*scale) + "px Roboto Condensed", "black");
+    var helpText = new createjs.Text("Help", (24*scale) + "px Roboto Condensed", "black");
 
-    fullscreenIcon.textBaseline = fullscreen.textBaseline = settingsIcon.textBaseline = settings.textBaseline = helpIcon.textBaseline = help.textBaseline = "middle";
+    titleIcon.textAlign = settingsIcon.textAlign = helpIcon.textAlign = "center";
+    helpIcon.textBaseline = helpText.textBaseline = settingsIcon.textBaseline = settingsText.textBaseline = "middle";
 
-    titleIcon.x = fullscreenIcon.x = settingsIcon.x = helpIcon.x = 30*scale;
-    title.x = fullscreen.x = settings.x = help.x = titleIcon.getMeasuredWidth() + 60*scale;
+    titleIcon.x = settingsIcon.x = helpIcon.x = dpx*scale;
+    titleText.x = settingsText.x = helpText.x = dpx*2*scale;
 
-    helpIcon.y = help.y = table.height - helpIcon.getMeasuredHeight() - 30*scale;
-    settingsIcon.y = settings.y = helpIcon.y - settingsIcon.getMeasuredHeight() - 30*scale;
-    fullscreenIcon.y = fullscreen.y = settingsIcon.y - fullscreenIcon.getMeasuredHeight() - 30*scale;
+    helpIcon.y = helpText.y = table.height - (dpy*scale);
+    settingsIcon.y = settingsText.y = helpIcon.y - (dpy*scale);
 
-    var fullscreenTarget = new createjs.Shape();
-    fullscreenTarget.graphics.beginFill("white").drawRect(-(fullscreenIcon.getMeasuredWidth()+60*scale), -fullscreenIcon.getMeasuredHeight()/2 - 8*scale, drawerWidth*scale, fullscreenIcon.getMeasuredHeight() + 16*scale);
-    fullscreen.hitArea = fullscreenTarget;
-
-    fullscreen.removeAllEventListeners();
-    fullscreen.on("mouseover", function() {
-        fullscreen.color = mdBlue;
-        stage.update();
-    });
-    fullscreen.on("mouseout", function() {
-        fullscreen.color = "black";
-        stage.update();
-    });
-    fullscreen.on("click", toggleFullScreen);
-
-    drawer.addChild(drawerBack, titleIcon, title, close, fullscreenIcon, fullscreen, settingsIcon, settings, helpIcon, help);
+    drawer.addChild(drawerBack, titleIcon, titleText, close, settingsIcon, settingsText, helpIcon, helpText);
+    trumpInfoY = titleText.y + titleText.getMeasuredHeight();
     drawDrawerInfo();
     stage.addChild(drawer);
 }
 
 function drawDrawerInfo() {
-    var trumpSuitPic = getSuitIcon(trumpSuit);
+    drawTrumpInfo();
+    drawScore();
+    drawScoreTeam();
+    drawDefendTeam();
+}
+
+function drawTrumpInfo() {
+	var trumpSuitPic = getSuitIcon(trumpSuit);
     var trumpsColor = (trumpSuit == "diamonds" || trumpSuit == "hearts") ? "red" : "black";
 
     var trumpSuitIcon = new createjs.Text(trumpSuitPic, (28*scale) + "px Roboto Condensed", trumpsColor);
     var trumpSuitText = new createjs.Text("Trump suit", (24*scale) + "px Roboto Condensed", "black");
-    trumpSuitIcon.x = 30*scale;
-    trumpSuitText.x = trumpSuitIcon.getMeasuredWidth() + 60*scale;
-    trumpSuitIcon.y = trumpSuitText.y = 120*scale;
+    trumpSuitIcon.textAlign = "center";
+    trumpSuitIcon.textBaseline = trumpSuitText.textBaseline = "middle";
+    trumpSuitIcon.x = dpx*scale;
+    trumpSuitText.x = dpx*2*scale;
+    trumpSuitIcon.y = trumpSuitText.y = trumpInfoY + (dpy*scale);
 
     var trumpValueIcon = new createjs.Text(trumpValue, (28*scale) + "px Roboto Condensed", trumpsColor);
     var trumpValueText = new createjs.Text("Trump value", (24*scale) + "px Roboto Condensed", "black");
     trumpValueIcon.textAlign = "center";
-    trumpValueIcon.x = 30*scale + trumpSuitIcon.getMeasuredWidth()/2;
-    trumpValueText.x = trumpSuitIcon.getMeasuredWidth() + 60*scale;
-    trumpValueIcon.y = trumpValueText.y = 168*scale;
+    trumpValueIcon.textBaseline = trumpValueText.textBaseline = "middle";
+    trumpValueIcon.x = dpx*scale;
+    trumpValueText.x = dpx*2*scale;
+    trumpValueIcon.y = trumpValueText.y = trumpSuitIcon.y + dpy*scale;
 
     trumpSuitIcon.textBaseline = "middle";
     trumpSuitText.textBaseline = "middle";
     trumpValueIcon.textBaseline = "middle";
     trumpValueText.textBaseline = "middle";
+
     drawer.addChild(trumpSuitIcon, trumpSuitText, trumpValueIcon, trumpValueText);
+
+    scoreInfoY = trumpValueIcon.y + trumpValueIcon.getMeasuredHeight()/2;
+}
+
+function drawScore() {
+    var scoreIcon = new createjs.Text("\uE147", (28*scale) + "px Material Icons", mdOrange);
+    var scoreText = new createjs.Text("Score:", (24*scale) + "px Roboto Condensed", "black");
+    scoreIcon.textAlign = "center";
+    scoreIcon.textBaseline = scoreText.textBaseline = "middle";
+    scoreIcon.x = dpx*scale;
+    scoreText.x = dpx*2*scale;
+    scoreIcon.y = scoreText.y = scoreInfoY + dpy*1.2*scale;
+
+    scoreTeamY = scoreIcon.y + scoreIcon.getMeasuredHeight()/2;
+
+	drawer.addChild(scoreIcon, scoreText);
+}
+
+function drawScoreTeam() {
+	var scoreTeamIcon = new createjs.Text("\uE3B8", (28*scale) + "px Material Icons", mdGray);
+    scoreTeamIcon.rotation = 180;
+    var scoreTeamText = new createjs.Text("Scoring Team", (24*scale) + "px Roboto Condensed", "black");
+    scoreTeamIcon.textAlign = "center";
+    scoreTeamIcon.textBaseline = scoreTeamText.textBaseline = "middle";
+
+    scoreTeamIcon.x = dpx*scale;
+    scoreTeamText.x = dpx*2*scale;
+    scoreTeamIcon.y = scoreTeamText.y = scoreTeamY + dpy*1.2*scale;
+
+    var scoreTeamContainer = drawTeamList(false);
+    scoreTeamContainer.x = dpx*scale;
+    scoreTeamContainer.y = scoreTeamIcon.y + dpy*scale;
+
+    // Change to last person on scoring team list
+    defendTeamY = scoreTeamContainer.y;
+     // + scoreTeamContainer.getBounds().height;
+
+    drawer.addChild(scoreTeamIcon, scoreTeamText, scoreTeamContainer);
+}
+
+function drawDefendTeam() {
+    var defendTeamIcon = new createjs.Text("\uE32A", (28*scale) + "px Material Icons", mdGray);
+    var defendTeamText = new createjs.Text("Defending Team", (24*scale) + "px Roboto Condensed", "black");
+
+    defendTeamIcon.textAlign = "center";
+    defendTeamIcon.textBaseline = defendTeamText.textBaseline = "middle";
+    defendTeamIcon.x = dpx*scale;
+    defendTeamText.x = dpx*2*scale;
+    defendTeamIcon.y = defendTeamText.y = defendTeamY + dpy*1.2*scale;
+
+    drawer.addChild(defendTeamIcon, defendTeamText);
+}
+
+function drawTeamList(defending) {
+    var teamContainer = new createjs.Container();
+
+    return teamContainer;
 }
 
 function getSuitIcon(suit) {
@@ -713,33 +799,130 @@ function getSuitIcon(suit) {
     return code;
 }
 
-function toggleFullScreen() {
-    if (document.fullscreenEnabled || document.webkitFullscreenEnabled || document.mozFullScreenEnabled || document.msFullscreenEnabled) {
+function checkLead(cards) {
+    var valid = true;
 
-        var i = document.documentElement;
+    // // Check if the play is a tractor if there are 4 or more cards
+    // if (cards.length >= 4) {
+    //     valid = checkTractor(cards);
+    //     roundIsTractor = valid;
+    // }
 
-        if (document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement) {
-            if (document.exitFullscreen) {
-                document.exitFullscreen();
-            } else if (document.webkitExitFullscreen) {
-                document.webkitExitFullscreen();
-            } else if (document.mozCancelFullScreen) {
-                document.mozCancelFullScreen();
-            } else if (document.msExitFullscreen) {
-                document.msExitFullscreen();
-            }
-        } else {
-            if (i.requestFullscreen) {
-                i.requestFullscreen();
-            } else if (i.webkitRequestFullscreen) {
-                i.webkitRequestFullscreen();
-            } else if (i.mozRequestFullScreen) {
-                i.mozRequestFullScreen();
-            } else if (i.msRequestFullscreen) {
-                i.msRequestFullscreen();
+    // // Check for valid set plays if not tractor
+    // if (!roundIsTractor) {
+    //     for (var i = 0; i < cards.length - 1; i++) {
+    //         if (valid) {
+    //             valid = (cards[i].suit == cards[i+1].suit) && (cards[i].cardValue == cards[i+1].cardValue);
+    //         }
+    //     }
+    // }
+
+    if (valid) {
+        console.log("IS GOOD");
+        roundCount = cards.length;
+        roundSuit = cards[0].suit;
+        roundIsTrump = cards[0].isTrump;
+        players[0].playCards();
+    } else {
+        console.log("not valid");
+    }
+}
+
+function checkPlay(cards) {
+    // Check the validity of following player moves
+}
+
+function checkTractor(cards) {
+    // Find the number of cards in each tractor set (ie pairs, triples, etc)
+    var setCount = 0;
+    do {setCount++;} 
+    while (cards[setCount-1].suit == cards[setCount].suit 
+        && cards[setCount-1].cardValue == cards[setCount].cardValue)
+    // console.log("Set count: " + setCount);
+
+    // The set must be a pair at minimum and the play must have whole numbers of sets
+    if (setCount > 1 && cards.length%setCount==0) {
+        // Check that the first cards in each set are the same suit and sequential
+        for (var i = 0; i < cards.length - setCount; i+=setCount) {
+            // Sequence set suits must match OR they must all be trumps
+            if (cards[i].suit == cards[i+setCount].suit || (cards[i].isTrump && cards[i+setCount].isTrump)) {
+                // Account for extraction of trump value from sequences
+                if (cards[i].cardValue+1 == trumpValue) {
+                    if (cards[i].cardValue + 2 != cards[i+setCount].cardValue) {
+                        // console.log("Not sequential sets");
+                        return false;
+                    }
+                } else {
+                    if (!(cards[i].cardValue + 1 == cards[i+setCount].cardValue)) {
+                        // console.log("Not sequential sets");
+                        return false;
+                    }
+                }
+            } 
+            else {
+                // console.log("Failed first set card suit check");
+                return false;
             }
         }
+
+        // How many sets to check left in the play
+        for (var j = 1; j <= (cards.length - setCount)/setCount; j++) {
+            // Traverse through a set and check they are the same card
+            for (var k = 0; k < setCount-1; k++) {
+                var index = setCount * j + k;
+                if (!(cards[index].suit == cards[index+1].suit && cards[index].cardValue == cards[index+1].cardValue)) {
+                    // console.log("Failed set check");
+                    return false;
+                }
+            }
+        }
+    } else {
+        // console.log("Failed set count check and divisible play count check");
+        return false;
     }
+
+    // Is a tractor!
+    tractorSetCount = setCount;
+    return true;
+}
+
+function testHand() {
+    players[0].hand.length = 0;
+    drawHand();
+    var deckCount = 4;
+
+    var suit = ["spades", "diamonds", "clubs", "hearts"];
+    var names = ["2", "3", "4", "5", "6", "7", "8", "9", "I0", "J", "Q", "K", "A"];
+    var points = 0;
+
+    for (var i = 0; i < deckCount; i++) {
+        for (var s = 0; s < 4; s++) {
+            for (var v = 0; v <= 12; v++) {
+                if (v==5 || v==10 || v==13) {
+                    points = (v==5) ? 5:10;
+                }
+                players[0].hand.push(new Card(suit[s], names[v], v+2, false, points));
+                points = 0;
+            }
+        }
+        players[0].hand.push(new Card("trump", "S", 17, true, 0));
+        players[0].hand.push(new Card("trump", "B", 18, true, 0));
+    }
+
+    for (var i = 0; i < players[0].hand.length; i++) {
+        if (players[0].hand[i].suit == trumpSuit) {
+            players[0].hand[i].isTrump = true;
+            if (players[0].hand[i].cardValue == trumpValue) {
+                players[0].hand[i].cardValue = 16;
+            }
+        }
+        if (players[0].hand[i].cardValue == trumpValue) {
+            players[0].hand[i].cardValue = 15;
+            players[0].hand[i].isTrump = true;
+        }
+    }
+    players[0].hand.sort(cardSort);
+    drawHand();
 }
 
 function ticking(event) {
@@ -751,6 +934,11 @@ function ticking(event) {
 
 function finishAnimating() {
     setTimeout(function () {animating--}, Math.ceil(1000/fps));
+}
+
+function sizeCanvas() {
+    table.width = (window.innerWidth >= 720) ? window.innerWidth : 720;
+    table.height = (window.innerHeight >= 720) ? window.innerHeight : 720;
 }
 
 window.addEventListener('resize', function() {
@@ -802,56 +990,4 @@ function shuffle(array) {
     }
 
     return array;
-}
-
-function drawTestIcons() {
-    drawMiniCard("\u2665", "red", "7", 300*scale, 50);
-    drawMiniCard("\u2660", "black", "Q", 400*scale, 50);
-    drawMiniCardDown(500*scale, 50);
-}
-
-function drawTestPlay() {
-    var offset = 0;
-    var arraycolor = ["black", "red", "red", "black", "red", "black"];
-    var arraysuit = ["\u2663", "\u2665", "\u2666", "\u2660", "\u2665", "\u2663"];
-    var arrayvalue = ["J", "A", "7", "6", "6", "Q"];
-    for (var i = 0; i < 6; i++) {
-        drawMiniCard(arraysuit[i], arraycolor[i], arrayvalue[i], table.width-(6*40*scale)-60+offset, 300);
-        offset += 40*scale;
-    }
-}
-
-function infoDump() {
-    var color = "black";
-    var font = "24px Roboto Condensed";
-
-    var dw = new createjs.Text("Viewport width: " + window.innerWidth, font, color);
-    dw.x = 100;
-    dw.y = 50;
-
-    var dh = new createjs.Text("Viewport height: " + window.innerHeight, font, color);
-    dh.x = 100;
-    dh.y = 80;
-
-    var scaletext = new createjs.Text("Pixel ratio: " + scale, font, color);
-    scaletext.x = 100;
-    scaletext.y = 110;
-
-    var sw = new createjs.Text("Screen width: " + screen.width, font, color);
-    sw.x = 100;
-    sw.y = 140;
-
-    var sh = new createjs.Text("Screen height: " + screen.height, font, color);
-    sh.x = 100;
-    sh.y = 170;
-
-    var asw = new createjs.Text("Available screen width: " + screen.availWidth, font, color);
-    asw.x = 100;
-    asw.y = 200;
-
-    var ash = new createjs.Text("Available screen height: " + screen.availHeight, font, color);
-    ash.x = 100;
-    ash.y = 230;
-
-    stage.addChild(dw, dh, scaletext, sw, sh, asw, ash);
 }
