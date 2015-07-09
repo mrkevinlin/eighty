@@ -224,20 +224,13 @@ function calculateDiscard() {
 function drawEverything() {
     stage.removeAllChildren();
 
-    var text = new createjs.Text("Secret work!", "80px Roboto Condensed", "white");
-    text.textAlign = "center";
-    text.textBaseline = "midde";
-    text.x = table.width/2;
-    text.y = table.height/2;
-    stage.addChild(text);
-
     // drawStart();
-    // drawEveryone();
-    // drawHand();
-    // // drawOpponentHand();
-    // drawPlayButton();
-    // drawDrawerIcon();
-    // drawDrawer();
+    drawEveryone();
+    drawHand();
+    // drawOpponentHand();
+    drawPlayButton();
+    drawDrawerIcon();
+    drawDrawer();
 
     //Testing methods
     // drawTestIcons();
