@@ -14,10 +14,6 @@ var mdOrange = "#FF9800";
 
 var players = [];
 var playerCount;
-var degrees;
-var radius;
-var centerx;
-var centery;
 
 var handContainer = new createjs.Container();
 var playButtonContainer = new createjs.Container();
@@ -65,7 +61,7 @@ function init() {
 
     sizeCanvas();
     initStage();
-    initPlayer();
+    initPlayers(playerCount);
     initDeck();
     initTrump();
     initHands();
@@ -83,10 +79,11 @@ function initStage() {
     createjs.Touch.enable(stage);
 }
 
-function initPlayer() {
+function initPlayers(playerCount) {
     for (var i = 0; i < playerCount; i++) {
         players.push(new Player(i));
 
+        // mocked player data
         players[i].defending = (i%3==0) ? true:false;
         if(i%3==0) {players[i].level = 3;}
         else if(i%2==0) {players[i].level = 2;}
@@ -95,15 +92,14 @@ function initPlayer() {
     }
     players[0].leader = true;
 
-    degrees = [];
-    initPlayerCoordinates();
+    initPlayerCoordinates(playerCount);
 }
 
-function initPlayerCoordinates() {
-    degrees.length = 0;
-    radius = (table.height - cardHeight*scale*scale - 64*scale)/2;
-    centerx = table.width/2;
-    centery = radius + 64*scale;
+function initPlayerCoordinates(playerCount) {
+    var degrees = [];
+    var radius = (table.height - cardHeight*scale*scale - 64*scale)/2;
+    var centerx = table.width/2;
+    var centery = radius + 64*scale;
     var stretch = (table.width - 108)/(radius*2);
 
     for (var i = 0; i < playerCount; i++) {
