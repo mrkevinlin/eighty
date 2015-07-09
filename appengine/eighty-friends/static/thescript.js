@@ -813,7 +813,7 @@ function checkLead(cards) {
 
     // // Check if the play is a tractor if there are 4 or more cards
     // if (cards.length >= 4) {
-    //     valid = checkTractor(cards);
+    //     valid = checkTractor(cards, new Card(trumpSuit, '', trumpValue, true, 0));
     //     roundIsTractor = valid;
     // }
 
@@ -841,7 +841,7 @@ function checkPlay(cards) {
     // Check the validity of following player moves
 }
 
-function checkTractor(cards) {
+function checkTractor(cards, trumpCard) {
     // Find the number of cards in each tractor set (ie pairs, triples, etc)
     var setCount = 0;
     do {setCount++;} 
@@ -856,7 +856,7 @@ function checkTractor(cards) {
             // Sequence set suits must match OR they must all be trumps
             if (cards[i].suit == cards[i+setCount].suit || (cards[i].isTrump && cards[i+setCount].isTrump)) {
                 // Account for extraction of trump value from sequences
-                if (cards[i].cardValue+1 == trumpValue) {
+                if (cards[i].cardValue+1 == trumpCard.cardValue) {
                     if (cards[i].cardValue + 2 != cards[i+setCount].cardValue) {
                         // console.log("Not sequential sets");
                         return false;
