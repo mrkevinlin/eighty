@@ -152,7 +152,7 @@ function initTrump() {
         if (deck[i].suit == trumpSuit) {
             deck[i].isTrump = true;
             if (deck[i].cardValue == trumpValue) {
-            	deck[i].cardValue = 16;
+                deck[i].cardValue = 16;
             }
         }
         if (deck[i].cardValue == trumpValue) {
@@ -227,7 +227,7 @@ Player.prototype.playCards = function() {
         createjs.Tween.get(handContainer.getChildAt(this.selectedIDs[i]))
         .to({scaleX: .5, scaleY: .5, x: animateToPoint.x + 50*scale*i, y: animateToPoint.y}, 200, createjs.Ease.cubicOut)
         .call(drawHand)
-        .call(drawPlayerPlay, [this.selectedCards, drawPoint], this) 
+        .call(drawPlayerPlay, [this.selectedCards, drawPoint], this)
         .call(finishAnimating);
     }
 
@@ -294,20 +294,20 @@ function drawEveryone() {
 function drawPlayer(id, x, y) {
     var playerContainer = new createjs.Container();
 
-	var avatarContainer = new createjs.Container();
-	var avatar = new createjs.Bitmap(imageUrl);
-	avatar.image.onload = function() {
-		stage.update();
-	};
-	var circleShadowGfx = new createjs.Graphics().beginFill('white').drawCircle(0, 0, 48).endFill();
-	var circleOverlayGfx = new createjs.Graphics().setStrokeStyle(3).beginStroke('white').drawCircle(0, 0, 47).endStroke();
-	var circleMask = new createjs.Shape(circleShadowGfx);
-	var circleOverlay = new createjs.Shape(circleOverlayGfx);
+    var avatarContainer = new createjs.Container();
+    var avatar = new createjs.Bitmap(imageUrl);
+    avatar.image.onload = function() {
+        stage.update();
+    };
+    var circleShadowGfx = new createjs.Graphics().beginFill('white').drawCircle(0, 0, 48).endFill();
+    var circleOverlayGfx = new createjs.Graphics().setStrokeStyle(3).beginStroke('white').drawCircle(0, 0, 47).endStroke();
+    var circleMask = new createjs.Shape(circleShadowGfx);
+    var circleOverlay = new createjs.Shape(circleOverlayGfx);
     circleMask.shadow = new createjs.Shadow(mdGray, 0, 2, 5);
-	avatar.x = -48;
-	avatar.y = -48;
-	avatar.mask = circleMask;
-	playerContainer.addChild(circleMask, avatar, circleOverlay);
+    avatar.x = -48;
+    avatar.y = -48;
+    avatar.mask = circleMask;
+    playerContainer.addChild(circleMask, avatar, circleOverlay);
 
     var levelCircle = new createjs.Shape();
     levelCircle.graphics.beginFill(mdOrange).drawCircle(0,0,16*scale);
@@ -343,7 +343,7 @@ function drawPlayer(id, x, y) {
         point.y = pointRect.y = 28*scale;
         playerContainer.addChild(pointRect, point);
     // } else {
-    	// var teamScore = new createjs.Text("\uE3B8", 36*scale + "px Material Icons", "white");
+        // var teamScore = new createjs.Text("\uE3B8", 36*scale + "px Material Icons", "white");
      //    teamScore.textAlign = "center";
      //    teamScore.textBaseline = "middle";
      //    teamScore.shadow = new createjs.Shadow(mdGray, 0, 2, 5);
@@ -422,7 +422,7 @@ function drawMiniCardDown(x, y) {
 
 function drawMiniCard(suit, value, x, y) {
     var color = (suit == "diamonds" || suit == "hearts" || suit == "trump" && value == "B") ? "red" : "black";
-	suit = getSuitIcon(suit);
+    suit = getSuitIcon(suit);
 
     switch (value) {
         case "B":
@@ -454,7 +454,7 @@ function drawMiniCard(suit, value, x, y) {
     card.addChild(cardboard, suitIcon, value);
     card.x = x;
     card.y = y;
-    
+
     return card;
 }
 
@@ -577,22 +577,22 @@ function drawPlayButton() {
     playButtonContainer.alpha = 0;
     playButtonContainer.removeAllEventListeners();
     playButtonContainer.addEventListener("mouseover", function(evt) {
-		evt.target.parent.scaleX = 1.01;
-		evt.target.parent.scaleY = 1.01;
-		evt.target.parent.y-=1
-		stage.update();
+        evt.target.parent.scaleX = 1.01;
+        evt.target.parent.scaleY = 1.01;
+        evt.target.parent.y-=1
+        stage.update();
     });
     playButtonContainer.addEventListener("mouseout", function(evt) {
-		evt.target.parent.scaleX = 1/1.01;
-		evt.target.parent.scaleY = 1/1.01;
-		evt.target.parent.y+=1
-		stage.update();
+        evt.target.parent.scaleX = 1/1.01;
+        evt.target.parent.scaleY = 1/1.01;
+        evt.target.parent.y+=1
+        stage.update();
     });
     playButtonContainer.addEventListener("click", function(evt) {
-    	animating++;
-    	createjs.Tween.get(evt.target.parent).to({alpha: 0.8}, 60).call(finishAnimating);
-    	players[0].setSelectedCards();
-    	players[0].checkSelection();
+        animating++;
+        createjs.Tween.get(evt.target.parent).to({alpha: 0.8}, 60).call(finishAnimating);
+        players[0].setSelectedCards();
+        players[0].checkSelection();
     });
     stage.addChild(playButtonContainer);
     stage.update();
@@ -638,11 +638,11 @@ function drawDrawerIcon() {
 }
 
 // Todo: Come up with good ways to pad elements vertically in the drawer. Currently hardcoded. (Pass heights/y values into subsequent draw methods?).
-// 
+//
 // Also use consistent paddings for x values, not measuredWidths(). Jeeeeeeez
 
 function drawDrawer() {
-	drawer.removeAllChildren();
+    drawer.removeAllChildren();
     drawer.x = -(drawerWidth+50)*scale;
 
     var drawerBack = new createjs.Shape();
@@ -705,7 +705,7 @@ function drawDrawerInfo() {
 }
 
 function drawTrumpInfo() {
-	var trumpSuitPic = getSuitIcon(trumpSuit);
+    var trumpSuitPic = getSuitIcon(trumpSuit);
     var trumpsColor = (trumpSuit == "diamonds" || trumpSuit == "hearts") ? "red" : "black";
 
     var trumpSuitIcon = new createjs.Text(trumpSuitPic, (28*scale) + "px Roboto Condensed", trumpsColor);
@@ -745,11 +745,11 @@ function drawScore() {
 
     scoreTeamY = scoreIcon.y + scoreIcon.getMeasuredHeight()/2;
 
-	drawer.addChild(scoreIcon, scoreText);
+    drawer.addChild(scoreIcon, scoreText);
 }
 
 function drawScoreTeam() {
-	var scoreTeamIcon = new createjs.Text("\uE3B8", (28*scale) + "px Material Icons", mdGray);
+    var scoreTeamIcon = new createjs.Text("\uE3B8", (28*scale) + "px Material Icons", mdGray);
     scoreTeamIcon.rotation = 180;
     var scoreTeamText = new createjs.Text("Scoring Team", (24*scale) + "px Roboto Condensed", "black");
     scoreTeamIcon.textAlign = "center";
@@ -790,8 +790,8 @@ function drawTeamList(defending) {
 }
 
 function getSuitIcon(suit) {
-	var code;
-	switch (suit) {
+    var code;
+    switch (suit) {
         case "spades":
             code = "\u2660";
             break;
@@ -844,8 +844,8 @@ function checkPlay(cards) {
 function checkTractor(cards, trumpCard) {
     // Find the number of cards in each tractor set (ie pairs, triples, etc)
     var setCount = 0;
-    do {setCount++;} 
-    while (cards[setCount-1].suit == cards[setCount].suit 
+    do {setCount++;}
+    while (cards[setCount-1].suit == cards[setCount].suit
         && cards[setCount-1].cardValue == cards[setCount].cardValue)
     // console.log("Set count: " + setCount);
 
@@ -867,7 +867,7 @@ function checkTractor(cards, trumpCard) {
                         return false;
                     }
                 }
-            } 
+            }
             else {
                 // console.log("Failed first set card suit check");
                 return false;
@@ -900,7 +900,7 @@ function testHand() {
     drawHand();
     var deckCount = 4;
 
-    var suit = ["spades", "diamonds", "clubs", "hearts"];
+    var suit= ["spades", "diamonds", "clubs", "hearts"];
     var names = ["2", "3", "4", "5", "6", "7", "8", "9", "I0", "J", "Q", "K", "A"];
     var points = 0;
 
@@ -957,7 +957,7 @@ window.addEventListener('resize', function() {
 });
 
 function cardSort(a, b) {
-	var sortFactor = (ascending) ? 1:-1;
+    var sortFactor = (ascending) ? 1:-1;
     if (a.isTrump && !b.isTrump) {
         return 1*sortFactor;
     } else if (b.isTrump && !a.isTrump) {
