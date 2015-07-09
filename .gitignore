@@ -3,3 +3,7 @@ Thumbs\.db
 
 # compile objects
 *.pyc
+
+# Vim swap files
+*.un~
+*.swp

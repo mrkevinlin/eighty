@@ -10,8 +10,6 @@ from simonsays_models import Player
 
 simon_says = Blueprint('simonsays', __name__)
 
-# just one game, its name and id are both 'default'
-GAME_KEY = Game.get_or_insert('default', id='default', name='default').key
 
 @simon_says.route('', methods=['GET','POST'])
 def game():
@@ -181,10 +179,11 @@ def send_channel_update(category, clients=None):
 def get_current_game():
     if g:
         if 'game_entity' not in g:
-            g.game_entity = GAME_KEY.get()
+            # just one game, its name and id are both 'default'
+            g.game_entity = Game.get_or_insert('default', id='default', name='default')
         return g.game_entity
     else:
-        return GAME_KEY.get()
+        return Game.get_or_insert('default', id='default', name='default')
 
 @simon_says.teardown_request
 def put_game(exception):
