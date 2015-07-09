@@ -16,6 +16,7 @@
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
         <script src="thescript.js"></script>
         <script>
+            var imageUrl = "img/default-profile.png";
             var auth2;
             var initClient = function() {
                 init();
@@ -47,6 +48,11 @@
                 console.log('ID: ' + profile.getId()); // Do not send to your backend! Use an ID token instead.
                 console.log('Name: ' + profile.getName());
                 console.log('Image URL: ' + profile.getImageUrl());
+                if (profile.getImageUrl()) {
+                    imageUrl = profile.getImageUrl();
+                    drawEveryone();
+                    stage.update();
+                }
                 console.log('Email: ' + profile.getEmail());
                 var idToken = auth2.currentUser.get().getAuthResponse().id_token;
                 console.log("ID Token: " + idToken);
@@ -65,9 +71,9 @@
             }
             var signOut = function() {
                 var auth2 = gapi.auth2.getAuthInstance();
-                // auth2.signOut().then(function () {
-                //     console.log('User signed out.');
-                // });
+                auth2.signOut().then(function () {
+                     console.log('User signed out.');
+                });
                 document.getElementById("signin-screen").style.display = "block";
             }
         </script>
@@ -84,7 +90,7 @@
             height: 100%;
         }
         #signin-overlay {
-            position: absolute;
+            position: fixed;
             width: 100%;
             height: 100%;
             background-color: white;
