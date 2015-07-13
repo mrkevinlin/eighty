@@ -143,8 +143,20 @@ function initDeck() {
         deck.push(new Card("trump", "S", 17, true, 0));
         deck.push(new Card("trump", "B", 18, true, 0));
     }
-
     deck = shuffle(deck);
+    drawDeck();
+}
+
+function drawDeck() {
+    var deckGraphic = new createjs.Container();
+    for (var i = 0; i < 8; i++) {
+        deckGraphic.addChild(drawCardDown(0, i*2));
+    }
+    deckGraphic.regX = cardWidth/2;
+    deckGraphic.regY = deckGraphic.getBounds().height/2;
+    deckGraphic.x = table.width/2;
+    deckGraphic.y = table.height/2;
+    stage.addChild(deckGraphic);
 }
 
 function initTrump() {
@@ -167,7 +179,8 @@ function initHands() {
     var discard = (playerCount == 6) ? 6 : 8;
     var cardCount = deck.length - discard;
     for (var d = 0; d < cardCount; d++) {
-        players[dealID].hand.push(deck[d]);
+        // players[dealID].hand.push(deck[d]);
+        dealCard(players[dealID], d);
         dealID++;
         if (dealID >= players.length) {
             dealID = 0;
@@ -175,6 +188,18 @@ function initHands() {
     }
 
     players[0].hand.sort(cardSort);
+}
+
+function dealCard(player, index) {
+    var dealtCard = drawCardDown(0, 0);
+    dealtCard.regX = cardWidth/2;
+    dealtCard.regY = cardHeight/2;
+    dealtCard.x = table.width/2;
+    dealtCard.y = table.height/2;
+
+    animating++;
+    createjs.Tween.get(dealtCard).to({x: player.xcoord, y: player.ycoord}, 300).call(finishAnimating);
+    player.hand.push(deck[index]);
 }
 
 var Player = function(id) {
