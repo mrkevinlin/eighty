@@ -62,6 +62,7 @@ function init() {
     trumpSuit = "hearts";
     trumpValue = 4;
     teamsSet = false;
+    ascending = true;
 
     sizeCanvas();
     initStage();
@@ -164,7 +165,7 @@ function initTrump() {
         if (deck[i].suit == trumpSuit) {
             deck[i].isTrump = true;
             if (deck[i].cardValue == trumpValue) {
-            	deck[i].cardValue = 16;
+                deck[i].cardValue = 16;
             }
         }
         if (deck[i].cardValue == trumpValue) {
@@ -211,27 +212,27 @@ var Player = function(id) {
     this.defending;
     this.level;
     this.points;
-    this.selectedIDs = [];
+    this.numCardsSelected = 0;
     this.selectedCards = [];
 };
 
-Player.prototype.addSelection = function(sel) {
-    this.selectedIDs.push(sel.parent.getChildIndex(sel));
-}
+//Player.prototype.addSelection = function(sel) {
+    //this.selectedCards.push(sel);
+//}
 
-Player.prototype.removeSelection = function(sel) {
-    this.selectedIDs.splice(this.selectedIDs.indexOf(sel.parent.getChildIndex(sel)),1);
-}
-
-Player.prototype.setSelectedCards = function() {
-    this.selectedCards.length = 0;
-    for (var i = 0; i < this.selectedIDs.length; i++) {
-        this.selectedCards.push(this.hand[this.selectedIDs[i]]);
-    }
-    this.selectedCards.sort(cardSort);
-}
+//Player.prototype.removeSelection = function(sel) {
+    //this.selectedCards.splice(this.selectedCards.indexOf(sel),1);
+//}
 
 Player.prototype.checkSelection = function() {
+    for (var i = 0; i < this.hand.length; i++) {
+        var card = this.hand[i];
+        if (card.isSelected) {
+            card.isSelected = false;
+            this.selectedCards.push(card);
+        }
+    }
+
     if (this.leader) {
         checkLead(this.selectedCards);
     } else {
@@ -239,34 +240,58 @@ Player.prototype.checkSelection = function() {
     }
 }
 
+Player.prototype.clearSelection = function() {
+    this.selectedCards.length = 0;
+    console.log("CLEARED");
+}
+
 Player.prototype.playCards = function() {
     animating++;
     createjs.Tween.get(playButtonContainer).to({alpha: 0}, 150).call(finishAnimating);
-    // Remove from array starting at higher indexes to prevent index change errors
-    this.selectedIDs.sort(function(a, b) {return a-b;});
-    var animateToPoint = handContainer.globalToLocal(table.width/2-(((this.selectedIDs.length-1)*50*scale + miniWidth*scale)/2), (players[0].ycoord - miniHeight*scale - 64));
+
+    var animateToPoint = handContainer.globalToLocal(table.width/2-(((this.selectedCards.length-1)*50*scale + miniWidth*scale)/2), (players[0].ycoord - miniHeight*scale - 64));
     var drawPoint = handContainer.localToGlobal(animateToPoint.x, animateToPoint.y);
-    for (var i = this.selectedIDs.length - 1; i >= 0; i--) {
-        this.hand.splice(this.selectedIDs[i],1);
+    stage.addChild(playContainer);
+    playContainer.removeAllChildren();
+    playContainer.x = drawPoint.x;
+    playContainer.y = drawPoint.y;
+    for (var i = this.selectedCards.length-1; i >= 0; i--) {
+        var card = this.selectedCards[i];
+        var handCard = handContainer.getChildAt(this.hand.indexOf(card));
         animating++;
-        createjs.Tween.get(handContainer.getChildAt(this.selectedIDs[i]))
-        .to({scaleX: .5, scaleY: .5, x: animateToPoint.x + 50*scale*i, y: animateToPoint.y}, 200, createjs.Ease.cubicOut)
-        .call(drawHand)
-        .call(drawPlayerPlay, [this.selectedCards, drawPoint], this) 
+        createjs.Tween.get(handCard)
+        .to({scaleX: .5, scaleY: .5, x: animateToPoint.x + 50*scale*i, y: animateToPoint.y}, 300, createjs.Ease.cubicOut)
+        .call(finishAnimating)
+        .call(drawPlayCard, [card, i], this);
+        // TODO: Make enum for card children 0=cardboard, 1=suitIcon, 2=value
+        // these animations take into account the container scaling, i.e. multiplies by 2
+        animating++;
+        var cardboard = handCard.getChildAt(0);
+        cardboard.shadow = new createjs.Shadow(mdGray, 0, 1, 2);
+        createjs.Tween.get(cardboard.graphics.command)
+        .to({radiusBL:20, radiusBR:20, radiusTL:20, radiusTR:20}, 300, createjs.Ease.cubicOut)
+        .call(finishAnimating);
+        animating++;
+        var value = handCard.getChildAt(2);
+        createjs.Tween.get(value)
+        .to({scaleX: 2, scaleY: 2, x: cardWidth/2*scale, y: 9*scale}, 300, createjs.Ease.cubicOut)
+        .call(finishAnimating);
+        animating++;
+        var suitIcon = handCard.getChildAt(1);
+        createjs.Tween.get(suitIcon)
+        .to({scaleX: 2, scaleY: 2, x: cardWidth/2*scale, y: 2*(5*scale + value.getMeasuredHeight())}, 300, createjs.Ease.cubicOut)
         .call(finishAnimating);
     }
 
-    this.selectedIDs.length = 0;
-    // this.selectedCards.length = 0;
-}
-
-function drawPlayerPlay(cards, pt) {
-    for (var i = 0; i < cards.length; i++) {
-        playContainer.addChild(drawMiniCard(cards[i].suit, cards[i].cardName, 50*scale*i, 0));
+    function drawPlayCard(card, i) {
+        playContainer.addChild(drawMiniCard(card.suit, card.cardName, 50*scale*i, 0));
+        this.hand.splice(this.hand.indexOf(card),1);
+        this.selectedCards.splice(this.selectedCards.length-1,1);
+        if (this.selectedCards.length === 0) {
+            drawHand();
+            this.numCardsSelected = 0;
+        }
     }
-    playContainer.x = pt.x;
-    playContainer.y = pt.y;
-    stage.addChild(playContainer);
 }
 
 var Card = function(suit, name, value, isTrump, points) {
@@ -275,6 +300,7 @@ var Card = function(suit, name, value, isTrump, points) {
     this.cardValue = value;
     this.isTrump = isTrump;
     this.points = points;
+    this.isSelected = false;
 };
 
 function drawEverything() {
@@ -320,38 +346,35 @@ function drawPlayer(id, x, y) {
     var playerContainer = new createjs.Container();
     playerContainer.removeAllChildren();
 
+    var badgeShadow = new createjs.Shadow("rgba(0, 0, 0, 0.5)", 0, 2, 5);
+
     var avatar = new createjs.Shape();
     avatar.graphics.beginFill(mdBlue).drawCircle(0,0,42*scale);
-    avatar.shadow = new createjs.Shadow(mdGray, 0, 2, 5);
+    avatar.set({shadow: badgeShadow});
     playerContainer.addChild(avatar);
 
     var levelCircle = new createjs.Shape();
     levelCircle.graphics.beginFill(mdOrange).drawCircle(0,0,16*scale);
-    levelCircle.shadow = new createjs.Shadow(mdGray, 0, 2, 5);
-    levelCircle.x = 32*scale;
-    levelCircle.y = -32*scale;
+    levelCircle.set({shadow: badgeShadow, x: 32*scale, y: -32*scale});
+
     var level = new createjs.Text(players[id].level, 26*scale + "px Roboto Condensed", "white");
-    level.textBaseline = "middle";
-    level.textAlign = "center";
-    level.x = 32*scale;
-    level.y = -32*scale;
+    level.set(centerText());
+    level.set({x: 32*scale, y: -32*scale});
     playerContainer.addChild(levelCircle, level);
 
     if (players[id].defending) {
         var teamDefense = new createjs.Text("\uE32A", 36*scale + "px Material Icons", "white");
-        teamDefense.textAlign = "center";
-        teamDefense.textBaseline = "middle";
-        teamDefense.shadow = new createjs.Shadow(mdGray, 0, 2, 5);
+        teamDefense.set(centerText());
+        teamDefense.shadow = badgeShadow;
         teamDefense.x = (-12-teamDefense.getMeasuredWidth()/2)*scale;
         teamDefense.y = (12+teamDefense.getMeasuredHeight()/2)*scale;
         playerContainer.addChild(teamDefense);
     } else if (!teamsSet) {
         var pointRect = new createjs.Shape();
         var point = new createjs.Text(players[id].points, 26*scale + "px Roboto Condensed", mdGray);
-        point.textBaseline = "middle";
-        point.textAlign = "center";
+        point.set(centerText());
         pointRect.graphics.beginFill("white").drawRoundRect(0, 0, point.getMeasuredWidth()+18*scale, point.getMeasuredHeight()+8*scale, 5);
-        pointRect.shadow = new createjs.Shadow(mdGray, 0, 2, 5);
+        pointRect.shadow = badgeShadow;
         pointRect.regX = (point.getMeasuredWidth()+18*scale)/2;
         pointRect.regY = (point.getMeasuredHeight()+8*scale)/2;
 
@@ -359,7 +382,7 @@ function drawPlayer(id, x, y) {
         point.y = pointRect.y = 28*scale;
         playerContainer.addChild(pointRect, point);
     // } else {
-    	// var teamScore = new createjs.Text("\uE3B8", 36*scale + "px Material Icons", "white");
+        // var teamScore = new createjs.Text("\uE3B8", 36*scale + "px Material Icons", "white");
      //    teamScore.textAlign = "center";
      //    teamScore.textBaseline = "middle";
      //    teamScore.shadow = new createjs.Shadow(mdGray, 0, 2, 5);
@@ -381,7 +404,7 @@ function drawHand() {
     stage.addChild(handContainer);
 
     for (var i = 0; i < players[0].hand.length; i++) {
-        handContainer.addChild(drawCard(players[0].hand[i].suit, players[0].hand[i].cardName, offset*i, 0));
+        handContainer.addChild(drawCard(players[0].hand[i], offset*i, 0));
     }
 
     handContainer.regX = ((players[0].hand.length-1)*offset + cardWidth*scale)/2;
@@ -424,8 +447,7 @@ function drawMiniCardDown(x, y) {
     cardboard.shadow = new createjs.Shadow("black", 0, 1, 2);
 
     var picture = new createjs.Text("\uE410", 64*scale + "px Material Icons", "lightblue");
-    picture.textBaseline = "middle";
-    picture.textAlign = "center";
+    picture.set(centerText());
     picture.x = miniWidth/2*scale;
     picture.y = miniHeight/2*scale;
 
@@ -438,7 +460,7 @@ function drawMiniCardDown(x, y) {
 
 function drawMiniCard(suit, value, x, y) {
     var color = (suit == "diamonds" || suit == "hearts" || suit == "trump" && value == "B") ? "red" : "black";
-	suit = getSuitIcon(suit);
+    suit = getSuitIcon(suit);
 
     switch (value) {
         case "B":
@@ -470,7 +492,7 @@ function drawMiniCard(suit, value, x, y) {
     card.addChild(cardboard, suitIcon, value);
     card.x = x;
     card.y = y;
-    
+
     return card;
 }
 
@@ -482,8 +504,7 @@ function drawCardDown(x, y) {
     cardboard.shadow = new createjs.Shadow("black", 0, 1, 2);
 
     var picture = new createjs.Text("\uE410", 80*scale + "px Material Icons", "lightblue");
-    picture.textBaseline = "middle";
-    picture.textAlign = "center";
+    picture.set(centerText());
     picture.x = cardWidth/2*scale;
     picture.y = cardHeight/2*scale;
 
@@ -494,7 +515,9 @@ function drawCardDown(x, y) {
     return card;
 }
 
-function drawCard(suit, value, x, y) {
+function drawCard(card, x, y) {
+    var suit = card.suit;
+    var value = card.cardName;
     var color = (suit == "diamonds" || suit == "hearts" || suit == "trump" && value == "B") ? "red" : "black";
     suit = getSuitIcon(suit);
 
@@ -507,62 +530,63 @@ function drawCard(suit, value, x, y) {
             break;
     }
 
-    var card = new createjs.Container();
+    var cardContainer = new createjs.Container();
+    cardContainer.cardObj = card;
 
     var cardboard = new createjs.Shape();
     cardboard.graphics.beginFill('white').drawRoundRect(0, 0, cardWidth*scale, cardHeight*scale, 10);
     cardboard.shadow = new createjs.Shadow("black", 0, 1, 2);
 
-    var value = new createjs.Text(value, 36*scale + "px Roboto Condensed", color);
-    value.textBaseline = "top";
-    value.textAlign = "center";
-    value.y = 10*scale;
+    var valueText = new createjs.Text(value, 36*scale + "px Roboto Condensed", color);
+    valueText.textBaseline = "top";
+    valueText.textAlign = "center";
+    valueText.y = 10*scale;
 
     var suitIcon = new createjs.Text(suit, 36*scale + "px Roboto Condensed", color);
     suitIcon.textBaseline = "top";
-    suitIcon.textAlign = "left";
-    suitIcon.x = 5*scale;
-    suitIcon.y = 10*scale + value.getMeasuredHeight();
+    suitIcon.textAlign = "center";
+    suitIcon.y = 10*scale + valueText.getMeasuredHeight();
 
-    value.x = 5*scale + (suitIcon.getMeasuredWidth()/2);
+    valueText.x = 5*scale + (suitIcon.getMeasuredWidth()/2);
+    suitIcon.x = 5*scale + (suitIcon.getMeasuredWidth()/2);
 
-    card.addChild(cardboard, suitIcon, value);
-    card.x = x;
-    card.y = y;
+    cardContainer.addChild(cardboard, suitIcon, valueText);
+    cardContainer.x = x;
+    cardContainer.y = y;
     var originalY = y;
     var targetY = y-30*scale
     var clicked = false;
 
-    card.removeAllEventListeners();
-    card.addEventListener("mouseover", function() {
+    cardContainer.removeAllEventListeners();
+    cardContainer.addEventListener("mouseover", function() {
         animating++;
-        createjs.Tween.get(card).to({y: targetY},60).call(finishAnimating);
+        createjs.Tween.get(cardContainer).to({y: targetY},60).call(finishAnimating);
     });
 
-    card.addEventListener("mouseout", function() {
+    cardContainer.addEventListener("mouseout", function() {
         if (!clicked) {
             animating++;
-            createjs.Tween.get(card).to({y: originalY},60).call(finishAnimating);
+            createjs.Tween.get(cardContainer).to({y: originalY},60).call(finishAnimating);
         }
     });
 
-    card.addEventListener("click", function(evt) {
+    cardContainer.addEventListener("click", function(evt) {
         if (!clicked) {
             cardboard.shadow = new createjs.Shadow(mdBlue, 0, 0, 10);
             animating++;
-            createjs.Tween.get(card).to({y: targetY}, 60).call(finishAnimating);
-            clicked = !clicked;
-            players[0].addSelection(evt.target);
-
+            createjs.Tween.get(cardContainer).to({y: targetY}, 60).call(finishAnimating);
+            players[0].numCardsSelected++;
         } else {
             cardboard.shadow = new createjs.Shadow("black", 0, 1, 2);
             animating++;
-            createjs.Tween.get(card).to({y: originalY}, 60).call(finishAnimating);
-            clicked = !clicked;
-            players[0].removeSelection(evt.target);
+            createjs.Tween.get(cardContainer).to({y: originalY}, 60).call(finishAnimating);
+            players[0].numCardsSelected--;
         }
 
-        if (players[0].selectedIDs.length > 0) {
+        clicked = !clicked;
+        evt.target.cardObj.isSelected = clicked;
+
+        if (players[0].numCardsSelected > 0) {
             animating++;
             createjs.Tween.get(playButtonContainer).to({alpha: 1}, 150).call(finishAnimating);
         } else {
@@ -570,15 +594,15 @@ function drawCard(suit, value, x, y) {
             createjs.Tween.get(playButtonContainer).to({alpha: 0}, 150).call(finishAnimating);
         }
     });
-    card.mouseChildren = false;
+    cardContainer.mouseChildren = false;
 
-    return card;
+    return cardContainer;
 }
 
 function drawPlayButton() {
+	playButtonContainer.removeAllChildren();
     var playButtonText = new createjs.Text("Play", (32*scale) + "px Roboto Condensed", "white");
-    playButtonText.textAlign = "center";
-    playButtonText.textBaseline = "middle";
+    playButtonText.set(centerText());
     playButtonText.x = 60*scale;
     playButtonText.y = 30*scale;
     var playButtonShape = new createjs.Shape();
@@ -592,23 +616,22 @@ function drawPlayButton() {
     playButtonContainer.y = table.height/2;
     playButtonContainer.alpha = 0;
     playButtonContainer.removeAllEventListeners();
-    playButtonContainer.addEventListener("mouseover", function(evt) {
-		evt.target.parent.scaleX = 1.01;
-		evt.target.parent.scaleY = 1.01;
-		evt.target.parent.y-=1
-		stage.update();
-    });
-    playButtonContainer.addEventListener("mouseout", function(evt) {
-		evt.target.parent.scaleX = 1/1.01;
-		evt.target.parent.scaleY = 1/1.01;
-		evt.target.parent.y+=1
-		stage.update();
-    });
+  //   playButtonContainer.addEventListener("mouseover", function(evt) {
+        // evt.target.parent.scaleX = 1.01;
+        // evt.target.parent.scaleY = 1.01;
+        // evt.target.parent.y-=1
+        // stage.update();
+  //   });
+  //   playButtonContainer.addEventListener("mouseout", function(evt) {
+        // evt.target.parent.scaleX = 1/1.01;
+        // evt.target.parent.scaleY = 1/1.01;
+        // evt.target.parent.y+=1
+        // stage.update();
+  //   });
     playButtonContainer.addEventListener("click", function(evt) {
-    	animating++;
-    	createjs.Tween.get(evt.target.parent).to({alpha: 0.8}, 60).call(finishAnimating);
-    	players[0].setSelectedCards();
-    	players[0].checkSelection();
+        animating++;
+        createjs.Tween.get(evt.target.parent).to({alpha: 0.8}, 60).call(finishAnimating);
+        players[0].checkSelection();
     });
     stage.addChild(playButtonContainer);
     stage.update();
@@ -658,7 +681,7 @@ function drawDrawerIcon() {
 // Also use consistent paddings for x values, not measuredWidths(). Jeeeeeeez
 
 function drawDrawer() {
-	drawer.removeAllChildren();
+    drawer.removeAllChildren();
     drawer.x = -(drawerWidth+50)*scale;
 
     var drawerBack = new createjs.Shape();
@@ -721,7 +744,7 @@ function drawDrawerInfo() {
 }
 
 function drawTrumpInfo() {
-	var trumpSuitPic = getSuitIcon(trumpSuit);
+    var trumpSuitPic = getSuitIcon(trumpSuit);
     var trumpsColor = (trumpSuit == "diamonds" || trumpSuit == "hearts") ? "red" : "black";
 
     var trumpSuitIcon = new createjs.Text(trumpSuitPic, (28*scale) + "px Roboto Condensed", trumpsColor);
@@ -761,11 +784,11 @@ function drawScore() {
 
     scoreTeamY = scoreIcon.y + scoreIcon.getMeasuredHeight()/2;
 
-	drawer.addChild(scoreIcon, scoreText);
+    drawer.addChild(scoreIcon, scoreText);
 }
 
 function drawScoreTeam() {
-	var scoreTeamIcon = new createjs.Text("\uE3B8", (28*scale) + "px Material Icons", mdGray);
+    var scoreTeamIcon = new createjs.Text("\uE3B8", (28*scale) + "px Material Icons", mdGray);
     scoreTeamIcon.rotation = 180;
     var scoreTeamText = new createjs.Text("Scoring Team", (24*scale) + "px Roboto Condensed", "black");
     scoreTeamIcon.textAlign = "center";
@@ -806,8 +829,8 @@ function drawTeamList(defending) {
 }
 
 function getSuitIcon(suit) {
-	var code;
-	switch (suit) {
+    var code;
+    switch (suit) {
         case "spades":
             code = "\u2660";
             break;
@@ -966,6 +989,10 @@ function sizeCanvas() {
     table.height = (window.innerHeight >= 720) ? window.innerHeight : 720;
 }
 
+function centerText() {
+    return {textBaseline: "middle", textAlign: "center"};
+}
+
 window.addEventListener('resize', function() {
     sizeCanvas();
     initPlayerCoordinates();
@@ -973,7 +1000,7 @@ window.addEventListener('resize', function() {
 });
 
 function cardSort(a, b) {
-	var sortFactor = (ascending) ? 1:-1;
+    var sortFactor = (ascending) ? 1:-1;
     if (a.isTrump && !b.isTrump) {
         return 1*sortFactor;
     } else if (b.isTrump && !a.isTrump) {
